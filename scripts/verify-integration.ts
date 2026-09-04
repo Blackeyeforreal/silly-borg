@@ -202,6 +202,56 @@ async function runTests() {
   if (minXml.includes('Honors &amp; Awards:')) throw new Error('Honors & Awards should NOT be present');
   if (minXml.includes('[Company Name')) throw new Error('Placeholder Company Name found');
   console.log('✓ Dynamic paragraph pruning verified with 0 orphan labels and 0 unreplaced placeholders!');
+
+  console.log('--- Step 5: Testing Rich Text Formatting Parser ---');
+  const { parseFormattedRuns } = await import('../src/lib/format-text');
+  const formattedSample = 'Engineered **10+ microservices** with *low latency* and <u>high throughput</u>.';
+  const runs = parseFormattedRuns(formattedSample);
+  if (runs.length !== 7) {
+    throw new Error(`Expected 7 runs, got ${runs.length}`);
+  }
+  if (!runs[1].bold || runs[1].text !== '10+ microservices') {
+    throw new Error('Bold formatting run not extracted correctly');
+  }
+  if (!runs[3].italic || runs[3].text !== 'low latency') {
+    throw new Error('Italic formatting run not extracted correctly');
+  }
+  if (!runs[5].underline || runs[5].text !== 'high throughput') {
+    throw new Error('Underline formatting run not extracted correctly');
+  }
+  console.log('✓ Rich text formatting parser verified!');
+
+  console.log('--- Step 6: Testing Custom Sections in Schema and DOCX ---');
+  const customResume: ResumeData = {
+    ...sampleResume,
+    custom_sections: [
+      {
+        id: 'sec_1',
+        section_title: 'FEATURED PROJECTS',
+        items: [
+          {
+            title: 'AI Resume Builder',
+            subtitle: 'Next.js 15, TypeScript, Gemini 3.6 Flash',
+            dates: '2024',
+            location: 'github.com/project',
+            description: [
+              'Implemented **interactive preview** with <u>instant formatting</u> and *Garamond parity*.'
+            ]
+          }
+        ]
+      }
+    ]
+  };
+
+  const customBuf = await renderResumeDocx(customResume);
+  const customZip = new PizZip(customBuf);
+  const customXml = customZip.file('word/document.xml')?.asText() || '';
+
+  if (!customXml.includes('FEATURED PROJECTS')) throw new Error('FEATURED PROJECTS section header missing');
+  if (!customXml.includes('AI Resume Builder')) throw new Error('Project title missing');
+  if (!customXml.includes('<w:b w:val="1"/>')) throw new Error('Bold run XML missing in custom section');
+  if (!customXml.includes('<w:u w:val="single"/>')) throw new Error('Underline run XML missing in custom section');
+  console.log('✓ Custom sections with native OpenXML rich-text runs verified!');
   console.log('=============================================');
   console.log('🎉 ALL INTEGRATION VERIFICATION TESTS PASSED!');
   console.log('=============================================');

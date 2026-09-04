@@ -1,14 +1,16 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Undo2, Redo2, Download, FileText, Plus, Loader2 } from 'lucide-react';
+import { Undo2, Redo2, Download, FileText, Plus, Loader2, FolderPlus } from 'lucide-react';
 import { useResumeStore } from '@/store/resume-store';
 import { useToast } from '@/components/ui/Toast';
+import { AddSectionModal } from '@/components/preview/AddSectionModal';
 
 export function ResumeToolbar() {
   const { resumeData, reset } = useResumeStore();
   const { undo, redo, pastStates, futureStates } = useResumeStore.temporal.getState();
   const [isExporting, setIsExporting] = useState<'docx' | 'pdf' | null>(null);
+  const [isAddSectionOpen, setIsAddSectionOpen] = useState(false);
   const { addToast } = useToast();
 
   const handleExport = async (format: 'docx' | 'pdf') => {
@@ -97,6 +99,14 @@ export function ResumeToolbar() {
 
         <div className="flex items-center space-x-3">
           <button
+            onClick={() => setIsAddSectionOpen(true)}
+            className="flex items-center px-3 py-1.5 text-sm font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-md hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors cursor-pointer"
+          >
+            <FolderPlus className="w-4 h-4 mr-1.5 text-blue-600" />
+            Add Section
+          </button>
+
+          <button
             onClick={() => handleExport('docx')}
             disabled={!!isExporting}
             className="flex items-center px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 transition-colors"
@@ -129,6 +139,11 @@ export function ResumeToolbar() {
           </button>
         </div>
       </div>
+
+      <AddSectionModal
+        isOpen={isAddSectionOpen}
+        onClose={() => setIsAddSectionOpen(false)}
+      />
     </div>
   );
 }

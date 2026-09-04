@@ -44,11 +44,26 @@ export const SkillsAndInterestsSchema = z.object({
   interests: z.optional(z.array(z.string()))
 });
 
+export const CustomSectionItemSchema = z.object({
+  title: z.string(),
+  subtitle: z.optional(z.string()),
+  dates: z.optional(z.string()),
+  location: z.optional(z.string()),
+  description: z.array(z.string())
+});
+
+export const CustomSectionSchema = z.object({
+  id: z.string(),
+  section_title: z.string(),
+  items: z.array(CustomSectionItemSchema)
+});
+
 export const ResumeDataSchema = z.object({
   personal_info: PersonalInfoSchema,
   work_experience: z.array(WorkExperienceSchema),
   education: z.array(EducationSchema),
-  skills_and_interests: SkillsAndInterestsSchema
+  skills_and_interests: SkillsAndInterestsSchema,
+  custom_sections: z.optional(z.array(CustomSectionSchema))
 });
 
 export type ResumeData = z.infer<typeof ResumeDataSchema>;
@@ -57,6 +72,8 @@ export type WorkExperience = z.infer<typeof WorkExperienceSchema>;
 export type Education = z.infer<typeof EducationSchema>;
 export type SkillsAndInterests = z.infer<typeof SkillsAndInterestsSchema>;
 export type PersonalInfo = z.infer<typeof PersonalInfoSchema>;
+export type CustomSectionItem = z.infer<typeof CustomSectionItemSchema>;
+export type CustomSection = z.infer<typeof CustomSectionSchema>;
 
 function cleanSchemaForGemini(schema: any): any {
   if (typeof schema !== 'object' || schema === null) return schema;
