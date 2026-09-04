@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
     const jsonSchema = getResumeJsonSchema();
     const prompt = `${RESUME_GENERATION_SYSTEM_PROMPT}\n\nResume Text:\n${resumeText}\n\nJob Description:\n${jobDescription}`;
 
-    const candidateModels = ['gemini-3.6-flash', 'gemini-flash-latest'];
+    const candidateModels = ['gemini-3.6-flash', 'gemini-flash-latest', 'gemini-3.7-flash', 'gemini-3.5-flash','gemini-3.5-flash-lite'];
     let result: any = null;
     let lastError: any = null;
 
