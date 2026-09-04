@@ -12,22 +12,64 @@ import { AddSectionModal } from './AddSectionModal';
 
 export function ResumePreview() {
   const resumeData = useResumeStore((state) => state.resumeData);
+  const templateSettings = useResumeStore((state) => state.templateSettings);
   const [isAddSectionOpen, setIsAddSectionOpen] = useState(false);
 
   if (!resumeData) return null;
 
+  // Compute typography
+  const fontFamilies: Record<string, string> = {
+    'Garamond': 'var(--font-serif), "EB Garamond", Garamond, Georgia, serif',
+    'Times New Roman': '"Times New Roman", Times, Georgia, serif',
+    'Georgia': 'Georgia, Cambria, serif',
+    'Calibri': 'Calibri, Candara, "Segoe UI", Arial, sans-serif',
+    'Arial': 'Arial, Helvetica, sans-serif',
+  };
+  const currentFontFamily = fontFamilies[templateSettings?.fontFamily] || fontFamilies['Garamond'];
+
+  // Compute margins
+  const margins = {
+    compact: { top: '0.2in', bottom: '0.25in', left: '0.35in', right: '0.35in' },
+    normal: { top: '0.125in', bottom: '0.29in', left: '0.5in', right: '0.5in' },
+    spacious: { top: '0.4in', bottom: '0.4in', left: '0.75in', right: '0.75in' },
+  }[templateSettings?.marginSize || 'normal'];
+
+  // Compute font size
+  const fontSizeClass = {
+    compact: 'text-[9.5pt]',
+    standard: 'text-[10pt]',
+    spacious: 'text-[10.5pt]',
+  }[templateSettings?.fontSize || 'standard'];
+
+  // Compute line spacing
+  const lineSpacingClass = {
+    tight: 'leading-[1.18]',
+    normal: 'leading-[1.25]',
+    relaxed: 'leading-[1.4]',
+  }[templateSettings?.lineSpacing || 'normal'];
+
+  const accentColor = templateSettings?.accentColor || '#000000';
+
   return (
     <>
+      <style>{`
+        .resume-paper h1,
+        .resume-paper h2,
+        .resume-paper .name-header,
+        .resume-paper .section-header {
+          border-bottom-color: ${accentColor} !important;
+        }
+      `}</style>
       <div 
-        className="bg-white resume-paper shadow-2xl rounded-sm w-full font-serif text-black text-[10pt] leading-[1.25] relative"
+        className={`bg-white resume-paper shadow-2xl rounded-sm w-full font-serif text-black ${fontSizeClass} ${lineSpacingClass} relative`}
         style={{
           maxWidth: '8.5in',
           minHeight: '11in',
-          paddingTop: '0.125in',
-          paddingBottom: '0.29in',
-          paddingLeft: '0.5in',
-          paddingRight: '0.5in',
-          fontFamily: 'var(--font-serif), "EB Garamond", Garamond, Georgia, serif',
+          paddingTop: margins.top,
+          paddingBottom: margins.bottom,
+          paddingLeft: margins.left,
+          paddingRight: margins.right,
+          fontFamily: currentFontFamily,
         }}
       >
         <PersonalInfoSection data={resumeData.personal_info} />

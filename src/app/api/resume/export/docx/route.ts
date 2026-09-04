@@ -8,13 +8,14 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const resumeData: ResumeData = body.resumeData || body.resume;
+    const templateSettings = body.templateSettings;
 
     if (!resumeData) {
       return NextResponse.json({ error: 'Missing resume data' }, { status: 400 });
     }
 
     try {
-      const templateBuffer = await renderResumeDocx(resumeData);
+      const templateBuffer = await renderResumeDocx(resumeData, templateSettings);
       return new NextResponse(new Uint8Array(templateBuffer), {
         status: 200,
         headers: {

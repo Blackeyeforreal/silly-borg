@@ -5,21 +5,15 @@ export interface FormattedRun {
   bold?: boolean;
   italic?: boolean;
   underline?: boolean;
+  linkUrl?: string;
 }
 
 /**
- * Parses markdown and HTML style tokens (**bold**, *italic*, <u>underline</u>, <b>, <i>)
- * into a structured list of formatted runs for DOCX or UI rendering.
+ * Parses inline formatting tags (**bold**, *italic*, <u>underline</u>, <b>, <i>)
  */
-export function parseFormattedRuns(rawText: string): FormattedRun[] {
+function parseInlineFormatting(rawText: string): FormattedRun[] {
   if (!rawText) return [];
 
-  // Regex matching formatting tokens:
-  // 1. ** (bold)
-  // 2. * (italic)
-  // 3. <u> and </u> (underline)
-  // 4. <b> and </b> (bold)
-  // 5. <i> and </i> (italic)
   const tokenRegex = /(\*\*|\*|<\/?u>|<\/?b>|<\/?i>|<\/?strong>|<\/?em>)/gi;
   const parts = rawText.split(tokenRegex);
 
@@ -45,7 +39,6 @@ export function parseFormattedRuns(rawText: string): FormattedRun[] {
     } else if (lower === '</u>') {
       isUnderline = false;
     } else {
-      // Normal text run with current formatting state
       runs.push({
         text: part,
         bold: isBold || undefined,
@@ -55,11 +48,59 @@ export function parseFormattedRuns(rawText: string): FormattedRun[] {
     }
   }
 
+  return runs;
+}
+
+/**
+ * Parses markdown and HTML style tokens (**bold**, *italic*, <u>underline</u>, and [label](url))
+ * into a structured list of formatted runs for DOCX or UI rendering.
+ */
+export function parseFormattedRuns(rawText: string): FormattedRun[] {
+  if (!rawText) return [];
+
+  // Match markdown links: [label](url)
+  const linkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
+  let lastIndex = 0;
+  const runs: FormattedRun[] = [];
+  let match: RegExpExecArray | null;
+
+  while ((match = linkRegex.exec(rawText)) !== null) {
+    const beforeText = rawText.substring(lastIndex, match.index);
+    if (beforeText) {
+      runs.push(...parseInlineFormatting(beforeText));
+    }
+
+    const label = match[1];
+    const url = match[2];
+    const labelRuns = parseInlineFormatting(label);
+
+    if (labelRuns.length === 0) {
+      runs.push({ text: label, linkUrl: url });
+    } else {
+      for (const lr of labelRuns) {
+        runs.push({ ...lr, linkUrl: url });
+      }
+    }
+
+    lastIndex = linkRegex.lastIndex;
+  }
+
+  const remaining = rawText.substring(lastIndex);
+  if (remaining) {
+    runs.push(...parseInlineFormatting(remaining));
+  }
+
   // Merge consecutive runs with identical styles
   const merged: FormattedRun[] = [];
   for (const r of runs) {
     const last = merged[merged.length - 1];
-    if (last && !!last.bold === !!r.bold && !!last.italic === !!r.italic && !!last.underline === !!r.underline) {
+    if (
+      last &&
+      !!last.bold === !!r.bold &&
+      !!last.italic === !!r.italic &&
+      !!last.underline === !!r.underline &&
+      last.linkUrl === r.linkUrl
+    ) {
       last.text += r.text;
     } else {
       merged.push({ ...r });
@@ -70,7 +111,7 @@ export function parseFormattedRuns(rawText: string): FormattedRun[] {
 }
 
 /**
- * Converts formatted text containing (**bold**, *italic*, <u>underline</u>)
+ * Converts formatted text containing (**bold**, *italic*, <u>underline</u>, [label](url))
  * into React elements for live preview display.
  */
 export function formatTextToReact(text: string): React.ReactNode {
@@ -78,7 +119,7 @@ export function formatTextToReact(text: string): React.ReactNode {
   const runs = parseFormattedRuns(text);
 
   if (runs.length === 0) return null;
-  if (runs.length === 1 && !runs[0].bold && !runs[0].italic && !runs[0].underline) {
+  if (runs.length === 1 && !runs[0].bold && !runs[0].italic && !runs[0].underline && !runs[0].linkUrl) {
     return runs[0].text;
   }
 
@@ -94,6 +135,23 @@ export function formatTextToReact(text: string): React.ReactNode {
         }
         if (run.bold) {
           content = <strong key={`b-${idx}`} className="font-bold">{content}</strong>;
+        }
+        if (run.linkUrl) {
+          const href = run.linkUrl.startsWith('http://') || run.linkUrl.startsWith('https://') || run.linkUrl.startsWith('mailto:')
+            ? run.linkUrl
+            : `https://${run.linkUrl}`;
+          content = (
+            <a
+              key={`a-${idx}`}
+              href={href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 hover:text-blue-800 underline decoration-blue-500 font-medium inline transition-colors"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {content}
+            </a>
+          );
         }
         return <React.Fragment key={idx}>{content}</React.Fragment>;
       })}
@@ -156,3 +214,27 @@ export function toggleWrapSelection(
     newEnd: end + tokenLen,
   };
 }
+
+/**
+ * Inserts or wraps selection as a markdown hyperlink: [label](url)
+ */
+export function insertHyperlink(
+  fullText: string,
+  start: number,
+  end: number,
+  url: string,
+  customLabel?: string
+): { newText: string; newStart: number; newEnd: number } {
+  const selectedText = fullText.substring(start, end);
+  const label = customLabel || selectedText || 'Link';
+  const cleanUrl = url.trim();
+  const linkMarkdown = `[${label}](${cleanUrl})`;
+
+  const before = fullText.substring(0, start);
+  const after = fullText.substring(end);
+  const newText = before + linkMarkdown + after;
+  const newStart = start;
+  const newEnd = start + linkMarkdown.length;
+  return { newText, newStart, newEnd };
+}
+

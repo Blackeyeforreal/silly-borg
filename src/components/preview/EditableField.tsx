@@ -1,9 +1,10 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Sparkles, Check, X, Bold, Italic, Underline } from 'lucide-react';
+import { Sparkles, Check, X, Bold, Italic, Underline, Link2 } from 'lucide-react';
 import { AIRewritePopover } from './AIRewritePopover';
-import { formatTextToReact, toggleWrapSelection } from '@/lib/format-text';
+import { formatTextToReact, toggleWrapSelection, insertHyperlink } from '@/lib/format-text';
+import { useResumeStore } from '@/store/resume-store';
 
 interface EditableFieldProps {
   value: string;
@@ -24,11 +25,22 @@ export function EditableField({
   as: Component = 'span',
   multiline = false
 }: EditableFieldProps) {
-  const [isEditing, setIsEditing] = useState(false);
+  const activeEditingPath = useResumeStore((state) => state.activeEditingPath);
+  const setActiveEditingPath = useResumeStore((state) => state.setActiveEditingPath);
+
+  const isEditing = activeEditingPath === fieldPath;
   const [editValue, setEditValue] = useState(value);
   const [showRewrite, setShowRewrite] = useState(false);
+  
+  // Hyperlink Dialog State
+  const [showLinkDialog, setShowLinkDialog] = useState(false);
+  const [linkUrl, setLinkUrl] = useState('');
+  const [linkText, setLinkText] = useState('');
+  const savedSelectionRef = useRef<{ start: number; end: number }>({ start: 0, end: 0 });
+
   const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement>(null);
   const containerRef = useRef<HTMLElement>(null);
+  const isCancelledRef = useRef(false);
 
   const isInline = Boolean(
     containerClassName?.includes('inline') || 
@@ -41,21 +53,40 @@ export function EditableField({
     setEditValue(value);
   }, [value]);
 
+  // When field becomes active / inactive
   useEffect(() => {
-    if (isEditing && inputRef.current) {
-      inputRef.current.focus();
-      if (inputRef.current instanceof HTMLTextAreaElement) {
-        inputRef.current.style.height = 'auto';
-        inputRef.current.style.height = inputRef.current.scrollHeight + 'px';
+    if (isEditing) {
+      isCancelledRef.current = false;
+      if (inputRef.current) {
+        inputRef.current.focus();
+        if (inputRef.current instanceof HTMLTextAreaElement) {
+          inputRef.current.style.height = 'auto';
+          inputRef.current.style.height = inputRef.current.scrollHeight + 'px';
+        }
       }
+    } else {
+      // Switched away to another field: auto-save if not explicitly cancelled
+      if (!isCancelledRef.current && editValue !== value) {
+        onSave(editValue);
+      }
+      setShowLinkDialog(false);
+      setShowRewrite(false);
     }
   }, [isEditing]);
 
   const handleSave = () => {
+    isCancelledRef.current = false;
     if (editValue !== value) {
       onSave(editValue);
     }
-    setIsEditing(false);
+    setActiveEditingPath(null);
+  };
+
+  const handleCancel = () => {
+    isCancelledRef.current = true;
+    setEditValue(value);
+    setShowLinkDialog(false);
+    setActiveEditingPath(null);
   };
 
   const applyFormatting = (formatType: 'bold' | 'italic' | 'underline') => {
@@ -68,7 +99,37 @@ export function EditableField({
     const result = toggleWrapSelection(editValue, start, end, formatType);
     setEditValue(result.newText);
 
-    // Restore cursor / selection after state update
+    setTimeout(() => {
+      if (inputRef.current) {
+        inputRef.current.focus();
+        inputRef.current.setSelectionRange(result.newStart, result.newEnd);
+      }
+    }, 0);
+  };
+
+  const openLinkDialog = () => {
+    const el = inputRef.current;
+    const start = el?.selectionStart ?? 0;
+    const end = el?.selectionEnd ?? 0;
+    savedSelectionRef.current = { start, end };
+    
+    const selected = editValue.substring(start, end);
+    setLinkText(selected);
+    setLinkUrl('');
+    setShowLinkDialog(true);
+  };
+
+  const handleInsertLink = () => {
+    if (!linkUrl.trim()) {
+      setShowLinkDialog(false);
+      return;
+    }
+
+    const { start, end } = savedSelectionRef.current;
+    const result = insertHyperlink(editValue, start, end, linkUrl, linkText.trim() || undefined);
+    setEditValue(result.newText);
+    setShowLinkDialog(false);
+
     setTimeout(() => {
       if (inputRef.current) {
         inputRef.current.focus();
@@ -78,7 +139,6 @@ export function EditableField({
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    // Rich-text formatting shortcuts
     if (e.ctrlKey || e.metaKey) {
       const key = e.key.toLowerCase();
       if (key === 'b') {
@@ -96,14 +156,22 @@ export function EditableField({
         applyFormatting('underline');
         return;
       }
+      if (key === 'k') {
+        e.preventDefault();
+        openLinkDialog();
+        return;
+      }
     }
 
-    if (e.key === 'Enter' && !e.shiftKey && !multiline) {
+    if (e.key === 'Enter' && !e.shiftKey && !multiline && !showLinkDialog) {
       e.preventDefault();
       handleSave();
     } else if (e.key === 'Escape') {
-      setEditValue(value);
-      setIsEditing(false);
+      if (showLinkDialog) {
+        setShowLinkDialog(false);
+      } else {
+        handleCancel();
+      }
     }
   };
 
@@ -143,6 +211,15 @@ export function EditableField({
             <Underline className="w-3.5 h-3.5" />
           </button>
 
+          <button
+            type="button"
+            onClick={openLinkDialog}
+            className={`p-1 hover:bg-gray-700 rounded transition-colors ${showLinkDialog ? 'bg-blue-600' : ''}`}
+            title="Add Link (Ctrl+K)"
+          >
+            <Link2 className="w-3.5 h-3.5" />
+          </button>
+
           <div className="w-px h-3.5 bg-gray-700 mx-1" />
 
           <button
@@ -166,13 +243,49 @@ export function EditableField({
           </button>
           <button
             type="button"
-            onClick={() => { setEditValue(value); setIsEditing(false); }}
+            onClick={handleCancel}
             className="p-1 hover:bg-red-900 text-red-300 rounded transition-colors"
             title="Cancel (Esc)"
           >
             <X className="w-3.5 h-3.5" />
           </button>
         </div>
+
+        {/* Inline Hyperlink Dialog */}
+        {showLinkDialog && (
+          <div className="flex items-center gap-1.5 p-1.5 bg-white border border-blue-400 rounded shadow-md text-xs mb-1 w-max">
+            <input
+              type="text"
+              placeholder="Display text"
+              value={linkText}
+              onChange={(e) => setLinkText(e.target.value)}
+              className="px-1.5 py-0.5 border border-gray-300 rounded text-xs w-28 focus:outline-none focus:border-blue-500"
+            />
+            <input
+              type="text"
+              placeholder="URL (e.g. https://...)"
+              value={linkUrl}
+              onChange={(e) => setLinkUrl(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleInsertLink()}
+              autoFocus
+              className="px-1.5 py-0.5 border border-gray-300 rounded text-xs w-44 focus:outline-none focus:border-blue-500"
+            />
+            <button
+              type="button"
+              onClick={handleInsertLink}
+              className="px-2 py-0.5 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors font-medium text-xs cursor-pointer"
+            >
+              Add
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowLinkDialog(false)}
+              className="p-0.5 text-gray-500 hover:text-gray-700 cursor-pointer"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
 
         {multiline ? (
           <textarea
@@ -217,7 +330,7 @@ export function EditableField({
       style={isInline ? { display: 'inline-flex', width: 'auto', alignItems: 'center' } : undefined}
     >
       <Component 
-        onClick={() => setIsEditing(true)}
+        onClick={() => setActiveEditingPath(fieldPath)}
         className={`editable-hover ${isInline ? 'inline' : 'w-full block'} ${className}`}
         style={isInline ? { display: 'inline', width: 'auto' } : undefined}
       >
@@ -225,7 +338,11 @@ export function EditableField({
       </Component>
       
       <button 
-        onClick={(e) => { e.stopPropagation(); setShowRewrite(true); }}
+        onClick={(e) => { 
+          e.stopPropagation(); 
+          setActiveEditingPath(fieldPath);
+          setShowRewrite(true); 
+        }}
         className={`p-1 text-purple-500 hover:bg-purple-50 rounded transition-opacity no-print ${
           isInline 
             ? 'hidden group-hover:inline-flex absolute -top-6 left-1/2 -translate-x-1/2 bg-white shadow-sm border border-purple-200 z-10' 

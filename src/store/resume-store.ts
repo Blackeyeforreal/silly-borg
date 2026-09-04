@@ -55,17 +55,38 @@ export function removeFromArray(obj: any, path: string, index: number): any {
   return setNestedValue(obj, path, newArray);
 }
 
+export interface TemplateSettings {
+  fontFamily: 'Garamond' | 'Times New Roman' | 'Georgia' | 'Calibri' | 'Arial';
+  fontSize: 'compact' | 'standard' | 'spacious';
+  lineSpacing: 'tight' | 'normal' | 'relaxed';
+  marginSize: 'compact' | 'normal' | 'spacious';
+  accentColor: string;
+}
+
+export const DEFAULT_TEMPLATE_SETTINGS: TemplateSettings = {
+  fontFamily: 'Garamond',
+  fontSize: 'standard',
+  lineSpacing: 'normal',
+  marginSize: 'normal',
+  accentColor: '#000000',
+};
+
 interface ResumeState {
   resumeData: ResumeData | null;
   jobDescription: string;
   originalResumeText: string;
   isGenerating: boolean;
   generationStep: string;
+  activeEditingPath: string | null;
+  templateSettings: TemplateSettings;
   
   setResumeData: (data: ResumeData | null) => void;
   updateField: (path: string, value: any) => void;
   addArrayItem: (path: string, value: any) => void;
   removeArrayItem: (path: string, index: number) => void;
+  setActiveEditingPath: (path: string | null) => void;
+  setTemplateSettings: (settings: Partial<TemplateSettings>) => void;
+  resetTemplateSettings: () => void;
   setJobDescription: (desc: string) => void;
   setOriginalResumeText: (text: string) => void;
   setIsGenerating: (isGenerating: boolean) => void;
@@ -85,6 +106,14 @@ export const useResumeStore = create<ResumeState>()(
       originalResumeText: '',
       isGenerating: false,
       generationStep: '',
+      activeEditingPath: null,
+      templateSettings: DEFAULT_TEMPLATE_SETTINGS,
+
+      setActiveEditingPath: (path) => set({ activeEditingPath: path }),
+      setTemplateSettings: (settings) => set((state) => ({
+        templateSettings: { ...state.templateSettings, ...settings }
+      })),
+      resetTemplateSettings: () => set({ templateSettings: DEFAULT_TEMPLATE_SETTINGS }),
 
       setResumeData: (data) => set({ resumeData: data }),
       
@@ -187,7 +216,8 @@ export const useResumeStore = create<ResumeState>()(
         jobDescription: '',
         originalResumeText: '',
         isGenerating: false,
-        generationStep: ''
+        generationStep: '',
+        activeEditingPath: null,
       })
     }),
     {

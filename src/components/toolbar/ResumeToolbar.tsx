@@ -1,16 +1,18 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Undo2, Redo2, Download, FileText, Plus, Loader2, FolderPlus } from 'lucide-react';
+import { Undo2, Redo2, Download, FileText, Plus, Loader2, FolderPlus, Palette } from 'lucide-react';
 import { useResumeStore } from '@/store/resume-store';
 import { useToast } from '@/components/ui/Toast';
 import { AddSectionModal } from '@/components/preview/AddSectionModal';
+import { TemplateSettingsModal } from '@/components/preview/TemplateSettingsModal';
 
 export function ResumeToolbar() {
-  const { resumeData, reset } = useResumeStore();
+  const { resumeData, reset, templateSettings } = useResumeStore();
   const { undo, redo, pastStates, futureStates } = useResumeStore.temporal.getState();
   const [isExporting, setIsExporting] = useState<'docx' | 'pdf' | null>(null);
   const [isAddSectionOpen, setIsAddSectionOpen] = useState(false);
+  const [isTemplateSettingsOpen, setIsTemplateSettingsOpen] = useState(false);
   const { addToast } = useToast();
 
   const handleExport = async (format: 'docx' | 'pdf') => {
@@ -21,7 +23,7 @@ export function ResumeToolbar() {
       const response = await fetch(`/api/resume/export/${format}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ resumeData, resume: resumeData })
+        body: JSON.stringify({ resumeData, resume: resumeData, templateSettings })
       });
 
       if (!response.ok) {
@@ -99,6 +101,15 @@ export function ResumeToolbar() {
 
         <div className="flex items-center space-x-3">
           <button
+            onClick={() => setIsTemplateSettingsOpen(true)}
+            className="flex items-center px-3 py-1.5 text-sm font-medium text-purple-700 bg-purple-50 border border-purple-200 rounded-md hover:bg-purple-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-colors cursor-pointer"
+            title="Modify template font, margins, line spacing, and accent color"
+          >
+            <Palette className="w-4 h-4 mr-1.5 text-purple-600" />
+            Template
+          </button>
+
+          <button
             onClick={() => setIsAddSectionOpen(true)}
             className="flex items-center px-3 py-1.5 text-sm font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-md hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors cursor-pointer"
           >
@@ -143,6 +154,11 @@ export function ResumeToolbar() {
       <AddSectionModal
         isOpen={isAddSectionOpen}
         onClose={() => setIsAddSectionOpen(false)}
+      />
+
+      <TemplateSettingsModal
+        isOpen={isTemplateSettingsOpen}
+        onClose={() => setIsTemplateSettingsOpen(false)}
       />
     </div>
   );

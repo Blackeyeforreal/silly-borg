@@ -252,6 +252,90 @@ async function runTests() {
   if (!customXml.includes('<w:b w:val="1"/>')) throw new Error('Bold run XML missing in custom section');
   if (!customXml.includes('<w:u w:val="single"/>')) throw new Error('Underline run XML missing in custom section');
   console.log('✓ Custom sections with native OpenXML rich-text runs verified!');
+
+  console.log('--- Step 7: Testing Hyperlink Parsing and DOCX Hyperlink Styling ---');
+  const { insertHyperlink } = await import('../src/lib/format-text');
+  const linkText = 'Portfolio: [Devang Srivastava](https://github.com/Blackeyeforreal) | [LinkedIn](https://linkedin.com)';
+  const linkRuns = parseFormattedRuns(linkText);
+  if (linkRuns.length !== 4) {
+    throw new Error(`Expected 4 runs for linkText, got ${linkRuns.length}`);
+  }
+  if (!linkRuns[1].linkUrl || linkRuns[1].linkUrl !== 'https://github.com/Blackeyeforreal' || linkRuns[1].text !== 'Devang Srivastava') {
+    throw new Error('Hyperlink 1 was not extracted properly');
+  }
+  if (!linkRuns[3].linkUrl || linkRuns[3].linkUrl !== 'https://linkedin.com' || linkRuns[3].text !== 'LinkedIn') {
+    throw new Error('Hyperlink 2 was not extracted properly');
+  }
+
+  // Test insertHyperlink helper
+  const inserted = insertHyperlink('Hello world', 6, 11, 'https://world.com');
+  if (inserted.newText !== 'Hello [world](https://world.com)') {
+    throw new Error(`insertHyperlink failed: got "${inserted.newText}"`);
+  }
+
+  // Test DOCX rendering with hyperlinks
+  const resumeWithLink: ResumeData = {
+    ...sampleResume,
+    personal_info: {
+      ...sampleResume.personal_info,
+      contact: {
+        ...sampleResume.personal_info.contact,
+        links: '[GitHub Profile](https://github.com/Blackeyeforreal)'
+      }
+    }
+  };
+  const linkBuf = await renderResumeDocx(resumeWithLink);
+  const linkZip = new PizZip(linkBuf);
+  const linkXml = linkZip.file('word/document.xml')?.asText() || '';
+  if (!linkXml.includes('<w:color w:val="0563C1"/>') || !linkXml.includes('GitHub Profile')) {
+    throw new Error('DOCX XML missing blue hyperlink run styling');
+  }
+  console.log('✓ Hyperlink parsing and DOCX styling verified!');
+
+  console.log('--- Step 8: Testing Template Customization in DOCX ---');
+  const customTemplateSettings = {
+    fontFamily: 'Calibri' as const,
+    accentColor: '#1E3A8A',
+    marginSize: 'compact' as const,
+    lineSpacing: 'tight' as const,
+    fontSize: 'compact' as const,
+  };
+
+  const customTmplBuf = await renderResumeDocx(sampleResume, customTemplateSettings);
+  const customTmplZip = new PizZip(customTmplBuf);
+  const customTmplXml = customTmplZip.file('word/document.xml')?.asText() || '';
+
+  if (!customTmplXml.includes('w:ascii="Calibri"')) {
+    throw new Error('Calibri font was not applied to document XML runs');
+  }
+  if (!customTmplXml.includes('w:bottom w:color="1E3A8A"')) {
+    throw new Error('Accent color 1E3A8A was not applied to borders');
+  }
+  if (!customTmplXml.includes('w:left="504"') || !customTmplXml.includes('w:right="504"')) {
+    throw new Error('Compact margin twips (504) was not applied to w:pgMar');
+  }
+  if (!customTmplXml.includes('w:line="220"')) {
+    throw new Error('Tight line spacing (220) was not applied to paragraphs');
+  }
+  console.log('✓ Template customization (Calibri font, Navy accent color, compact margins) verified in DOCX!');
+
+  console.log('--- Step 9: Testing Single Active Editing State ---');
+  const { useResumeStore } = await import('../src/store/resume-store');
+  const store = useResumeStore.getState();
+  store.setActiveEditingPath('personal_info.full_name');
+  if (useResumeStore.getState().activeEditingPath !== 'personal_info.full_name') {
+    throw new Error('setActiveEditingPath failed to set active editing path');
+  }
+  store.setActiveEditingPath('work_experience[0].company');
+  if (useResumeStore.getState().activeEditingPath !== 'work_experience[0].company') {
+    throw new Error('setActiveEditingPath failed to switch active editing path to new field');
+  }
+  store.setActiveEditingPath(null);
+  if (useResumeStore.getState().activeEditingPath !== null) {
+    throw new Error('setActiveEditingPath failed to clear active editing path');
+  }
+  console.log('✓ Single active editing state verified in resume store!');
+
   console.log('=============================================');
   console.log('🎉 ALL INTEGRATION VERIFICATION TESTS PASSED!');
   console.log('=============================================');
@@ -261,3 +345,4 @@ runTests().catch((err) => {
   console.error('Test failure:', err);
   process.exit(1);
 });
+
