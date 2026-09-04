@@ -15,9 +15,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Missing resumeText or jobDescription' }, { status: 400 });
     }
 
-    const apiKey = process.env.GEMINI_API_KEY;
+    const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || process.env.GOOGLE_GENAI_API_KEY;
     if (!apiKey) {
-      return NextResponse.json({ error: 'GEMINI_API_KEY is not set' }, { status: 500 });
+      return NextResponse.json({ 
+        error: 'GEMINI_API_KEY is not set. Please create a .env.local file in the project root containing: GEMINI_API_KEY=your_key_here' 
+      }, { status: 500 });
     }
 
     const ai = new GoogleGenAI({ apiKey });

@@ -41,7 +41,10 @@ export function AIRewritePopover({
         })
       });
 
-      if (!res.ok) throw new Error('Failed to rewrite text');
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || `Failed to rewrite text (HTTP ${res.status})`);
+      }
       
       const data = await res.json();
       const newText = data.rewrittenValue || data.newValue;

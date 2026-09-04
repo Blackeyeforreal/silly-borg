@@ -1,6 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const pdf = require('pdf-parse');
 import mammoth from 'mammoth';
 
 export const runtime = 'nodejs';
@@ -23,8 +21,29 @@ export async function POST(req: NextRequest) {
     let text = '';
 
     if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
-      const data = await pdf(buffer);
-      text = data.text;
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const pdfModule = require('pdf-parse');
+        if (pdfModule.PDFParse) {
+          const parser = new pdfModule.PDFParse({ data: new Uint8Array(buffer) });
+          const result = await parser.getText();
+          text = result.text || '';
+          if (typeof parser.destroy === 'function') {
+            await parser.destroy();
+          }
+        } else if (typeof pdfModule === 'function') {
+          const data = await pdfModule(buffer);
+          text = data.text || '';
+        } else if (typeof pdfModule.default === 'function') {
+          const data = await pdfModule.default(buffer);
+          text = data.text || '';
+        } else {
+          throw new Error('Unsupported pdf-parse module format');
+        }
+      } catch (err: any) {
+        console.error('PDF parsing error:', err);
+        throw new Error('Failed to parse PDF: ' + (err.message || String(err)));
+      }
     } else if (
       file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || 
       file.name.endsWith('.docx')

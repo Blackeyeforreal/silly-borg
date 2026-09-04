@@ -5,6 +5,7 @@ import { useResumeStore } from '@/store/resume-store';
 import { FileUpload } from './FileUpload';
 import { useToast } from '@/components/ui/Toast';
 import { Sparkles, Loader2 } from 'lucide-react';
+import { sampleResumeData } from '@/lib/sample-data';
 
 export function GenerateForm() {
   const [inputMode, setInputMode] = useState<'upload' | 'paste'>('upload');
@@ -50,7 +51,10 @@ export function GenerateForm() {
         })
       });
 
-      if (!response.ok) throw new Error('Failed to generate resume');
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error || `Failed to generate resume (HTTP ${response.status})`);
+      }
 
       // Note: for real progressive updates, we would use SSE. Here simulating it for UX.
       setGenerationStep('Formatting resume data...');
@@ -126,23 +130,38 @@ export function GenerateForm() {
         />
       </section>
 
-      <button
-        onClick={handleGenerate}
-        disabled={isGenerating || !resumeText || !jobDescription}
-        className="w-full flex items-center justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-base font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-400 disabled:cursor-not-allowed transition-colors"
-      >
-        {isGenerating ? (
-          <>
-            <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-            {generationStep || 'Generating...'}
-          </>
-        ) : (
-          <>
-            <Sparkles className="w-5 h-5 mr-2" />
-            Generate Resume
-          </>
-        )}
-      </button>
+      <div className="flex flex-col sm:flex-row gap-3">
+        <button
+          onClick={handleGenerate}
+          disabled={isGenerating || !resumeText || !jobDescription}
+          className="flex-1 flex items-center justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-base font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-400 disabled:cursor-not-allowed transition-colors"
+        >
+          {isGenerating ? (
+            <>
+              <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+              {generationStep || 'Generating...'}
+            </>
+          ) : (
+            <>
+              <Sparkles className="w-5 h-5 mr-2" />
+              Generate Resume
+            </>
+          )}
+        </button>
+
+        <button
+          type="button"
+          onClick={() => {
+            setResumeData(sampleResumeData);
+            addToast('Loaded sample resume for editing, rewrite, and export.', 'info');
+          }}
+          disabled={isGenerating}
+          className="flex items-center justify-center py-3 px-5 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-gray-50 hover:bg-gray-100 hover:text-gray-900 transition-colors cursor-pointer"
+          title="Load sample resume to test preview, inline editing, and exports immediately"
+        >
+          Load Demo Resume
+        </button>
+      </div>
     </div>
   );
 }
