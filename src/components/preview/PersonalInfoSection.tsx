@@ -33,18 +33,18 @@ export function PersonalInfoSection({ data }: PersonalInfoSectionProps) {
         />
       </div>
       
-      <div className="flex flex-wrap items-center gap-x-2 text-[11pt] border-b border-black pb-1 mb-2 text-black">
+      <div className="flex flex-nowrap items-center text-[10pt] border-b border-black pb-1 mb-2 text-black leading-none whitespace-nowrap overflow-x-auto">
         {contactItems.map((item, index) => (
-          <React.Fragment key={index}>
-            {index > 0 && <span className="text-gray-400 select-none">|</span>}
+          <span key={index} className="inline-flex items-center whitespace-nowrap shrink-0">
+            {index > 0 && <span className="text-black select-none mx-2 font-normal">|</span>}
             <EditableField
               value={item.value as string}
               onSave={(val) => updateField(item.path, val)}
               fieldPath={item.path}
-              className="inline w-auto text-[11pt]"
-              containerClassName="inline-flex items-center w-auto"
+              className="inline text-[10pt] whitespace-nowrap"
+              containerClassName="inline-flex items-center w-auto shrink-0"
             />
-          </React.Fragment>
+          </span>
         ))}
       </div>
     </div>

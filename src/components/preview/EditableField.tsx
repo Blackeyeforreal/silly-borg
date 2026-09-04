@@ -130,7 +130,11 @@ export function EditableField({
       
       <button 
         onClick={(e) => { e.stopPropagation(); setShowRewrite(true); }}
-        className="p-1 text-purple-500 opacity-0 group-hover:opacity-100 hover:bg-purple-50 rounded transition-opacity no-print ml-1 shrink-0"
+        className={`p-1 text-purple-500 hover:bg-purple-50 rounded transition-opacity no-print ${
+          isInline 
+            ? 'hidden group-hover:inline-flex absolute -top-6 left-1/2 -translate-x-1/2 bg-white shadow-sm border border-purple-200 z-10' 
+            : 'opacity-0 group-hover:opacity-100 ml-1 shrink-0'
+        }`}
         title="AI Rewrite"
       >
         <Sparkles className="w-3.5 h-3.5" />
