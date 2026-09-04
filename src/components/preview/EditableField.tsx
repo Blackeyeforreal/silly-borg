@@ -9,6 +9,7 @@ interface EditableFieldProps {
   onSave: (value: string) => void;
   fieldPath: string;
   className?: string;
+  containerClassName?: string;
   as?: 'span' | 'p' | 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'div';
   multiline?: boolean;
 }
@@ -18,6 +19,7 @@ export function EditableField({
   onSave,
   fieldPath,
   className = '',
+  containerClassName,
   as: Component = 'span',
   multiline = false
 }: EditableFieldProps) {
@@ -26,6 +28,13 @@ export function EditableField({
   const [showRewrite, setShowRewrite] = useState(false);
   const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  const isInline = Boolean(
+    containerClassName?.includes('inline') || 
+    containerClassName?.includes('w-auto') || 
+    className.includes('inline') || 
+    className.includes('w-auto')
+  );
 
   useEffect(() => {
     setEditValue(value);
@@ -60,7 +69,10 @@ export function EditableField({
 
   if (isEditing) {
     return (
-      <div className={`relative flex flex-col gap-1 w-full ${className} no-print`} ref={containerRef}>
+      <div 
+        className={`relative ${isInline ? 'inline-flex' : 'flex'} flex-col gap-1 ${isInline ? 'w-auto' : 'w-full'} ${containerClassName || ''} no-print`} 
+        ref={containerRef}
+      >
         {multiline ? (
           <textarea
             ref={inputRef as React.RefObject<HTMLTextAreaElement>}
@@ -77,7 +89,7 @@ export function EditableField({
             value={editValue}
             onChange={(e) => setEditValue(e.target.value)}
             onKeyDown={handleKeyDown}
-            className="w-full p-1 border-2 border-blue-500 rounded-md focus:outline-none focus:ring-0 shadow-sm bg-white"
+            className={`p-1 border-2 border-blue-500 rounded-md focus:outline-none focus:ring-0 shadow-sm bg-white ${isInline ? 'min-w-[120px]' : 'w-full'}`}
           />
         )}
         <div className="flex justify-end gap-1 absolute right-0 -bottom-8 z-10 bg-white p-1 rounded-md shadow-md border">
@@ -108,17 +120,17 @@ export function EditableField({
   }
 
   return (
-    <div className="relative group inline-block w-full">
+    <div className={`relative group ${containerClassName || (isInline ? 'inline-flex w-auto items-center' : 'w-full block')}`}>
       <Component 
         onClick={() => setIsEditing(true)}
-        className={`editable-hover w-full block ${className}`}
+        className={`editable-hover ${isInline ? 'inline' : 'w-full block'} ${className}`}
       >
         {value || <span className="text-gray-300 italic no-print">Click to edit</span>}
       </Component>
       
       <button 
         onClick={(e) => { e.stopPropagation(); setShowRewrite(true); }}
-        className="absolute -left-6 top-1/2 -translate-y-1/2 p-1 text-purple-500 opacity-0 group-hover:opacity-100 hover:bg-purple-50 rounded transition-opacity no-print"
+        className="p-1 text-purple-500 opacity-0 group-hover:opacity-100 hover:bg-purple-50 rounded transition-opacity no-print ml-1 shrink-0"
         title="AI Rewrite"
       >
         <Sparkles className="w-3.5 h-3.5" />

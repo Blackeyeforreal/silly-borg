@@ -27,12 +27,14 @@ export function EducationSection({ data }: EducationSectionProps) {
                 fieldPath={`education[${eIndex}].university`}
                 as="h3"
                 className="font-bold text-[15px]"
+                containerClassName="flex-1 min-w-0"
               />
               <EditableField
                 value={edu.graduation_date}
                 onSave={(val) => updateField(`education[${eIndex}].graduation_date`, val)}
                 fieldPath={`education[${eIndex}].graduation_date`}
-                className="w-auto text-right whitespace-nowrap ml-4"
+                className="w-auto text-right whitespace-nowrap ml-4 shrink-0"
+                containerClassName="w-auto inline-flex items-center justify-end shrink-0"
               />
             </div>
             

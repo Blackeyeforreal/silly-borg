@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
     const prompt = `${RESUME_GENERATION_SYSTEM_PROMPT}\n\nResume Text:\n${resumeText}\n\nJob Description:\n${jobDescription}`;
 
     const result = await ai.models.generateContent({
-      model: 'gemini-2.0-flash',
+      model: 'gemini-3.8-flash',
       contents: prompt,
       config: {
         responseMimeType: 'application/json',

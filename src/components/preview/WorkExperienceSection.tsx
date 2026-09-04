@@ -27,12 +27,14 @@ export function WorkExperienceSection({ data }: WorkExperienceSectionProps) {
                 fieldPath={`work_experience[${cIndex}].company`}
                 as="h3"
                 className="font-bold text-base"
+                containerClassName="flex-1 min-w-0"
               />
               <EditableField
                 value={company.dates}
                 onSave={(val) => updateField(`work_experience[${cIndex}].dates`, val)}
                 fieldPath={`work_experience[${cIndex}].dates`}
-                className="text-sm w-auto text-right whitespace-nowrap ml-4"
+                className="text-sm w-auto text-right whitespace-nowrap ml-4 shrink-0"
+                containerClassName="w-auto inline-flex items-center justify-end shrink-0"
               />
             </div>
 
@@ -44,6 +46,7 @@ export function WorkExperienceSection({ data }: WorkExperienceSectionProps) {
                     onSave={(val) => updateField(`work_experience[${cIndex}].roles[${rIndex}].title`, val)}
                     fieldPath={`work_experience[${cIndex}].roles[${rIndex}].title`}
                     className="italic font-semibold text-[15px]"
+                    containerClassName="flex-1 min-w-0"
                   />
                   <div className="flex gap-2 text-sm ml-4">
                     {role.dates && (
