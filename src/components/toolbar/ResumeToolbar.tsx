@@ -21,10 +21,19 @@ export function ResumeToolbar() {
 
     try {
       if (format === 'pdf') {
-        const { exportResumeToPdf } = await import('@/lib/pdf/exporter');
-        await exportResumeToPdf('resume.pdf');
-        addToast('Successfully exported PDF', 'success');
-        return;
+        try {
+          const { exportResumeToPdf } = await import('@/lib/pdf/exporter');
+          await exportResumeToPdf('resume.pdf');
+          addToast('Successfully exported PDF', 'success');
+          return;
+        } catch (pdfErr) {
+          console.error('Direct PDF export error, falling back to print dialog:', pdfErr);
+          addToast('Direct PDF export encountered an issue. Opening print dialog...', 'info');
+          setTimeout(() => {
+            window.print();
+          }, 300);
+          return;
+        }
       }
 
       const response = await fetch('/api/resume/export/docx', {

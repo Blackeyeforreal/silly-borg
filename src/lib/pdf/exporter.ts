@@ -1,7 +1,7 @@
 'use client';
 
 import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
+import html2canvas from 'html2canvas-pro';
 
 export async function exportResumeToPdf(filename: string = 'resume.pdf'): Promise<void> {
   const element = document.getElementById('resume-paper-element') || document.querySelector('.resume-paper');
