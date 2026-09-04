@@ -1,0 +1,120 @@
+import { create } from 'zustand';
+import { temporal } from 'zundo';
+import { ResumeData } from '../lib/schema';
+
+// Helper to parse path strings like "work_experience[0].roles[1].title"
+function parsePath(path: string): string[] {
+  return path.replace(/\[(\d+)\]/g, '.$1').split('.').filter(Boolean);
+}
+
+export function setNestedValue(obj: any, path: string, value: any): any {
+  if (!obj) return obj;
+  const keys = parsePath(path);
+  const result = Array.isArray(obj) ? [...obj] : { ...obj };
+  let current = result;
+  
+  for (let i = 0; i < keys.length - 1; i++) {
+    const key = keys[i];
+    const nextKey = keys[i + 1];
+    const isNextKeyArrayIndex = !isNaN(parseInt(nextKey, 10));
+    
+    if (current[key] === undefined || current[key] === null) {
+      current[key] = isNextKeyArrayIndex ? [] : {};
+    } else {
+      current[key] = Array.isArray(current[key]) ? [...current[key]] : { ...current[key] };
+    }
+    current = current[key];
+  }
+  
+  current[keys[keys.length - 1]] = value;
+  return result;
+}
+
+export function getNestedValue(obj: any, path: string): any {
+  if (!obj) return undefined;
+  const keys = parsePath(path);
+  let current = obj;
+  for (const key of keys) {
+    if (current === undefined || current === null) return undefined;
+    current = current[key];
+  }
+  return current;
+}
+
+export function addToArray(obj: any, path: string, value: any): any {
+  const currentArray = getNestedValue(obj, path) || [];
+  return setNestedValue(obj, path, [...currentArray, value]);
+}
+
+export function removeFromArray(obj: any, path: string, index: number): any {
+  const currentArray = getNestedValue(obj, path);
+  if (!Array.isArray(currentArray)) return obj;
+  
+  const newArray = [...currentArray];
+  newArray.splice(index, 1);
+  return setNestedValue(obj, path, newArray);
+}
+
+interface ResumeState {
+  resumeData: ResumeData | null;
+  jobDescription: string;
+  originalResumeText: string;
+  isGenerating: boolean;
+  generationStep: string;
+  
+  setResumeData: (data: ResumeData | null) => void;
+  updateField: (path: string, value: any) => void;
+  addArrayItem: (path: string, value: any) => void;
+  removeArrayItem: (path: string, index: number) => void;
+  setJobDescription: (desc: string) => void;
+  setOriginalResumeText: (text: string) => void;
+  setIsGenerating: (isGenerating: boolean) => void;
+  setGenerationStep: (step: string) => void;
+  reset: () => void;
+}
+
+export const useResumeStore = create<ResumeState>()(
+  temporal(
+    (set, get) => ({
+      resumeData: null,
+      jobDescription: '',
+      originalResumeText: '',
+      isGenerating: false,
+      generationStep: '',
+
+      setResumeData: (data) => set({ resumeData: data }),
+      
+      updateField: (path, value) => set((state) => {
+        if (!state.resumeData) return state;
+        return { resumeData: setNestedValue(state.resumeData, path, value) };
+      }),
+      
+      addArrayItem: (path, value) => set((state) => {
+        if (!state.resumeData) return state;
+        return { resumeData: addToArray(state.resumeData, path, value) };
+      }),
+      
+      removeArrayItem: (path, index) => set((state) => {
+        if (!state.resumeData) return state;
+        return { resumeData: removeFromArray(state.resumeData, path, index) };
+      }),
+      
+      setJobDescription: (desc) => set({ jobDescription: desc }),
+      setOriginalResumeText: (text) => set({ originalResumeText: text }),
+      setIsGenerating: (isGenerating) => set({ isGenerating }),
+      setGenerationStep: (step) => set({ generationStep: step }),
+      
+      reset: () => set({
+        resumeData: null,
+        jobDescription: '',
+        originalResumeText: '',
+        isGenerating: false,
+        generationStep: ''
+      })
+    }),
+    {
+      limit: 50,
+      partialize: (state) => ({ resumeData: state.resumeData })
+    }
+  )
+);

@@ -1,0 +1,113 @@
+{
+  "personal_info": {
+    "full_name": "[Full Name]",
+    "contact": {
+      "email": "[Email Address]",
+      "phone": "[Phone Number]",
+      "location": "[City, State]",
+      "links": "[Portfolio / LinkedIn / GitHub Link]"
+    }
+  },
+  "work_experience": [
+    {
+      "company": "[Company Name 1]",
+      "dates": "[Start Date] – [End Date]",
+      "roles": [
+        {
+          "title": "[Job Title]",
+          "location": "[Location / Remote]",
+          "description": [
+            "[Brief company overview or high-level summary of responsibilities and achievements.]",
+            "[Key responsibility or major project completed with quantified metrics and outcomes.]"
+          ],
+          "technologies_used": [
+            "[List of relevant tools, languages, or frameworks]"
+          ]
+        }
+      ]
+    },
+    {
+      "company": "[Company Name 2]",
+      "dates": "[Start Date] – [End Date]",
+      "roles": [
+        {
+          "title": "[Job Title]",
+          "location": "[Location / Remote]",
+          "description": [
+            "[Core responsibility #1 / key achievements / project leadership description.]",
+            "[Core responsibility #2 / operational impact or team collaboration summary.]"
+          ],
+          "key_results": [
+            "[Measurable impact, performance metrics, revenue growth, or efficiency gains.]"
+          ]
+        }
+      ]
+    },
+    {
+      "company": "[Company Name 3]",
+      "dates": "[Start Date] – [End Date]",
+      "roles": [
+        {
+          "title": "[Job Title]",
+          "location": "[Location / Remote]",
+          "description": [
+            "[Core responsibility #1 / summary of key achievements.]",
+            "[Core responsibility #2 / summary of role scope.]"
+          ]
+        }
+      ]
+    },
+    {
+      "company": "[Company Name 4]",
+      "dates": "[Start Date] – [End Date]",
+      "roles": [
+        {
+          "title": "[Recent Job Title]",
+          "dates": "[Start Date] – [End Date]",
+          "location": "[Location / Remote]",
+          "description": [
+            "[Key responsibility or initiative managed in this role.]",
+            "[Key achievement or outcome produced in this role.]"
+          ]
+        },
+        {
+          "title": "[Prior Job Title]",
+          "dates": "[Start Date] – [End Date]",
+          "location": "[Location / Remote]",
+          "description": [
+            "[Primary responsibility or achievement prior to promotion.]"
+          ]
+        }
+      ]
+    }
+  ],
+  "education": [
+    {
+      "university": "[University Name]",
+      "graduation_date": "[Graduation Date]",
+      "degree": "[Degree Name]",
+      "major": "[Major]",
+      "location": "[Location]",
+      "honors_and_awards": [
+        "[GPA / Honors / Dean's List / Academic Achievements]"
+      ],
+      "activities": [
+        "[Relevant coursework, clubs, minor, leadership, or study abroad]"
+      ]
+    }
+  ],
+  "skills_and_interests": {
+    "certifications": [
+      "[List relevant professional certifications and licenses]"
+    ],
+    "technologies": [
+      "[List software, tools, programming languages, and technical platforms]"
+    ],
+    "skills": [
+      "[List core technical and domain skills]"
+    ],
+    "interests": [
+      "[List personal interests or hobbies]"
+    ]
+  }
+}

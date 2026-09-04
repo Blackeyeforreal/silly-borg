@@ -1,0 +1,29 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-serif: 'Garamond', 'Georgia', serif;
+}
+
+@layer utilities {
+  .editable-hover {
+    @apply hover:bg-blue-50/50 hover:ring-1 hover:ring-blue-200 transition-all cursor-text rounded-sm;
+  }
+}
+
+@media print {
+  body {
+    background-color: white;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .print-only {
+    display: block !important;
+  }
+  .resume-paper {
+    box-shadow: none !important;
+    max-width: none !important;
+    padding: 0 !important;
+  }
+}
