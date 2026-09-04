@@ -14,11 +14,15 @@ export function ResumePreview() {
 
   return (
     <div 
-      className="bg-white resume-paper shadow-2xl rounded-sm w-full font-serif text-gray-900"
+      className="bg-white resume-paper shadow-2xl rounded-sm w-full font-serif text-black text-[10pt] leading-[1.25]"
       style={{
         maxWidth: '8.5in',
         minHeight: '11in',
-        padding: '0.75in',
+        paddingTop: '0.125in',
+        paddingBottom: '0.29in',
+        paddingLeft: '0.5in',
+        paddingRight: '0.5in',
+        fontFamily: 'var(--font-serif), "EB Garamond", Garamond, Georgia, serif',
       }}
     >
       <PersonalInfoSection data={resumeData.personal_info} />

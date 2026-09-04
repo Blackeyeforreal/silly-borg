@@ -27,19 +27,38 @@ export async function POST(req: NextRequest) {
     const jsonSchema = getResumeJsonSchema();
     const prompt = `${RESUME_GENERATION_SYSTEM_PROMPT}\n\nResume Text:\n${resumeText}\n\nJob Description:\n${jobDescription}`;
 
-    const result = await ai.models.generateContent({
-      model: 'gemini-3.8-flash',
-      contents: prompt,
-      config: {
-        responseMimeType: 'application/json',
-        responseSchema: jsonSchema,
+    const candidateModels = ['gemini-3.6-flash', 'gemini-flash-latest'];
+    let result: any = null;
+    let lastError: any = null;
+
+    for (const modelName of candidateModels) {
+      for (let attempt = 1; attempt <= 2; attempt++) {
+        try {
+          result = await ai.models.generateContent({
+            model: modelName,
+            contents: prompt,
+            config: {
+              responseMimeType: 'application/json',
+              responseSchema: jsonSchema,
+            }
+          });
+          if (result?.text) break;
+        } catch (err: any) {
+          lastError = err;
+          console.warn(`Attempt ${attempt} for model ${modelName} failed:`, err.message || err);
+          if (attempt < 2) {
+            await new Promise((resolve) => setTimeout(resolve, 1500));
+          }
+        }
       }
-    });
+      if (result?.text) break;
+    }
+
+    if (!result?.text) {
+      throw lastError || new Error('No text generated from Gemini API');
+    }
 
     const responseText = result.text;
-    if (!responseText) {
-      throw new Error('No text generated from Gemini API');
-    }
 
     let cleanedText = responseText.trim();
     if (cleanedText.startsWith('```json')) {

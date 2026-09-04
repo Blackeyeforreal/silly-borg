@@ -22,16 +22,18 @@ export function PersonalInfoSection({ data }: PersonalInfoSectionProps) {
   ].filter(item => item.value);
 
   return (
-    <div className="mb-6 text-center">
-      <EditableField
-        value={data.full_name || ''}
-        onSave={(val) => updateField('personal_info.full_name', val)}
-        fieldPath="personal_info.full_name"
-        as="h1"
-        className="text-3xl font-bold uppercase tracking-wider mb-2"
-      />
+    <div className="mb-3 text-left">
+      <div className="border-b border-black pb-0.5 mb-1">
+        <EditableField
+          value={data.full_name || ''}
+          onSave={(val) => updateField('personal_info.full_name', val)}
+          fieldPath="personal_info.full_name"
+          as="h1"
+          className="text-[24pt] font-bold tracking-tight text-black"
+        />
+      </div>
       
-      <div className="flex flex-wrap justify-center items-center gap-x-2.5 gap-y-1 text-sm border-b border-gray-900 pb-3 leading-relaxed">
+      <div className="flex flex-wrap items-center gap-x-2 text-[11pt] border-b border-black pb-1 mb-2 text-black">
         {contactItems.map((item, index) => (
           <React.Fragment key={index}>
             {index > 0 && <span className="text-gray-400 select-none">|</span>}
@@ -39,7 +41,7 @@ export function PersonalInfoSection({ data }: PersonalInfoSectionProps) {
               value={item.value as string}
               onSave={(val) => updateField(item.path, val)}
               fieldPath={item.path}
-              className="inline w-auto"
+              className="inline w-auto text-[11pt]"
               containerClassName="inline-flex items-center w-auto"
             />
           </React.Fragment>

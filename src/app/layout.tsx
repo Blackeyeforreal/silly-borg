@@ -1,9 +1,16 @@
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import { Inter, EB_Garamond } from 'next/font/google';
 import './globals.css';
 import { ToastProvider } from '@/components/ui/Toast';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
+const ebGaramond = EB_Garamond({ 
+  subsets: ['latin'], 
+  variable: '--font-serif',
+  weight: ['400', '500', '600', '700', '800'],
+  style: ['normal', 'italic'],
+  display: 'swap'
+});
 
 export const metadata: Metadata = {
   title: 'AI Resume Builder',
@@ -17,7 +24,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${inter.variable} font-sans antialiased bg-gray-50 text-gray-900`}>
+      <body className={`${inter.variable} ${ebGaramond.variable} font-sans antialiased bg-gray-100 text-gray-900`}>
         <ToastProvider>
           {children}
         </ToastProvider>

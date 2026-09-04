@@ -34,15 +34,34 @@ export async function POST(req: NextRequest) {
       prompt += `\nFull Resume Context (JSON): ${JSON.stringify(resumeContext)}`;
     }
 
-    const result = await ai.models.generateContent({
-      model: 'gemini-2.0-flash',
-      contents: prompt,
-    });
+    const candidateModels = ['gemini-3.6-flash', 'gemini-flash-latest'];
+    let result: any = null;
+    let lastError: any = null;
+
+    for (const modelName of candidateModels) {
+      for (let attempt = 1; attempt <= 2; attempt++) {
+        try {
+          result = await ai.models.generateContent({
+            model: modelName,
+            contents: prompt,
+          });
+          if (result?.text) break;
+        } catch (err: any) {
+          lastError = err;
+          console.warn(`Attempt ${attempt} for model ${modelName} failed:`, err.message || err);
+          if (attempt < 2) {
+            await new Promise((resolve) => setTimeout(resolve, 1500));
+          }
+        }
+      }
+      if (result?.text) break;
+    }
+
+    if (!result?.text) {
+      throw lastError || new Error('No text generated from Gemini API');
+    }
 
     const text = result.text;
-    if (!text) {
-      throw new Error('No text generated');
-    }
 
     let cleaned = text.trim();
     if ((cleaned.startsWith('"') && cleaned.endsWith('"')) || (cleaned.startsWith("'") && cleaned.endsWith("'"))) {

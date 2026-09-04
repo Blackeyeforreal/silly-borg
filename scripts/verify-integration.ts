@@ -151,6 +151,57 @@ async function runTests() {
   if (xml.includes('[Company Name 1]')) throw new Error('Unreplaced placeholder [Company Name 1] found!');
 
   console.log(`✓ DOCX template rendering passed! Size: ${buf.length} bytes`);
+
+  console.log('--- Step 4: Testing Dynamic Paragraph Pruning (Partial Resume) ---');
+  const minimalResume: ResumeData = {
+    personal_info: {
+      full_name: 'Alex Johnson',
+      contact: {
+        email: 'alex@example.com',
+        phone: '123-456-7890',
+        location: 'San Francisco, CA',
+        links: 'github.com/alex'
+      }
+    },
+    work_experience: [
+      {
+        company: 'Solo Co',
+        dates: '2023 - Present',
+        roles: [
+          {
+            title: 'Staff Engineer',
+            location: 'Remote',
+            description: ['Built scalable systems end-to-end.']
+          }
+        ]
+      }
+    ],
+    education: [
+      {
+        university: 'State University',
+        graduation_date: '2020',
+        degree: 'BS',
+        major: 'SE',
+        location: 'CA'
+      }
+    ],
+    skills_and_interests: {
+      skills: ['TypeScript', 'Node.js']
+    }
+  };
+
+  const minBuf = await renderResumeDocx(minimalResume);
+  const minZip = new PizZip(minBuf);
+  const minXml = minZip.file('word/document.xml')?.asText() || '';
+
+  if (!minXml.includes('Alex Johnson')) throw new Error('Alex Johnson missing in minimal docx');
+  if (!minXml.includes('Solo Co')) throw new Error('Solo Co missing in minimal docx');
+  if (minXml.includes('Key Results:')) throw new Error('Key Results should NOT be present in minimal docx');
+  if (minXml.includes('Technologies/Skills Used:')) throw new Error('Technologies/Skills Used should NOT be present');
+  if (minXml.includes('Certifications:')) throw new Error('Certifications should NOT be present');
+  if (minXml.includes('Honors &amp; Awards:')) throw new Error('Honors & Awards should NOT be present');
+  if (minXml.includes('[Company Name')) throw new Error('Placeholder Company Name found');
+  console.log('✓ Dynamic paragraph pruning verified with 0 orphan labels and 0 unreplaced placeholders!');
   console.log('=============================================');
   console.log('🎉 ALL INTEGRATION VERIFICATION TESTS PASSED!');
   console.log('=============================================');
