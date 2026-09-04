@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  serverExternalPackages: ['mammoth', 'pdf-parse', 'pizzip', 'docx'],
+  serverExternalPackages: ['@google/genai', 'mammoth', 'pdf-parse', 'pizzip', 'docx'],
 };
 
 export default nextConfig;

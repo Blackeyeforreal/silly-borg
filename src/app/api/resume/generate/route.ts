@@ -3,6 +3,7 @@ import { GoogleGenAI } from '@google/genai';
 import { ResumeDataSchema, getResumeJsonSchema } from '@/lib/schema';
 import { RESUME_GENERATION_SYSTEM_PROMPT } from '@/lib/ai/prompts';
 
+export const runtime = 'nodejs';
 export const maxDuration = 60;
 
 export async function POST(req: NextRequest) {
