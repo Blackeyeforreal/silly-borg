@@ -61,6 +61,7 @@ export function ResumePreview() {
         }
       `}</style>
       <div 
+        id="resume-paper-element"
         className={`bg-white resume-paper shadow-2xl rounded-sm w-full font-serif text-black ${fontSizeClass} ${lineSpacingClass} relative`}
         style={{
           maxWidth: '8.5in',

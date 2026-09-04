@@ -20,21 +20,20 @@ export function ResumeToolbar() {
     setIsExporting(format);
 
     try {
-      const response = await fetch(`/api/resume/export/${format}`, {
+      if (format === 'pdf') {
+        const { exportResumeToPdf } = await import('@/lib/pdf/exporter');
+        await exportResumeToPdf('resume.pdf');
+        addToast('Successfully exported PDF', 'success');
+        return;
+      }
+
+      const response = await fetch('/api/resume/export/docx', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ resumeData, resume: resumeData, templateSettings })
       });
 
       if (!response.ok) {
-        if (format === 'pdf') {
-          // Fallback to browser print which prints the high-fidelity preview
-          addToast('Opening print dialog for PDF export...', 'info');
-          setTimeout(() => {
-            window.print();
-          }, 300);
-          return;
-        }
         throw new Error('Export failed');
       }
 
@@ -42,13 +41,13 @@ export function ResumeToolbar() {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `resume.${format}`;
+      a.download = 'resume.docx';
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
       
-      addToast(`Successfully exported ${format.toUpperCase()}`, 'success');
+      addToast('Successfully exported DOCX', 'success');
     } catch (error) {
       addToast(error instanceof Error ? error.message : `Failed to export ${format.toUpperCase()}`, 'error');
     } finally {

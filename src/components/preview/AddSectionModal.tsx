@@ -103,11 +103,15 @@ const PRESETS: SectionPreset[] = [
 ];
 
 export function AddSectionModal({ isOpen, onClose }: AddSectionModalProps) {
-  const addCustomSection = useResumeStore(state => state.addCustomSection);
+  const { resumeData, addCustomSection, restoreBuiltinSection } = useResumeStore();
   const [customTitle, setCustomTitle] = useState('');
   const [isCustom, setIsCustom] = useState(false);
 
   if (!isOpen) return null;
+
+  const hasWorkExp = resumeData?.work_experience && resumeData.work_experience.length > 0;
+  const hasEdu = resumeData?.education && resumeData.education.length > 0;
+  const hasSkills = Boolean(resumeData?.skills_and_interests);
 
   const handleSelectPreset = (preset: SectionPreset) => {
     addCustomSection(preset.title, preset.defaultItem);
@@ -134,7 +138,7 @@ export function AddSectionModal({ isOpen, onClose }: AddSectionModalProps) {
           </div>
           <button 
             onClick={onClose}
-            className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -144,6 +148,43 @@ export function AddSectionModal({ isOpen, onClose }: AddSectionModalProps) {
         <div className="p-6 space-y-4 max-h-[75vh] overflow-y-auto">
           {!isCustom ? (
             <>
+              {(!hasWorkExp || !hasEdu || !hasSkills) && (
+                <div className="p-3 bg-amber-50/70 border border-amber-200 rounded-lg">
+                  <div className="text-xs font-semibold text-amber-900 mb-1.5 flex items-center gap-1.5">
+                    <span>Restore Standard Sections</span>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {!hasWorkExp && (
+                      <button
+                        type="button"
+                        onClick={() => { restoreBuiltinSection('work_experience'); onClose(); }}
+                        className="px-2.5 py-1 text-xs font-medium bg-white border border-amber-300 rounded-md hover:bg-amber-100 text-amber-900 flex items-center gap-1 cursor-pointer transition-colors shadow-2xs"
+                      >
+                        <Plus className="w-3 h-3 text-amber-700" /> Work Experience
+                      </button>
+                    )}
+                    {!hasEdu && (
+                      <button
+                        type="button"
+                        onClick={() => { restoreBuiltinSection('education'); onClose(); }}
+                        className="px-2.5 py-1 text-xs font-medium bg-white border border-amber-300 rounded-md hover:bg-amber-100 text-amber-900 flex items-center gap-1 cursor-pointer transition-colors shadow-2xs"
+                      >
+                        <Plus className="w-3 h-3 text-amber-700" /> Education
+                      </button>
+                    )}
+                    {!hasSkills && (
+                      <button
+                        type="button"
+                        onClick={() => { restoreBuiltinSection('skills_and_interests'); onClose(); }}
+                        className="px-2.5 py-1 text-xs font-medium bg-white border border-amber-300 rounded-md hover:bg-amber-100 text-amber-900 flex items-center gap-1 cursor-pointer transition-colors shadow-2xs"
+                      >
+                        <Plus className="w-3 h-3 text-amber-700" /> Skills & Interests
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+
               <p className="text-sm text-gray-600">
                 Choose a pre-formatted section to instantly add to your resume, or create a custom section.
               </p>

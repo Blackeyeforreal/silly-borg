@@ -95,6 +95,12 @@ interface ResumeState {
   removeCustomSection: (sectionId: string) => void;
   addCustomSectionItem: (sectionId: string) => void;
   removeCustomSectionItem: (sectionId: string, itemIndex: number) => void;
+  deleteBuiltinSection: (sectionKey: 'work_experience' | 'education' | 'skills_and_interests') => void;
+  restoreBuiltinSection: (sectionKey: 'work_experience' | 'education' | 'skills_and_interests') => void;
+  addWorkExperienceEntry: () => void;
+  removeWorkExperienceEntry: (index: number) => void;
+  addEducationEntry: () => void;
+  removeEducationEntry: (index: number) => void;
   reset: () => void;
 }
 
@@ -202,6 +208,123 @@ export const useResumeStore = create<ResumeState>()(
           resumeData: {
             ...state.resumeData,
             custom_sections: updated
+          }
+        };
+      }),
+
+      deleteBuiltinSection: (sectionKey) => set((state) => {
+        if (!state.resumeData) return state;
+        const updated = { ...state.resumeData };
+        if (sectionKey === 'work_experience') {
+          updated.work_experience = [];
+        } else if (sectionKey === 'education') {
+          updated.education = [];
+        } else if (sectionKey === 'skills_and_interests') {
+          updated.skills_and_interests = undefined;
+        }
+        return { resumeData: updated };
+      }),
+
+      restoreBuiltinSection: (sectionKey) => set((state) => {
+        if (!state.resumeData) return state;
+        const updated = { ...state.resumeData };
+        if (sectionKey === 'work_experience') {
+          updated.work_experience = [
+            {
+              company: 'Company Name',
+              dates: '2023 – Present',
+              roles: [
+                {
+                  title: 'Software Engineer',
+                  location: 'Location',
+                  description: ['Developed and scaled mission-critical features.'],
+                  technologies_used: ['TypeScript', 'Node.js']
+                }
+              ]
+            }
+          ];
+        } else if (sectionKey === 'education') {
+          updated.education = [
+            {
+              university: 'University Name',
+              graduation_date: '2023',
+              degree: 'Bachelor of Science',
+              major: 'Computer Science',
+              location: 'City, State'
+            }
+          ];
+        } else if (sectionKey === 'skills_and_interests') {
+          updated.skills_and_interests = {
+            technologies: ['React', 'Next.js', 'TypeScript', 'Node.js'],
+            skills: ['Full-Stack Development', 'System Architecture'],
+            interests: ['Open Source', 'Technology']
+          };
+        }
+        return { resumeData: updated };
+      }),
+
+      addWorkExperienceEntry: () => set((state) => {
+        if (!state.resumeData) return state;
+        const current = state.resumeData.work_experience || [];
+        return {
+          resumeData: {
+            ...state.resumeData,
+            work_experience: [
+              ...current,
+              {
+                company: 'New Company',
+                dates: '2023 – Present',
+                roles: [
+                  {
+                    title: 'Role Title',
+                    location: 'City, State',
+                    description: ['Key accomplishment or deliverable with measurable impact.']
+                  }
+                ]
+              }
+            ]
+          }
+        };
+      }),
+
+      removeWorkExperienceEntry: (index) => set((state) => {
+        if (!state.resumeData || !state.resumeData.work_experience) return state;
+        const updated = state.resumeData.work_experience.filter((_, i) => i !== index);
+        return {
+          resumeData: {
+            ...state.resumeData,
+            work_experience: updated
+          }
+        };
+      }),
+
+      addEducationEntry: () => set((state) => {
+        if (!state.resumeData) return state;
+        const current = state.resumeData.education || [];
+        return {
+          resumeData: {
+            ...state.resumeData,
+            education: [
+              ...current,
+              {
+                university: 'University Name',
+                graduation_date: 'Graduation Year',
+                degree: 'Bachelor of Science',
+                major: 'Major / Field of Study',
+                location: 'City, State'
+              }
+            ]
+          }
+        };
+      }),
+
+      removeEducationEntry: (index) => set((state) => {
+        if (!state.resumeData || !state.resumeData.education) return state;
+        const updated = state.resumeData.education.filter((_, i) => i !== index);
+        return {
+          resumeData: {
+            ...state.resumeData,
+            education: updated
           }
         };
       }),

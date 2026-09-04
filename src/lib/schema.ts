@@ -62,7 +62,7 @@ export const ResumeDataSchema = z.object({
   personal_info: PersonalInfoSchema,
   work_experience: z.array(WorkExperienceSchema),
   education: z.array(EducationSchema),
-  skills_and_interests: SkillsAndInterestsSchema,
+  skills_and_interests: z.optional(SkillsAndInterestsSchema),
   custom_sections: z.optional(z.array(CustomSectionSchema))
 });
 

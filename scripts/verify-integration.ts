@@ -336,6 +336,47 @@ async function runTests() {
   }
   console.log('✓ Single active editing state verified in resume store!');
 
+  console.log('--- Step 10: Testing Section Deletion and Entry Management ---');
+  store.setResumeData(JSON.parse(JSON.stringify(sampleResume)));
+  
+  // Test deleting work experience
+  store.deleteBuiltinSection('work_experience');
+  if (useResumeStore.getState().resumeData?.work_experience?.length !== 0) {
+    throw new Error('deleteBuiltinSection failed to clear work_experience');
+  }
+
+  // Test restoring work experience
+  store.restoreBuiltinSection('work_experience');
+  if (!useResumeStore.getState().resumeData?.work_experience || useResumeStore.getState().resumeData!.work_experience.length === 0) {
+    throw new Error('restoreBuiltinSection failed to restore work_experience');
+  }
+
+  // Test adding work experience entry
+  const initialExpCount = useResumeStore.getState().resumeData!.work_experience.length;
+  store.addWorkExperienceEntry();
+  if (useResumeStore.getState().resumeData!.work_experience.length !== initialExpCount + 1) {
+    throw new Error('addWorkExperienceEntry failed to append new entry');
+  }
+
+  // Test removing work experience entry
+  store.removeWorkExperienceEntry(initialExpCount);
+  if (useResumeStore.getState().resumeData!.work_experience.length !== initialExpCount) {
+    throw new Error('removeWorkExperienceEntry failed to remove entry');
+  }
+
+  // Test deleting education
+  store.deleteBuiltinSection('education');
+  if (useResumeStore.getState().resumeData?.education?.length !== 0) {
+    throw new Error('deleteBuiltinSection failed to clear education');
+  }
+
+  // Test deleting skills
+  store.deleteBuiltinSection('skills_and_interests');
+  if (useResumeStore.getState().resumeData?.skills_and_interests !== undefined) {
+    throw new Error('deleteBuiltinSection failed to clear skills_and_interests');
+  }
+  console.log('✓ Section deletion, restoration, and entry management verified!');
+
   console.log('=============================================');
   console.log('🎉 ALL INTEGRATION VERIFICATION TESTS PASSED!');
   console.log('=============================================');
