@@ -33,9 +33,22 @@ export function PersonalInfoSection({ data }: PersonalInfoSectionProps) {
         />
       </div>
       
-      <div className="flex flex-nowrap items-center text-[10pt] border-b border-black pb-1 mb-2 text-black leading-none whitespace-nowrap overflow-x-auto">
+      <div 
+        className="flex flex-nowrap items-center text-[10pt] border-b border-black pb-1 mb-2 text-black leading-none whitespace-nowrap overflow-x-auto"
+        style={{
+          display: 'flex',
+          flexDirection: 'row',
+          flexWrap: 'nowrap',
+          alignItems: 'center',
+          whiteSpace: 'nowrap',
+        }}
+      >
         {contactItems.map((item, index) => (
-          <span key={index} className="inline-flex items-center whitespace-nowrap shrink-0">
+          <span 
+            key={index} 
+            className="inline-flex items-center whitespace-nowrap shrink-0"
+            style={{ display: 'inline-flex', alignItems: 'center', whiteSpace: 'nowrap', flexShrink: 0 }}
+          >
             {index > 0 && <span className="text-black select-none mx-2 font-normal">|</span>}
             <EditableField
               value={item.value as string}

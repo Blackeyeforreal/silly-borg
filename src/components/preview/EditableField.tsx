@@ -119,11 +119,17 @@ export function EditableField({
     );
   }
 
+  const Container = isInline ? 'span' : 'div';
+
   return (
-    <div className={`relative group ${containerClassName || (isInline ? 'inline-flex w-auto items-center' : 'w-full block')}`}>
+    <Container 
+      className={`relative group ${containerClassName || (isInline ? 'inline-flex w-auto items-center' : 'w-full block')}`}
+      style={isInline ? { display: 'inline-flex', width: 'auto', alignItems: 'center' } : undefined}
+    >
       <Component 
         onClick={() => setIsEditing(true)}
         className={`editable-hover ${isInline ? 'inline' : 'w-full block'} ${className}`}
+        style={isInline ? { display: 'inline', width: 'auto' } : undefined}
       >
         {value || <span className="text-gray-300 italic no-print">Click to edit</span>}
       </Component>
@@ -151,6 +157,6 @@ export function EditableField({
           onClose={() => setShowRewrite(false)}
         />
       )}
-    </div>
+    </Container>
   );
 }

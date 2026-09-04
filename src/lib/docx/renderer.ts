@@ -38,7 +38,7 @@ export async function renderResumeDocx(data: ResumeData): Promise<Buffer> {
 
   // Helper: Section header paragraph with bottom border
   const makeSectionHeader = (title: string) => {
-    return `<w:p><w:pPr><w:pBdr><w:bottom w:color="000000" w:space="1" w:sz="6" w:val="single"/></w:pBdr><w:spacing w:before="120" w:line="252" w:lineRule="auto"/><w:rPr/></w:pPr><w:r><w:rPr><w:rFonts w:ascii="Garamond" w:cs="Garamond" w:eastAsia="Garamond" w:hAnsi="Garamond"/><w:b w:val="1"/><w:bCs w:val="1"/><w:sz w:val="24"/><w:szCs w:val="24"/><w:rtl w:val="0"/></w:rPr><w:t xml:space="preserve">${title}</w:t></w:r></w:p>`;
+    return `<w:p><w:pPr><w:pBdr><w:bottom w:color="000000" w:space="1" w:sz="6" w:val="single"/></w:pBdr><w:spacing w:before="120" w:line="252" w:lineRule="auto"/><w:rPr/></w:pPr><w:r><w:rPr><w:rFonts w:ascii="Garamond" w:cs="Garamond" w:eastAsia="Garamond" w:hAnsi="Garamond"/><w:b w:val="1"/><w:bCs w:val="1"/><w:sz w:val="24"/><w:szCs w:val="24"/><w:rtl w:val="0"/></w:rPr><w:t xml:space="preserve">${xmlEscape(title)}</w:t></w:r></w:p>`;
   };
 
   // Helper: Two-column line with right-aligned tab stop
@@ -63,7 +63,7 @@ export async function renderResumeDocx(data: ResumeData): Promise<Buffer> {
   // Helper: Sub-bullet with bold label
   const makeLabeledSubBullet = (label: string, text: string, ilvl: number = 1, numId: number = 3) => {
     const indAttr = ilvl === 0 ? '<w:ind w:left="360"/>' : '<w:ind w:left="1080" w:hanging="360"/><w:jc w:val="both"/>';
-    return `<w:p><w:pPr><w:numPr><w:ilvl w:val="${ilvl}"/><w:numId w:val="${numId}"/></w:numPr><w:spacing w:line="252" w:lineRule="auto"/>${indAttr}</w:pPr><w:r><w:rPr><w:rFonts w:ascii="Garamond" w:cs="Garamond" w:eastAsia="Garamond" w:hAnsi="Garamond"/><w:b w:val="1"/><w:bCs w:val="1"/><w:sz w:val="20"/><w:szCs w:val="20"/><w:rtl w:val="0"/></w:rPr><w:t xml:space="preserve">${label}: </w:t></w:r><w:r><w:rPr><w:rFonts w:ascii="Garamond" w:cs="Garamond" w:eastAsia="Garamond" w:hAnsi="Garamond"/><w:sz w:val="20"/><w:szCs w:val="20"/><w:rtl w:val="0"/></w:rPr><w:t xml:space="preserve">${xmlEscape(text)}</w:t></w:r></w:p>`;
+    return `<w:p><w:pPr><w:numPr><w:ilvl w:val="${ilvl}"/><w:numId w:val="${numId}"/></w:numPr><w:spacing w:line="252" w:lineRule="auto"/>${indAttr}</w:pPr><w:r><w:rPr><w:rFonts w:ascii="Garamond" w:cs="Garamond" w:eastAsia="Garamond" w:hAnsi="Garamond"/><w:b w:val="1"/><w:bCs w:val="1"/><w:sz w:val="20"/><w:szCs w:val="20"/><w:rtl w:val="0"/></w:rPr><w:t xml:space="preserve">${xmlEscape(label)}: </w:t></w:r><w:r><w:rPr><w:rFonts w:ascii="Garamond" w:cs="Garamond" w:eastAsia="Garamond" w:hAnsi="Garamond"/><w:sz w:val="20"/><w:szCs w:val="20"/><w:rtl w:val="0"/></w:rPr><w:t xml:space="preserve">${xmlEscape(text)}</w:t></w:r></w:p>`;
   };
 
   // 1. Personal Info
@@ -205,7 +205,7 @@ export async function renderResumeDocx(data: ResumeData): Promise<Buffer> {
   );
 
   if (hasSkills) {
-    paragraphs.push(makeSectionHeader('CERTIFICATIONS, SKILLS &amp; INTERESTS'));
+    paragraphs.push(makeSectionHeader('CERTIFICATIONS, SKILLS & INTERESTS'));
 
     if (skills.certifications && skills.certifications.length > 0) {
       paragraphs.push(makeLabeledSubBullet('Certifications', skills.certifications.filter(Boolean).join(', '), 0, 1));
@@ -229,5 +229,5 @@ export async function renderResumeDocx(data: ResumeData): Promise<Buffer> {
   const newXml = `${docStart}${paragraphs.join('')}${sectPrXml}${docEnd}`;
 
   zip.file('word/document.xml', newXml);
-  return zip.generate({ type: 'nodebuffer' });
+  return zip.generate({ type: 'nodebuffer', compression: 'DEFLATE' });
 }
