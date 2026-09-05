@@ -1,9 +1,12 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  serverExternalPackages: ['@google/genai', 'mammoth', 'pdf-parse', 'pizzip', 'docx'],
+  serverExternalPackages: ['@google/genai', 'mammoth', 'pizzip', 'docx', 'pdfjs-dist'],
   outputFileTracingIncludes: {
-    '/api/**/*': ['./Template/**/*'],
+    '/api/**/*': [
+      './Template/**/*',
+      './node_modules/pdfjs-dist/**/*',
+    ],
   },
 };
 

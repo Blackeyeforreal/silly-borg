@@ -28,6 +28,21 @@ export function FileUpload({ onTextExtracted }: FileUploadProps) {
     setFileName(file.name);
     setIsLoading(true);
 
+    if (extension === '.txt') {
+      try {
+        const text = await file.text();
+        if (!text.trim()) throw new Error('Uploaded .txt file is empty.');
+        onTextExtracted(text);
+        addToast('Text file loaded successfully.', 'success');
+      } catch (err: any) {
+        addToast(err.message || 'Error reading text file', 'error');
+        setFileName(null);
+      } finally {
+        setIsLoading(false);
+      }
+      return;
+    }
+
     try {
       const formData = new FormData();
       formData.append('file', file);
