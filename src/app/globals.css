@@ -7,8 +7,33 @@
 
 @layer utilities {
   .editable-hover {
-    @apply hover:bg-blue-50/50 hover:ring-1 hover:ring-blue-200 transition-all cursor-text rounded-sm;
+    @apply hover:bg-blue-50/50 hover:ring-1 hover:ring-blue-300 transition-all cursor-text rounded-xs;
   }
+
+  .bg-dot-grid {
+    background-image: radial-gradient(rgba(148, 163, 184, 0.25) 1px, transparent 1px);
+    background-size: 20px 20px;
+  }
+
+  .bg-aura-glow {
+    background: radial-gradient(ellipse 70% 50% at 50% -10%, rgba(99, 102, 241, 0.12), rgba(248, 250, 252, 0));
+  }
+}
+
+/* Custom Sleek Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.4);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 116, 139, 0.6);
 }
 
 @media print {

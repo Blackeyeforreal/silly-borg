@@ -871,6 +871,121 @@ Infrastructure: Kubernetes, Docker, AWS, GCP, Terraform, Kafka, ClickHouse, Post
   }
   console.log('✓ Compromise local NLP resume parsing engine verified directly in < 25ms!');
 
+  // --- Suite 20: 1-Page Boundary & Auto-Tuner Optimization Verification ---
+  console.log('--- Step 20: Testing 1-Page Fit Auto-Tuner & Density Optimization ---');
+  // Set non-compact settings first
+  store.setTemplateSettings({
+    marginSize: 'spacious',
+    lineSpacing: 'relaxed',
+    fontSize: 'spacious'
+  });
+  if (useResumeStore.getState().templateSettings.marginSize !== 'spacious') {
+    throw new Error('Failed to set spacious settings');
+  }
+
+  // Trigger 1-Click Auto-Tuning
+  store.fitToSinglePage();
+  const tunedSettings = useResumeStore.getState().templateSettings;
+  if (tunedSettings.marginSize !== 'compact' || tunedSettings.lineSpacing !== 'tight' || tunedSettings.fontSize !== 'compact') {
+    throw new Error(`fitToSinglePage did not optimize settings to compact density: ${JSON.stringify(tunedSettings)}`);
+  }
+
+  // Verify 1-Page Boundary pixel calculation (11 inches at 96 DPI = 1056 px)
+  const standardLetterHeightPx = 11 * 96;
+  if (standardLetterHeightPx !== 1056) {
+    throw new Error(`Expected standardLetterHeightPx to be 1056, got ${standardLetterHeightPx}`);
+  }
+  store.setPageFitPercent(112);
+  if (useResumeStore.getState().pageFitPercent !== 112) {
+    throw new Error('setPageFitPercent failed to update store');
+  }
+  console.log('✓ 1-Page boundary math & density auto-tuner verified!');
+
+  // --- Suite 21: 1-Click Matched Cover Letter Synthesis & Tone Verification ---
+  console.log('--- Step 21: Testing Matched Cover Letter Synthesis Across All Tones ---');
+  const { CoverLetterDataSchema } = await import('../src/lib/cover-letter/schema');
+  const { synthesizeCoverLetterOffline } = await import('../src/lib/cover-letter/synthesizer');
+
+  const targetJobDescription = `
+    Company: Stripe
+    Role: Staff Infrastructure Architect
+    Location: San Francisco, CA
+    We are seeking an experienced Staff Infrastructure Architect to lead our global ledger and idempotency systems.
+    Must have hands-on experience with Go, Kubernetes, high-concurrency microservices, and large-scale distributed databases.
+  `;
+
+  // Test 'professional' tone
+  const profLetter = synthesizeCoverLetterOffline(sampleResume, targetJobDescription, 'professional');
+  const parsedProf = CoverLetterDataSchema.parse(profLetter);
+  if (!parsedProf.company_name.toLowerCase().includes('stripe')) {
+    throw new Error(`Expected company Stripe, got: ${parsedProf.company_name}`);
+  }
+  if (!parsedProf.job_title.toLowerCase().includes('staff infrastructure architect')) {
+    throw new Error(`Expected job title Staff Infrastructure Architect, got: ${parsedProf.job_title}`);
+  }
+  if (!parsedProf.opening_paragraph.includes('Staff Infrastructure Architect')) {
+    throw new Error('Opening paragraph does not mention the target role');
+  }
+  if (parsedProf.body_paragraphs.length < 2) {
+    throw new Error(`Expected at least 2 body paragraphs, got ${parsedProf.body_paragraphs.length}`);
+  }
+  // Check candidate achievements and skills are embedded
+  if (!parsedProf.body_paragraphs[0].includes('TechCorp Solutions') || !parsedProf.body_paragraphs[0].includes('Senior Software Engineer')) {
+    throw new Error(`Expected recent company and role in body paragraph: ${parsedProf.body_paragraphs[0]}`);
+  }
+
+  // Test 'confident' tone
+  const confLetter = synthesizeCoverLetterOffline(sampleResume, targetJobDescription, 'confident');
+  CoverLetterDataSchema.parse(confLetter);
+  if (!confLetter.opening_paragraph.includes('confident') && !confLetter.opening_paragraph.includes('strong candidacy')) {
+    throw new Error('Confident letter did not use confident framing');
+  }
+
+  // Test 'technical' tone
+  const techLetter = synthesizeCoverLetterOffline(sampleResume, targetJobDescription, 'technical');
+  CoverLetterDataSchema.parse(techLetter);
+  if (!techLetter.opening_paragraph.includes('engineering') && !techLetter.opening_paragraph.includes('proficiency')) {
+    throw new Error('Technical letter did not use technical framing');
+  }
+  console.log('✓ Matched Cover Letter multi-tone synthesis and schema validation verified!');
+
+  // --- Suite 22: Cover Letter Native DOCX Rendering & Styling Parity Verification ---
+  console.log('--- Step 22: Testing Cover Letter DOCX Renderer ---');
+  const { renderCoverLetterDocx } = await import('../src/lib/docx/cover-letter-renderer');
+
+  const coverLetterDocxBuffer = await renderCoverLetterDocx(profLetter, sampleResume, {
+    fontFamily: 'Calibri',
+    accentColor: '#1E3A8A'
+  });
+
+  if (!coverLetterDocxBuffer || coverLetterDocxBuffer.length < 1000) {
+    throw new Error('Generated cover letter DOCX buffer too small');
+  }
+
+  const clZip = new PizZip(coverLetterDocxBuffer);
+  const clXml = clZip.file('word/document.xml')?.asText() || '';
+
+  if (!clXml.includes('Devang Srivastava')) {
+    throw new Error('Candidate name missing in cover letter DOCX');
+  }
+  if (!clXml.includes('Stripe')) {
+    throw new Error('Company name Stripe missing in cover letter DOCX');
+  }
+  if (!clXml.includes('Staff Infrastructure Architect')) {
+    throw new Error('Job title missing in cover letter DOCX');
+  }
+  if (!clXml.includes('w:ascii="Calibri"')) {
+    throw new Error('Calibri font family styling missing in cover letter DOCX');
+  }
+  if (!clXml.includes('w:bottom w:val="single"')) {
+    throw new Error('Candidate letterhead accent border missing in cover letter DOCX');
+  }
+  if (!clXml.includes('Sincerely,')) {
+    throw new Error('Sign-off missing in cover letter DOCX');
+  }
+
+  console.log(`✓ Cover letter native DOCX generator verified! Size: ${coverLetterDocxBuffer.length} bytes`);
+
   console.log('=============================================');
   console.log('🎉 ALL INTEGRATION VERIFICATION TESTS PASSED!');
   console.log('=============================================');

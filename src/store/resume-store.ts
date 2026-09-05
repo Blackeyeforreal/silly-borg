@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import { temporal } from 'zundo';
 import { ResumeData, CustomSection, CustomSectionItem } from '../lib/schema';
+import { CoverLetterData } from '../lib/cover-letter/schema';
+import { CoverLetterTone } from '../lib/cover-letter/synthesizer';
 
 // Helper to parse path strings like "work_experience[0].roles[1].title"
 function parsePath(path: string): string[] {
@@ -105,6 +107,25 @@ interface ResumeState {
   sidebarPosition: 'left' | 'right';
   activeFormSection: string | null;
   
+  // Page 1 Boundary & Auto-Tuner State
+  showPageBoundary: boolean;
+  pageFitPercent: number;
+  setShowPageBoundary: (show: boolean) => void;
+  togglePageBoundary: () => void;
+  setPageFitPercent: (pct: number) => void;
+  fitToSinglePage: () => void;
+
+  // Cover Letter State
+  coverLetterData: CoverLetterData | null;
+  isCoverLetterOpen: boolean;
+  coverLetterTone: CoverLetterTone;
+  isGeneratingCoverLetter: boolean;
+  setCoverLetterOpen: (open: boolean) => void;
+  setCoverLetterData: (data: CoverLetterData | null) => void;
+  setCoverLetterTone: (tone: CoverLetterTone) => void;
+  setIsGeneratingCoverLetter: (isGenerating: boolean) => void;
+  updateCoverLetterField: (field: string, value: any) => void;
+
   setResumeData: (data: ResumeData | null) => void;
   updateField: (path: string, value: any) => void;
   addArrayItem: (path: string, value: any) => void;
@@ -150,6 +171,44 @@ export const useResumeStore = create<ResumeState>()(
       isSidebarOpen: true,
       sidebarPosition: 'left',
       activeFormSection: null,
+
+      // Page boundary & auto-tuning
+      showPageBoundary: true,
+      pageFitPercent: 0,
+      setShowPageBoundary: (show) => set({ showPageBoundary: show }),
+      togglePageBoundary: () => set((s) => ({ showPageBoundary: !s.showPageBoundary })),
+      setPageFitPercent: (pct) => set({ pageFitPercent: pct }),
+      fitToSinglePage: () => set((state) => {
+        // Optimize layout density: compact margins, tight line spacing, compact font size
+        const current = state.templateSettings;
+        return {
+          templateSettings: {
+            ...current,
+            marginSize: 'compact',
+            lineSpacing: 'tight',
+            fontSize: 'compact'
+          }
+        };
+      }),
+
+      // Cover Letter
+      coverLetterData: null,
+      isCoverLetterOpen: false,
+      coverLetterTone: 'professional',
+      isGeneratingCoverLetter: false,
+      setCoverLetterOpen: (open) => set({ isCoverLetterOpen: open }),
+      setCoverLetterData: (data) => set({ coverLetterData: data }),
+      setCoverLetterTone: (tone) => set({ coverLetterTone: tone }),
+      setIsGeneratingCoverLetter: (isGen) => set({ isGeneratingCoverLetter: isGen }),
+      updateCoverLetterField: (field, value) => set((state) => {
+        if (!state.coverLetterData) return state;
+        return {
+          coverLetterData: {
+            ...state.coverLetterData,
+            [field]: value
+          }
+        };
+      }),
 
       setActiveEditingPath: (path) => set({ activeEditingPath: path }),
       setTemplateSettings: (settings) => set((state) => ({

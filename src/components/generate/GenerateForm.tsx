@@ -7,7 +7,18 @@ import { parseResumeTextToData } from '@/lib/format-resume';
 import { FileUpload } from './FileUpload';
 import { ProfileEditorForm } from './ProfileEditorForm';
 import { useToast } from '@/components/ui/Toast';
-import { Sparkles, Loader2, CheckCircle2, User, LogIn, FileEdit } from 'lucide-react';
+import { 
+  Sparkles, 
+  Loader2, 
+  CheckCircle2, 
+  User, 
+  FileEdit, 
+  Briefcase, 
+  ArrowRight,
+  UploadCloud,
+  FileText,
+  Wand2
+} from 'lucide-react';
 import { sampleResumeData } from '@/lib/sample-data';
 import type { ResumeData } from '@/lib/schema';
 
@@ -19,6 +30,56 @@ const DYNAMIC_GENERATION_STEPS = [
   'Drafting role-tailored bullet points...',
   'Formatting clean executive layout...',
   'Finalizing tailored resume document...'
+];
+
+const SAMPLE_JOBS = [
+  {
+    title: 'Senior Full-Stack Engineer',
+    badge: 'Next.js & TS',
+    description: `Company: Stripe / Vercel
+Role: Senior Full-Stack Engineer
+Location: San Francisco, CA / Remote
+
+About the Role:
+We are seeking a Senior Full-Stack Engineer to architect and scale mission-critical web applications. You will work across modern frontend frameworks (Next.js, React, TypeScript, Tailwind CSS) and robust backend distributed systems (Node.js, PostgreSQL, Redis, Docker).
+
+Responsibilities:
+• Architect performant, accessible, and responsive user interfaces with sub-second latency.
+• Build scalable microservices and REST/GraphQL APIs handling high concurrency.
+• Collaborate with product managers and designers to rapidly ship high-impact features.
+• Champion engineering excellence, automated testing, and CI/CD pipelines.`
+  },
+  {
+    title: 'Staff Systems Architect',
+    badge: 'Go & K8s',
+    description: `Company: Datadog / CloudScale
+Role: Staff Distributed Systems Architect
+Location: New York, NY / Remote
+
+About the Role:
+Looking for a Staff Infrastructure Architect to lead our global ledger, telemetry, and distributed consensus tier.
+
+Requirements:
+• 6+ years building high-throughput distributed systems in Go, Rust, or C++.
+• Deep expertise with Kubernetes, Docker, Kafka, ClickHouse, and PostgreSQL.
+• Track record optimizing system bottlenecks, reducing latency, and achieving 99.999% SLA.
+• Experience mentoring senior engineers and driving technical architecture roadmaps.`
+  },
+  {
+    title: 'Lead Frontend Specialist',
+    badge: 'React & UI',
+    description: `Company: Linear / Figma
+Role: Lead Frontend Specialist
+Location: Remote
+
+About the Role:
+We are looking for a craft-obsessed Lead Frontend Specialist to drive UI architecture, design systems, and web performance.
+
+Requirements:
+• Mastery of React, Next.js, TypeScript, modern CSS architectures, and micro-interactions.
+• Proven expertise optimizing Core Web Vitals (LCP, INP, CLS) and state synchronization.
+• Keen eye for typography, layout design, and fluid transitions.`
+  }
 ];
 
 export function GenerateForm() {
@@ -134,33 +195,40 @@ export function GenerateForm() {
     }
   };
 
+  const handleLoadSampleResume = () => {
+    setStructuredProfile(sampleResumeData);
+    setResumeText(formatResumeDataToText(sampleResumeData));
+    setInputMode('form');
+    addToast('Loaded sample profile! Select a job description below to tailor.', 'info');
+  };
+
   return (
-    <div className="bg-white rounded-xl shadow-md p-6 sm:p-8 space-y-6">
+    <div className="bg-white rounded-2xl shadow-xl border border-slate-200/80 p-6 sm:p-8 space-y-8 backdrop-blur-md">
       {/* Logged in User Banner */}
       {user ? (
-        <div className="p-4 rounded-xl border border-blue-200 bg-blue-50/70 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="p-4 rounded-xl border border-blue-200/80 bg-gradient-to-r from-blue-50/80 to-indigo-50/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-sm shrink-0">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center font-bold text-sm shadow-xs shrink-0">
               {user.name.charAt(0).toUpperCase()}
             </div>
             <div>
-              <div className="text-xs font-semibold text-blue-900">
-                Logged in as <span className="font-bold">{user.name}</span> ({user.email})
+              <div className="text-xs font-bold text-slate-900">
+                Welcome back, {user.name} <span className="text-slate-500 font-normal">({user.email})</span>
               </div>
               {savedProfile?.resumeData ? (
-                <div className="text-[11px] text-blue-700">
-                  Master profile loaded ({savedProfile.resumeData.work_experience?.length || 0} jobs, {savedProfile.resumeData.education?.length || 0} degrees, {savedProfile.resumeData.custom_sections?.length || 0} custom sections).
+                <div className="text-[11px] text-blue-700 font-medium">
+                  Master profile active ({savedProfile.resumeData.work_experience?.length || 0} companies, {savedProfile.resumeData.education?.length || 0} degrees).
                 </div>
               ) : (
                 <div className="text-[11px] text-amber-700">
-                  No saved profile yet. Upload once to save your master work history and template styling!
+                  No saved profile yet. Generate once and click "Save Profile" to keep your history.
                 </div>
               )}
             </div>
           </div>
 
           {savedProfile?.resumeData && (
-            <label className="flex items-center gap-2 cursor-pointer bg-white px-3 py-1.5 rounded-lg border border-blue-200 shadow-2xs shrink-0">
+            <label className="flex items-center gap-2 cursor-pointer bg-white px-3 py-1.5 rounded-lg border border-blue-200 shadow-2xs shrink-0 hover:border-blue-300 transition-colors">
               <input
                 type="checkbox"
                 checked={useSavedProfile}
@@ -172,97 +240,119 @@ export function GenerateForm() {
           )}
         </div>
       ) : (
-        <div className="p-3.5 rounded-xl border border-gray-200 bg-gray-50 flex items-center justify-between gap-2 text-xs text-gray-600">
+        <div className="p-3.5 rounded-xl border border-slate-200 bg-slate-50/80 flex items-center justify-between gap-2 text-xs text-slate-600">
           <div className="flex items-center gap-2">
-            <User className="w-4 h-4 text-gray-500" />
-            <span>Have an account? Log in to save your work history and template preferences.</span>
+            <div className="p-1 bg-slate-200/70 rounded-md text-slate-600">
+              <User className="w-3.5 h-3.5" />
+            </div>
+            <span>Have an account? Log in to save your master work experience and template styling.</span>
           </div>
           <button
             type="button"
             onClick={() => setAuthModalOpen(true)}
-            className="text-blue-600 hover:text-blue-800 font-semibold px-2.5 py-1 rounded hover:bg-blue-50 border border-blue-200 transition-colors cursor-pointer shrink-0"
+            className="text-blue-600 hover:text-blue-800 font-semibold px-2.5 py-1 rounded hover:bg-blue-50 border border-blue-200/80 bg-white transition-colors cursor-pointer shrink-0"
           >
             Log In
           </button>
         </div>
       )}
 
-      {/* Resume Input Section */}
+      {/* Step 1: Resume Input Section */}
       <section className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-gray-900">1. Your Current Resume</h2>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-1 border-b border-slate-100">
+          <div className="flex items-center gap-2">
+            <span className="w-6 h-6 rounded-full bg-blue-600 text-white font-bold text-xs flex items-center justify-center">
+              1
+            </span>
+            <h2 className="text-base font-bold text-slate-900">Your Current Resume</h2>
+          </div>
           
           {(!useSavedProfile || !savedProfile?.resumeData) && (
-            <div className="flex bg-gray-100 p-1 rounded-lg">
-              <button
-                type="button"
-                onClick={() => setInputMode('upload')}
-                className={`px-3 sm:px-4 py-1.5 text-xs sm:text-sm font-medium rounded-md transition-colors ${
-                  inputMode === 'upload' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
-                }`}
-              >
-                Upload File
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  if (!structuredProfile && resumeText.trim()) {
-                    setStructuredProfile(parseResumeTextToData(resumeText));
-                  }
-                  setInputMode('form');
-                }}
-                className={`px-3 sm:px-4 py-1.5 text-xs sm:text-sm font-medium rounded-md transition-colors flex items-center gap-1.5 ${
-                  inputMode === 'form' ? 'bg-white text-gray-900 shadow-sm font-semibold' : 'text-gray-500 hover:text-gray-700'
-                }`}
-              >
-                <FileEdit className="w-3.5 h-3.5 text-blue-600" />
-                <span>Structured Form</span>
-                {structuredProfile && (
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                )}
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  if (structuredProfile && !resumeText.trim()) {
-                    setResumeText(formatResumeDataToText(structuredProfile));
-                  }
-                  setInputMode('paste');
-                }}
-                className={`px-3 sm:px-4 py-1.5 text-xs sm:text-sm font-medium rounded-md transition-colors ${
-                  inputMode === 'paste' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
-                }`}
-              >
-                Raw Text
-              </button>
+            <div className="flex items-center gap-2">
+              <div className="flex bg-slate-100 p-0.5 rounded-lg border border-slate-200/60">
+                <button
+                  type="button"
+                  onClick={() => setInputMode('upload')}
+                  className={`flex items-center gap-1 px-3 py-1 text-xs font-semibold rounded-md transition-all cursor-pointer ${
+                    inputMode === 'upload' 
+                      ? 'bg-white text-slate-900 shadow-2xs font-bold' 
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  <UploadCloud className="w-3.5 h-3.5 text-blue-600" />
+                  <span>Upload File</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!structuredProfile && resumeText.trim()) {
+                      setStructuredProfile(parseResumeTextToData(resumeText));
+                    }
+                    setInputMode('form');
+                  }}
+                  className={`flex items-center gap-1 px-3 py-1 text-xs font-semibold rounded-md transition-all cursor-pointer ${
+                    inputMode === 'form' 
+                      ? 'bg-white text-slate-900 shadow-2xs font-bold' 
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  <FileEdit className="w-3.5 h-3.5 text-indigo-600" />
+                  <span>Structured Form</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (structuredProfile && !resumeText.trim()) {
+                      setResumeText(formatResumeDataToText(structuredProfile));
+                    }
+                    setInputMode('paste');
+                  }}
+                  className={`flex items-center gap-1 px-3 py-1 text-xs font-semibold rounded-md transition-all cursor-pointer ${
+                    inputMode === 'paste' 
+                      ? 'bg-white text-slate-900 shadow-2xs font-bold' 
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  <FileText className="w-3.5 h-3.5 text-slate-600" />
+                  <span>Raw Text</span>
+                </button>
+              </div>
+
+              {!resumeText.trim() && !structuredProfile && (
+                <button
+                  type="button"
+                  onClick={handleLoadSampleResume}
+                  className="text-[11px] font-semibold text-blue-600 hover:text-blue-800 bg-blue-50/70 hover:bg-blue-100 border border-blue-200/80 px-2.5 py-1 rounded-md transition-colors cursor-pointer"
+                  title="Prefill with complete sample resume"
+                >
+                  Use Sample
+                </button>
+              )}
             </div>
           )}
         </div>
 
         {useSavedProfile && savedProfile?.resumeData ? (
-          <div className="p-4 rounded-xl border border-green-200 bg-green-50/60 text-green-900 space-y-2">
+          <div className="p-4 rounded-xl border border-emerald-200 bg-emerald-50/60 text-emerald-950 space-y-2">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-green-600 shrink-0" />
-                <span className="font-semibold text-xs sm:text-sm">
-                  Using your saved profile: {savedProfile.resumeData.personal_info.full_name || user?.name}
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span className="font-bold text-xs sm:text-sm">
+                  Using saved profile: {savedProfile.resumeData.personal_info.full_name || user?.name}
                 </span>
               </div>
               <button
                 type="button"
                 onClick={() => setUseSavedProfile(false)}
-                className="text-xs text-green-800 hover:text-green-950 underline font-medium cursor-pointer"
+                className="text-xs text-emerald-800 hover:text-emerald-950 underline font-medium cursor-pointer"
               >
                 Upload different resume instead
               </button>
             </div>
-            <div className="text-xs text-green-800 space-y-1 pl-6">
+            <div className="text-xs text-emerald-800 space-y-1 pl-6">
               <p>• Contact: {savedProfile.resumeData.personal_info.contact.email} | {savedProfile.resumeData.personal_info.contact.phone}</p>
-              <p>• Work History: {savedProfile.resumeData.work_experience?.map(w => w.company).join(', ') || 'No companies recorded'}</p>
-              <p>• Education: {savedProfile.resumeData.education?.map(e => e.university).join(', ') || 'No education recorded'}</p>
-              {savedProfile.templateSettings && (
-                <p>• Template Styling: {savedProfile.templateSettings.fontFamily} font, {savedProfile.templateSettings.accentColor} header accent</p>
-              )}
+              <p>• Work Experience: {savedProfile.resumeData.work_experience?.map(w => w.company).join(', ') || 'None recorded'}</p>
+              <p>• Education: {savedProfile.resumeData.education?.map(e => e.university).join(', ') || 'None recorded'}</p>
             </div>
           </div>
         ) : (
@@ -298,7 +388,7 @@ export function GenerateForm() {
 
             {inputMode === 'paste' && (
               <div className="space-y-2">
-                <div className="flex items-center justify-between text-xs text-gray-500">
+                <div className="flex items-center justify-between text-xs text-slate-500">
                   <span>Paste raw resume text or edit here:</span>
                   {resumeText.trim() && (
                     <button
@@ -317,21 +407,15 @@ export function GenerateForm() {
                             if (parsedJson.resume) {
                               setStructuredProfile(parsedJson.resume);
                               setInputMode('form');
-                              addToast(
-                                parsedJson.method === 'nlp'
-                                  ? `Parsed into structured sections via local NLP (${parsedJson.latencyMs || 25}ms)!`
-                                  : 'Converted raw text to structured form sections!',
-                                'success'
-                              );
+                              addToast('Converted raw text to structured sections with NLP!', 'success');
                               return;
                             }
                           }
                         } catch (e) {
-                          console.warn('NLP parse request failed, falling back to client NLP:', e);
+                          console.warn('NLP parse request failed, falling back to local NLP:', e);
                         } finally {
                           setIsParsingText(false);
                         }
-                        // Fallback
                         setStructuredProfile(parseResumeTextToData(resumeText));
                         setInputMode('form');
                         addToast('Parsed into structured form sections with local NLP!', 'info');
@@ -346,7 +430,7 @@ export function GenerateForm() {
                       ) : (
                         <>
                           <Sparkles className="w-3.5 h-3.5 text-blue-500" />
-                          <span>Parse with Local NLP into Form →</span>
+                          <span>Parse with NLP into Form →</span>
                         </>
                       )}
                     </button>
@@ -359,7 +443,7 @@ export function GenerateForm() {
                     setStructuredProfile(parseResumeTextToData(e.target.value));
                   }}
                   placeholder="Paste your current resume text here..."
-                  className="w-full h-48 p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-y text-xs sm:text-sm font-mono"
+                  className="w-full h-44 p-4 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-hidden resize-y text-xs sm:text-sm font-mono transition-colors"
                 />
               </div>
             )}
@@ -367,21 +451,48 @@ export function GenerateForm() {
         )}
       </section>
 
-      {/* Job Description Section */}
-      <section className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-gray-900">2. Target Job Description</h2>
-          <span className="text-xs text-gray-500">{jobDescription.length} chars</span>
+      {/* Step 2: Job Description Section */}
+      <section className="space-y-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-1 border-b border-slate-100">
+          <div className="flex items-center gap-2">
+            <span className="w-6 h-6 rounded-full bg-indigo-600 text-white font-bold text-xs flex items-center justify-center">
+              2
+            </span>
+            <h2 className="text-base font-bold text-slate-900">Target Job Description</h2>
+          </div>
+          <span className="text-xs text-slate-400 font-mono">{jobDescription.length} characters</span>
         </div>
+
+        {/* Quick Sample Job Chips */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-[11px] font-semibold text-slate-500">Quick Fill:</span>
+          {SAMPLE_JOBS.map((job) => (
+            <button
+              key={job.title}
+              type="button"
+              onClick={() => {
+                setJobDescription(job.description);
+                addToast(`Loaded ${job.title} job description!`, 'info');
+              }}
+              className="inline-flex items-center gap-1.5 text-[11px] font-medium text-slate-700 hover:text-indigo-700 bg-slate-100/80 hover:bg-indigo-50 border border-slate-200/80 hover:border-indigo-200 px-2.5 py-1 rounded-lg transition-all cursor-pointer"
+            >
+              <Briefcase className="w-3 h-3 text-indigo-500" />
+              <span>{job.title}</span>
+              <span className="text-[9px] text-slate-400 font-normal">({job.badge})</span>
+            </button>
+          ))}
+        </div>
+
         <textarea
           value={jobDescription}
           onChange={(e) => setJobDescription(e.target.value)}
-          placeholder="Paste the target job description here..."
-          className="w-full h-48 p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-y text-xs sm:text-sm"
+          placeholder="Paste the target job description or click one of the quick-fill chips above..."
+          className="w-full h-44 p-4 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-hidden resize-y text-xs sm:text-sm transition-colors"
         />
       </section>
 
-      <div className="flex flex-col sm:flex-row gap-3">
+      {/* Primary Action Buttons */}
+      <div className="flex flex-col sm:flex-row gap-3 pt-2">
         <button
           onClick={handleGenerate}
           disabled={
@@ -389,20 +500,20 @@ export function GenerateForm() {
             (!resumeText.trim() && !structuredProfile && (!useSavedProfile || !savedProfile?.resumeData)) || 
             !jobDescription.trim()
           }
-          className="flex-1 flex items-center justify-center min-h-[50px] py-3 px-4 border border-transparent rounded-lg shadow-sm text-base font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-400 disabled:cursor-not-allowed transition-all duration-300 cursor-pointer"
+          className="flex-1 flex items-center justify-center min-h-[52px] py-3.5 px-6 rounded-xl font-bold text-white bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:via-indigo-700 hover:to-purple-700 shadow-md shadow-indigo-500/20 hover:shadow-lg hover:shadow-indigo-500/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 cursor-pointer text-base"
         >
           {isGenerating ? (
-            <div className="flex items-center justify-center gap-2.5 max-w-full px-2">
-              <Loader2 className="w-5 h-5 animate-spin text-blue-200 shrink-0" />
+            <div className="flex items-center justify-center gap-3 px-2">
+              <Loader2 className="w-5 h-5 animate-spin text-white shrink-0" />
               <span className="font-semibold text-sm sm:text-base tracking-tight text-white transition-opacity duration-300">
-                {generationStep || 'Analyzing job description & matching skills...'}
+                {generationStep || 'Analyzing job requirements & matching achievements...'}
               </span>
             </div>
           ) : (
-            <>
-              <Sparkles className="w-5 h-5 mr-2" />
-              Generate Resume
-            </>
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-yellow-300" />
+              <span>Tailor &amp; Generate Resume</span>
+            </div>
           )}
         </button>
 
@@ -410,13 +521,13 @@ export function GenerateForm() {
           type="button"
           onClick={() => {
             setResumeData(sampleResumeData);
-            addToast('Loaded sample resume for editing, rewrite, and export.', 'info');
+            addToast('Loaded interactive studio preview with sample profile.', 'info');
           }}
           disabled={isGenerating}
-          className="flex items-center justify-center py-3 px-5 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-gray-50 hover:bg-gray-100 hover:text-gray-900 transition-colors cursor-pointer"
-          title="Load sample resume to test preview, inline editing, and exports immediately"
+          className="flex items-center justify-center py-3.5 px-5 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 bg-slate-50 hover:bg-slate-100 hover:text-slate-900 transition-colors cursor-pointer"
+          title="Directly launch editor with demo resume"
         >
-          Load Demo Resume
+          Explore Live Canvas →
         </button>
       </div>
     </div>
