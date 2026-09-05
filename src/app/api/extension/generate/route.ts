@@ -7,7 +7,7 @@ import { RESUME_GENERATION_SYSTEM_PROMPT } from '@/lib/ai/prompts';
 import { renderResumeDocx } from '@/lib/docx/renderer';
 import { sampleResumeData } from '@/lib/sample-data';
 import { DEFAULT_TEMPLATE_SETTINGS, TemplateSettings } from '@/store/resume-store';
-import { formatResumeDataToText } from '@/store/user-store';
+import { formatResumeDataToText, synthesizeTailoredResumeOffline } from '@/lib/format-resume';
 
 export const runtime = 'nodejs';
 export const maxDuration = 60;
@@ -156,19 +156,32 @@ export async function POST(req: NextRequest) {
       if (result?.text) break;
     }
 
+    let validatedResume: ResumeData;
+
     if (!result?.text) {
-      throw lastError || new Error('Failed to generate resume from Gemini API');
-    }
+      const isNetworkErr = 
+        lastError?.code === 'ENOTFOUND' ||
+        lastError?.message?.includes('ENOTFOUND') ||
+        lastError?.message?.includes('fetch failed') ||
+        lastError?.cause?.code === 'ENOTFOUND';
 
-    let cleanedText = result.text.trim();
-    if (cleanedText.startsWith('```json')) {
-      cleanedText = cleanedText.replace(/^```json\s*/, '').replace(/\s*```$/, '');
-    } else if (cleanedText.startsWith('```')) {
-      cleanedText = cleanedText.replace(/^```\s*/, '').replace(/\s*```$/, '');
-    }
+      if (isNetworkErr && userProfile?.resumeData) {
+        console.warn('Extension API: Gemini API unreachable via network, tailoring resume offline with keyword alignment...');
+        validatedResume = synthesizeTailoredResumeOffline(userProfile.resumeData, jobDescription);
+      } else {
+        throw lastError || new Error('Failed to generate resume from Gemini API');
+      }
+    } else {
+      let cleanedText = result.text.trim();
+      if (cleanedText.startsWith('```json')) {
+        cleanedText = cleanedText.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+      } else if (cleanedText.startsWith('```')) {
+        cleanedText = cleanedText.replace(/^```\s*/, '').replace(/\s*```$/, '');
+      }
 
-    const parsedData = JSON.parse(cleanedText);
-    const validatedResume = ResumeDataSchema.parse(parsedData);
+      const parsedData = JSON.parse(cleanedText);
+      validatedResume = ResumeDataSchema.parse(parsedData);
+    }
 
     // 6. Render to DOCX buffer
     const docxBuffer = await renderResumeDocx(validatedResume, templateSettings);

@@ -536,6 +536,7 @@ async function runTests() {
   // Verify extension assets
   const requiredFiles = [
     'background.js',
+    'content.js',
     'popup/popup.html',
     'popup/popup.js',
     'icons/icon16.png',

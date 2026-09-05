@@ -9,6 +9,7 @@ import { EducationSection } from './EducationSection';
 import { SkillsSection } from './SkillsSection';
 import { CustomSectionView } from './CustomSectionView';
 import { AddSectionModal } from './AddSectionModal';
+import { FloatingSelectionToolbar } from './FloatingSelectionToolbar';
 
 export function ResumePreview() {
   const { 
@@ -181,6 +182,9 @@ export function ResumePreview() {
         isOpen={isAddSectionOpen}
         onClose={() => setIsAddSectionOpen(false)}
       />
+
+      {/* Floating Action Button above mouse selection */}
+      <FloatingSelectionToolbar />
     </>
   );
 }
