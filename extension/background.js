@@ -2,7 +2,7 @@
  * TailorCraft Resume Extension - Service Worker (Manifest V3)
  */
 
-const DEFAULT_API_URL = 'http://localhost:3000';
+const DEFAULT_API_URL = 'https://bioforge-xi.vercel.app';
 
 // Register context menu on install or startup
 chrome.runtime.onInstalled.addListener(() => {
