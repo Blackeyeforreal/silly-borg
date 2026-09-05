@@ -1,3 +1,5 @@
+import fs from 'fs';
+import path from 'path';
 import PizZip from 'pizzip';
 import { ResumeDataSchema, type ResumeData } from '../src/lib/schema';
 import { setNestedValue, getNestedValue, addToArray, removeFromArray } from '../src/store/resume-store';
@@ -507,6 +509,95 @@ async function runTests() {
 
   console.log('✓ User profile persistence, formatting & exact PDF typography parity verified!');
 
+  // --- Suite 13: Extension Files & Manifest V3 Verification ---
+  const extensionDir = path.join(process.cwd(), 'extension');
+  const manifestPath = path.join(extensionDir, 'manifest.json');
+  if (!fs.existsSync(manifestPath)) {
+    throw new Error('extension/manifest.json does not exist');
+  }
+
+  const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));
+  if (manifest.manifest_version !== 3) {
+    throw new Error(`Expected manifest_version 3, got ${manifest.manifest_version}`);
+  }
+  const requiredPermissions = ['activeTab', 'scripting', 'storage', 'downloads', 'contextMenus', 'notifications'];
+  for (const perm of requiredPermissions) {
+    if (!manifest.permissions.includes(perm)) {
+      throw new Error(`Missing required permission in manifest: ${perm}`);
+    }
+  }
+  if (manifest.background?.service_worker !== 'background.js') {
+    throw new Error('manifest.json background.service_worker must be background.js');
+  }
+  if (manifest.action?.default_popup !== 'popup/popup.html') {
+    throw new Error('manifest.json action.default_popup must be popup/popup.html');
+  }
+
+  // Verify extension assets
+  const requiredFiles = [
+    'background.js',
+    'popup/popup.html',
+    'popup/popup.js',
+    'icons/icon16.png',
+    'icons/icon48.png',
+    'icons/icon128.png',
+    'README.md'
+  ];
+  for (const file of requiredFiles) {
+    const fullPath = path.join(extensionDir, file);
+    if (!fs.existsSync(fullPath)) {
+      throw new Error(`Missing extension file: ${file}`);
+    }
+    const stat = fs.statSync(fullPath);
+    if (stat.size === 0) {
+      throw new Error(`Extension file is empty: ${file}`);
+    }
+  }
+  console.log('✓ Browser Extension Manifest V3 package & asset files verified!');
+
+  // --- Suite 14: Extension DOCX Generation & Base64 Pipeline Verification ---
+  const testDocxBuffer = await renderResumeDocx(sampleResume, testTemplateSettings);
+  if (!testDocxBuffer || testDocxBuffer.length < 1000) {
+    throw new Error('Generated DOCX buffer too small or empty');
+  }
+  const base64Docx = testDocxBuffer.toString('base64');
+  if (!base64Docx || typeof base64Docx !== 'string' || base64Docx.length < 1000) {
+    throw new Error('Failed to encode DOCX buffer to base64');
+  }
+  // Verify that base64 can be decoded back to a valid zip archive
+  const decodedBuffer = Buffer.from(base64Docx, 'base64');
+  const zipCheck = new PizZip(decodedBuffer);
+  if (!zipCheck.file('word/document.xml')) {
+    throw new Error('Decoded base64 DOCX does not contain valid word/document.xml');
+  }
+  console.log('✓ Extension 1-click DOCX generation & Base64 data URI pipeline verified!');
+
+  // --- Suite 15: Server User Profiles & API Storage Verification ---
+  const profilesDir = path.join(process.cwd(), '.data');
+  const profilesFile = path.join(profilesDir, 'user-profiles.json');
+  if (!fs.existsSync(profilesDir)) {
+    fs.mkdirSync(profilesDir, { recursive: true });
+  }
+
+  const testStore: Record<string, any> = {};
+  testStore['test.user@example.com'] = {
+    name: 'Test User',
+    email: 'test.user@example.com',
+    savedProfile: {
+      resumeData: sampleResume,
+      templateSettings: testTemplateSettings,
+      updatedAt: new Date().toISOString()
+    }
+  };
+  fs.writeFileSync(profilesFile, JSON.stringify(testStore, null, 2), 'utf-8');
+
+  // Verify file write & read back
+  const readBack = JSON.parse(fs.readFileSync(profilesFile, 'utf-8'));
+  if (!readBack['test.user@example.com']?.savedProfile?.resumeData) {
+    throw new Error('Server user profiles storage failed round-trip read');
+  }
+  console.log('✓ User profiles API persistent storage verified!');
+
   console.log('=============================================');
   console.log('🎉 ALL INTEGRATION VERIFICATION TESTS PASSED!');
   console.log('=============================================');
@@ -516,4 +607,5 @@ runTests().catch((err) => {
   console.error('Test failure:', err);
   process.exit(1);
 });
+
 

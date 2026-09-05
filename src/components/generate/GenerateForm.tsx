@@ -8,6 +8,16 @@ import { useToast } from '@/components/ui/Toast';
 import { Sparkles, Loader2, CheckCircle2, User, LogIn } from 'lucide-react';
 import { sampleResumeData } from '@/lib/sample-data';
 
+const DYNAMIC_GENERATION_STEPS = [
+  'Analyzing target job requirements & tech stack...',
+  'Matching core competencies & achievements...',
+  'Highlighting high-impact quantifiable metrics...',
+  'Aligning resume keywords for ATS scoring...',
+  'Drafting role-tailored bullet points...',
+  'Formatting clean executive layout...',
+  'Finalizing tailored resume document...'
+];
+
 export function GenerateForm() {
   const [inputMode, setInputMode] = useState<'upload' | 'paste'>('upload');
   const [resumeText, setResumeText] = useState('');
@@ -33,6 +43,21 @@ export function GenerateForm() {
     setTemplateSettings,
     generationStep
   } = useResumeStore();
+
+  // Dynamic engaging loading status cycling
+  useEffect(() => {
+    if (!isGenerating) return;
+
+    let index = 0;
+    setGenerationStep(DYNAMIC_GENERATION_STEPS[0]);
+
+    const timer = setInterval(() => {
+      index = (index + 1) % DYNAMIC_GENERATION_STEPS.length;
+      setGenerationStep(DYNAMIC_GENERATION_STEPS[index]);
+    }, 2200);
+
+    return () => clearInterval(timer);
+  }, [isGenerating, setGenerationStep]);
   
   const { addToast } = useToast();
 
@@ -53,7 +78,6 @@ export function GenerateForm() {
 
     setOriginalResumeText(effectiveResumeText);
     setIsGenerating(true);
-    setGenerationStep('Analyzing job description & matching skills...');
 
     try {
       const response = await fetch('/api/resume/generate', {
@@ -247,13 +271,15 @@ export function GenerateForm() {
             (!resumeText.trim() && (!useSavedProfile || !savedProfile?.resumeData)) || 
             !jobDescription.trim()
           }
-          className="flex-1 flex items-center justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-base font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-400 disabled:cursor-not-allowed transition-colors cursor-pointer"
+          className="flex-1 flex items-center justify-center min-h-[50px] py-3 px-4 border border-transparent rounded-lg shadow-sm text-base font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-400 disabled:cursor-not-allowed transition-all duration-300 cursor-pointer"
         >
           {isGenerating ? (
-            <>
-              <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-              {generationStep || 'Generating...'}
-            </>
+            <div className="flex items-center justify-center gap-2.5 max-w-full px-2">
+              <Loader2 className="w-5 h-5 animate-spin text-blue-200 shrink-0" />
+              <span className="font-semibold text-sm sm:text-base tracking-tight text-white transition-opacity duration-300">
+                {generationStep || 'Analyzing job description & matching skills...'}
+              </span>
+            </div>
           ) : (
             <>
               <Sparkles className="w-5 h-5 mr-2" />

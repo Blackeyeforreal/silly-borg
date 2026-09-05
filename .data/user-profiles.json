@@ -1,0 +1,147 @@
+{
+  "test.user@example.com": {
+    "name": "Test User",
+    "email": "test.user@example.com",
+    "savedProfile": {
+      "resumeData": {
+        "personal_info": {
+          "full_name": "Devang Srivastava",
+          "contact": {
+            "email": "devang@example.com",
+            "phone": "+1 (555) 987-6543",
+            "location": "New York, NY",
+            "links": "https://linkedin.com/in/devang"
+          }
+        },
+        "work_experience": [
+          {
+            "company": "TechCorp Solutions",
+            "dates": "Jan 2022 – Present",
+            "roles": [
+              {
+                "title": "Senior Software Engineer",
+                "location": "New York, NY",
+                "description": [
+                  "Architected and deployed high-throughput microservices handling 2M+ requests daily.",
+                  "Spearheaded performance tuning efforts reducing latency by 42% across core endpoints."
+                ],
+                "technologies_used": [
+                  "TypeScript",
+                  "Next.js",
+                  "Go",
+                  "PostgreSQL",
+                  "Docker"
+                ]
+              }
+            ]
+          },
+          {
+            "company": "DataFlow Systems",
+            "dates": "Jun 2019 – Dec 2021",
+            "roles": [
+              {
+                "title": "Software Engineer",
+                "location": "San Francisco, CA",
+                "description": [
+                  "Engineered real-time analytics pipelines processing telemetry data for enterprise clients.",
+                  "Collaborated with product teams to design and implement intuitive reporting dashboards."
+                ],
+                "key_results": [
+                  "Increased client data processing throughput by 35%"
+                ]
+              }
+            ]
+          },
+          {
+            "company": "Innovate Labs",
+            "dates": "Jan 2018 – May 2019",
+            "roles": [
+              {
+                "title": "Junior Developer",
+                "location": "Remote",
+                "description": [
+                  "Built responsive web interfaces and integrated RESTful APIs.",
+                  "Maintained unit and integration test coverage across multiple client repositories."
+                ]
+              }
+            ]
+          },
+          {
+            "company": "Apex Digital",
+            "dates": "2016 – 2017",
+            "roles": [
+              {
+                "title": "Lead Frontend Specialist",
+                "dates": "2017 – 2017",
+                "location": "Austin, TX",
+                "description": [
+                  "Led UI refactor to React resulting in 50% faster page render times.",
+                  "Mentored junior engineers and instituted code review standards."
+                ]
+              },
+              {
+                "title": "Frontend Developer",
+                "dates": "2016 – 2017",
+                "location": "Austin, TX",
+                "description": [
+                  "Developed modular UI components for customer-facing web portals."
+                ]
+              }
+            ]
+          }
+        ],
+        "education": [
+          {
+            "university": "Carnegie Mellon University",
+            "graduation_date": "May 2016",
+            "degree": "Bachelor of Science",
+            "major": "Computer Science",
+            "location": "Pittsburgh, PA",
+            "honors_and_awards": [
+              "Dean's List",
+              "Summa Cum Laude"
+            ],
+            "activities": [
+              "ACM Student Chapter",
+              "Hackathon Lead Organizer"
+            ]
+          }
+        ],
+        "skills_and_interests": {
+          "certifications": [
+            "AWS Certified Solutions Architect"
+          ],
+          "technologies": [
+            "React",
+            "Next.js",
+            "TypeScript",
+            "Node.js",
+            "PostgreSQL",
+            "Redis",
+            "Docker",
+            "Kubernetes"
+          ],
+          "skills": [
+            "Full-Stack Development",
+            "Distributed Systems",
+            "System Architecture",
+            "API Design"
+          ],
+          "interests": [
+            "Open Source",
+            "Algorithmic Trading",
+            "Chess"
+          ]
+        }
+      },
+      "templateSettings": {
+        "fontFamily": "Times New Roman",
+        "fontSize": "standard",
+        "lineSpacing": "normal",
+        "marginSize": "normal",
+        "accentColor": "#1e3a8a"
+      },
+      "updatedAt": "2026-09-05T19:43:48.577Z"
+    }
+  }
+}

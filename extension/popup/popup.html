@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TailorCraft AI</title>
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --primary-light: #eff6ff;
+      --primary-border: #bfdbfe;
+      --gray-50: #f9fafb;
+      --gray-100: #f3f4f6;
+      --gray-200: #e5e7eb;
+      --gray-300: #d1d5db;
+      --gray-400: #9ca3af;
+      --gray-600: #4b5563;
+      --gray-700: #374151;
+      --gray-900: #111827;
+      --success: #16a34a;
+      --success-light: #dcfce7;
+      --error: #dc2626;
+      --error-light: #fee2e2;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background: #f8fafc;
+      color: var(--gray-900);
+      width: 380px;
+      min-height: 480px;
+      padding: 16px;
+      margin: 0;
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--gray-200);
+      margin-bottom: 14px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo-icon {
+      width: 32px;
+      height: 32px;
+      background: linear-gradient(135deg, #2563eb, #1d4ed8);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+      font-size: 16px;
+      box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
+    }
+
+    .brand-text h1 {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--gray-900);
+      line-height: 1.2;
+    }
+
+    .brand-text p {
+      font-size: 11px;
+      color: var(--gray-600);
+    }
+
+    .status-badge {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      font-weight: 500;
+      padding: 3px 8px;
+      border-radius: 9999px;
+      background: var(--primary-light);
+      color: var(--primary);
+    }
+
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #22c55e;
+    }
+
+    /* Auth card */
+    .card {
+      background: white;
+      border: 1px solid var(--gray-200);
+      border-radius: 10px;
+      padding: 14px;
+      margin-bottom: 12px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .user-profile {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      overflow: hidden;
+    }
+
+    .avatar {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 14px;
+      shrink: 0;
+    }
+
+    .user-details {
+      overflow: hidden;
+    }
+
+    .user-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--gray-900);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .user-email {
+      font-size: 11px;
+      color: var(--gray-600);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .btn-text {
+      background: transparent;
+      border: none;
+      color: var(--gray-600);
+      font-size: 11px;
+      cursor: pointer;
+      text-decoration: underline;
+      padding: 4px;
+    }
+    .btn-text:hover {
+      color: var(--error);
+    }
+
+    .profile-meta {
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px dashed var(--gray-200);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11px;
+      color: #047857;
+    }
+
+    /* Input fields */
+    .form-group {
+      margin-bottom: 10px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--gray-700);
+      margin-bottom: 4px;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1px solid var(--gray-300);
+      border-radius: 6px;
+      font-size: 12px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    .form-input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+    }
+
+    .textarea {
+      resize: vertical;
+      min-height: 95px;
+      font-family: inherit;
+    }
+
+    /* Buttons */
+    .btn {
+      width: 100%;
+      padding: 9px 14px;
+      border-radius: 7px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.2s;
+      border: none;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+      box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: var(--primary-hover);
+    }
+
+    .btn-primary:disabled {
+      background: #93c5fd;
+      cursor: not-allowed;
+    }
+
+    .btn-secondary {
+      background: white;
+      color: var(--gray-700);
+      border: 1px solid var(--gray-300);
+      margin-top: 6px;
+      font-size: 12px;
+      padding: 7px 12px;
+    }
+
+    .btn-secondary:hover:not(:disabled) {
+      background: var(--gray-100);
+    }
+
+    .btn-small {
+      width: auto;
+      padding: 4px 8px;
+      font-size: 11px;
+      border-radius: 5px;
+      background: var(--gray-100);
+      color: var(--gray-700);
+      border: 1px solid var(--gray-300);
+      cursor: pointer;
+    }
+    .btn-small:hover {
+      background: var(--gray-200);
+    }
+
+    .label-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 4px;
+    }
+
+    /* Alerts */
+    .alert {
+      padding: 10px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      line-height: 1.4;
+    }
+
+    .alert-success {
+      background: var(--success-light);
+      border: 1px solid #86efac;
+      color: #14532d;
+    }
+
+    .alert-error {
+      background: var(--error-light);
+      border: 1px solid #fca5a5;
+      color: #7f1d1d;
+    }
+
+    .spinner {
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top: 2px solid white;
+      border-radius: 50%;
+      width: 14px;
+      height: 14px;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* Settings footer */
+    .settings-footer {
+      margin-top: 10px;
+      font-size: 11px;
+      color: var(--gray-600);
+    }
+
+    .settings-toggle {
+      display: inline-block;
+      cursor: pointer;
+      color: var(--gray-600);
+      text-decoration: none;
+      margin-bottom: 6px;
+    }
+
+    .settings-panel {
+      display: none;
+      padding: 10px;
+      background: var(--gray-100);
+      border-radius: 6px;
+      margin-top: 6px;
+    }
+
+    .settings-panel.open {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="brand">
+      <div class="logo-icon">TC</div>
+      <div class="brand-text">
+        <h1>TailorCraft AI</h1>
+        <p>1-Click Resume Generator</p>
+      </div>
+    </div>
+    <div class="status-badge">
+      <span class="status-dot"></span>
+      <span id="connection-status">Ready</span>
+    </div>
+  </div>
+
+  <div id="alert-container"></div>
+
+  <!-- AUTH SECTION: LOGGED OUT -->
+  <div id="logged-out-view" class="card" style="display: none;">
+    <p style="font-size: 12px; color: var(--gray-700); margin-bottom: 10px;">
+      Log in to access your master work history, education, and saved template styling.
+    </p>
+
+    <div class="form-group">
+      <label for="login-name">Your Name</label>
+      <input type="text" id="login-name" class="form-input" placeholder="e.g. Alex Chen" value="Alex Chen">
+    </div>
+
+    <div class="form-group">
+      <label for="login-email">Your Email</label>
+      <input type="email" id="login-email" class="form-input" placeholder="e.g. alex.chen@example.com" value="alex.chen@example.com">
+    </div>
+
+    <button id="btn-login" class="btn btn-primary">Log In & Sync Profile</button>
+    <button id="btn-demo-login" class="btn btn-secondary">1-Click Demo Login (Alex Chen)</button>
+  </div>
+
+  <!-- MAIN GENERATION SECTION: LOGGED IN -->
+  <div id="logged-in-view" style="display: none;">
+    <div class="card">
+      <div class="user-info">
+        <div class="user-profile">
+          <div id="user-avatar" class="avatar">A</div>
+          <div class="user-details">
+            <div id="user-display-name" class="user-name">Alex Chen</div>
+            <div id="user-display-email" class="user-email">alex.chen@example.com</div>
+          </div>
+        </div>
+        <button id="btn-logout" class="btn-text">Switch</button>
+      </div>
+      <div class="profile-meta">
+        <span id="profile-meta-text">✓ Master Profile Synced</span>
+        <button id="btn-refresh-profile" class="btn-small" title="Sync profile from web server">Sync</button>
+      </div>
+    </div>
+
+    <!-- Job Description Input -->
+    <div class="card">
+      <div class="label-row">
+        <label for="job-desc" style="font-size: 12px; font-weight: 600; color: var(--gray-800);">
+          Job Description (from active tab)
+        </label>
+        <button id="btn-grab-selection" class="btn-small">Grab Selection</button>
+      </div>
+      <textarea id="job-desc" class="form-input textarea" placeholder="Highlight text on any job posting (LinkedIn, Indeed, etc.) or paste it here..."></textarea>
+      <div style="display: flex; justify-content: space-between; margin-top: 4px; font-size: 10px; color: var(--gray-400);">
+        <span id="char-count">0 characters</span>
+        <span>Auto-grabs highlighted text</span>
+      </div>
+    </div>
+
+    <!-- 1-Click Tailor Button -->
+    <button id="btn-generate" class="btn btn-primary" style="padding: 12px;">
+      <span id="btn-spinner" class="spinner" style="display: none;"></span>
+      <span id="btn-text">✨ Tailor & Download Resume (DOCX)</span>
+    </button>
+  </div>
+
+  <!-- Settings Footer -->
+  <div class="settings-footer">
+    <span id="toggle-settings" class="settings-toggle">⚙️ API Settings</span>
+    <div id="settings-panel" class="settings-panel">
+      <div class="form-group">
+        <label for="api-url">API Server URL</label>
+        <input type="text" id="api-url" class="form-input" value="http://localhost:3000">
+      </div>
+      <button id="btn-save-settings" class="btn-small" style="width: 100%;">Save Settings</button>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

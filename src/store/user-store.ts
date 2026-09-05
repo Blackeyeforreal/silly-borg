@@ -110,17 +110,32 @@ export function formatResumeDataToText(data: ResumeData): string {
 
 export const useUserStore = create<UserState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       user: null,
       savedProfile: null,
       isAuthModalOpen: false,
 
       login: (name: string, email: string) => {
         const id = 'usr_' + Date.now().toString(36);
+        const cleanEmail = email.trim().toLowerCase();
+        const cleanName = name.trim() || 'User';
+
         set({ 
-          user: { id, name: name.trim() || 'User', email: email.trim().toLowerCase() },
+          user: { id, name: cleanName, email: cleanEmail },
           isAuthModalOpen: false
         });
+
+        // Asynchronously check if backend has a saved profile for this user
+        if (typeof window !== 'undefined') {
+          fetch(`/api/user/profile?email=${encodeURIComponent(cleanEmail)}`)
+            .then((res) => (res.ok ? res.json() : null))
+            .then((data) => {
+              if (data?.savedProfile && !get().savedProfile) {
+                set({ savedProfile: data.savedProfile });
+              }
+            })
+            .catch(() => {});
+        }
       },
 
       logout: () => {
@@ -128,13 +143,27 @@ export const useUserStore = create<UserState>()(
       },
 
       saveProfile: (resumeData: ResumeData, templateSettings: TemplateSettings) => {
-        set({
-          savedProfile: {
-            resumeData,
-            templateSettings,
-            updatedAt: new Date().toISOString()
-          }
-        });
+        const newProfile: SavedUserProfile = {
+          resumeData,
+          templateSettings,
+          updatedAt: new Date().toISOString()
+        };
+
+        set({ savedProfile: newProfile });
+
+        // Asynchronously persist to server profile storage for browser extension & multi-client access
+        const currentUser = get().user;
+        if (currentUser?.email && typeof window !== 'undefined') {
+          fetch('/api/user/profile', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              email: currentUser.email,
+              name: currentUser.name,
+              savedProfile: newProfile
+            })
+          }).catch((err) => console.warn('Could not sync profile to server:', err));
+        }
       },
 
       clearProfile: () => {
