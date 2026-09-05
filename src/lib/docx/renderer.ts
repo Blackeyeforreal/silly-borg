@@ -3,7 +3,7 @@ import path from 'path';
 import PizZip from 'pizzip';
 import { ResumeData } from '../schema';
 import { parseFormattedRuns } from '../format-text';
-import type { TemplateSettings } from '../../store/resume-store';
+import { type TemplateSettings, getEffectiveSectionOrder } from '../../store/resume-store';
 
 function xmlEscape(str: string): string {
   if (!str) return '';
@@ -141,14 +141,14 @@ export async function renderResumeDocx(
     );
   }
 
-  // 2. Work Experience
-  const workExps = data.work_experience || [];
-  if (workExps.length > 0) {
+  // Helper section builders
+  const appendWorkExperience = () => {
+    const workExps = data.work_experience || [];
+    if (workExps.length === 0) return;
     paragraphs.push(makeSectionHeader('WORK EXPERIENCE'));
 
     for (let cIndex = 0; cIndex < workExps.length; cIndex++) {
       const exp = workExps[cIndex];
-      // Company name + dates
       paragraphs.push(
         makeTwoColumnLine(exp.company || '', exp.dates || '', {
           leftBold: true,
@@ -160,7 +160,6 @@ export async function renderResumeDocx(
 
       const roles = exp.roles || [];
       for (const role of roles) {
-        // Role title + location/dates
         const rightParts: string[] = [];
         if (role.dates && roles.length > 1) rightParts.push(role.dates);
         if (role.location) rightParts.push(role.location);
@@ -175,7 +174,6 @@ export async function renderResumeDocx(
           })
         );
 
-        // Descriptions
         if (Array.isArray(role.description)) {
           for (const desc of role.description) {
             if (desc && desc.trim()) {
@@ -184,7 +182,6 @@ export async function renderResumeDocx(
           }
         }
 
-        // Key Results
         if (role.key_results && role.key_results.length > 0) {
           const keyResultsText = role.key_results.filter(Boolean).join('; ');
           if (keyResultsText.trim()) {
@@ -192,7 +189,6 @@ export async function renderResumeDocx(
           }
         }
 
-        // Technologies/Skills Used
         if (role.technologies_used && role.technologies_used.length > 0) {
           const techText = role.technologies_used.filter(Boolean).join(', ');
           if (techText.trim()) {
@@ -201,16 +197,15 @@ export async function renderResumeDocx(
         }
       }
     }
-  }
+  };
 
-  // 3. Education
-  const edus = data.education || [];
-  if (edus.length > 0) {
+  const appendEducation = () => {
+    const edus = data.education || [];
+    if (edus.length === 0) return;
     paragraphs.push(makeSectionHeader('EDUCATION'));
 
     for (let eIndex = 0; eIndex < edus.length; eIndex++) {
       const edu = edus[eIndex];
-      // University + Graduation Date
       paragraphs.push(
         makeTwoColumnLine(edu.university || '', edu.graduation_date || '', {
           leftBold: true,
@@ -220,7 +215,6 @@ export async function renderResumeDocx(
         })
       );
 
-      // Degree, Major + Location
       const degreeMajor = [edu.degree, edu.major].filter(Boolean).join(', ');
       paragraphs.push(
         makeTwoColumnLine(degreeMajor, edu.location || '', {
@@ -231,7 +225,6 @@ export async function renderResumeDocx(
         })
       );
 
-      // Honors & Awards
       if (edu.honors_and_awards && edu.honors_and_awards.length > 0) {
         const honorsText = edu.honors_and_awards.filter(Boolean).join(', ');
         if (honorsText.trim()) {
@@ -239,7 +232,6 @@ export async function renderResumeDocx(
         }
       }
 
-      // Activities
       if (edu.activities && edu.activities.length > 0) {
         const actText = edu.activities.filter(Boolean).join(', ');
         if (actText.trim()) {
@@ -247,18 +239,18 @@ export async function renderResumeDocx(
         }
       }
     }
-  }
+  };
 
-  // 4. Skills & Interests
-  const skills = data.skills_and_interests;
-  const hasSkills = skills && (
-    (skills.certifications && skills.certifications.length > 0) ||
-    (skills.technologies && skills.technologies.length > 0) ||
-    (skills.skills && skills.skills.length > 0) ||
-    (skills.interests && skills.interests.length > 0)
-  );
+  const appendSkills = () => {
+    const skills = data.skills_and_interests;
+    const hasSkills = skills && (
+      (skills.certifications && skills.certifications.length > 0) ||
+      (skills.technologies && skills.technologies.length > 0) ||
+      (skills.skills && skills.skills.length > 0) ||
+      (skills.interests && skills.interests.length > 0)
+    );
 
-  if (hasSkills) {
+    if (!hasSkills) return;
     paragraphs.push(makeSectionHeader('CERTIFICATIONS, SKILLS & INTERESTS'));
 
     if (skills.certifications && skills.certifications.length > 0) {
@@ -273,17 +265,14 @@ export async function renderResumeDocx(
     if (skills.interests && skills.interests.length > 0) {
       paragraphs.push(makeLabeledSubBullet('Interests', skills.interests.filter(Boolean).join(', '), 0, 1));
     }
-  }
+  };
 
-  // 5. Custom Sections (e.g. Projects, Publications, Leadership, Awards)
-  const customSections = data.custom_sections || [];
-  for (const sec of customSections) {
-    if (!sec.section_title) continue;
+  const appendCustomSection = (sec: any) => {
+    if (!sec || !sec.section_title) return;
     paragraphs.push(makeSectionHeader(sec.section_title));
 
     for (let i = 0; i < sec.items.length; i++) {
       const item = sec.items[i];
-      // Title + dates
       paragraphs.push(
         makeTwoColumnLine(item.title || '', item.dates || '', {
           leftBold: true,
@@ -293,7 +282,6 @@ export async function renderResumeDocx(
         })
       );
 
-      // Subtitle + location
       if (item.subtitle || item.location) {
         paragraphs.push(
           makeTwoColumnLine(item.subtitle || '', item.location || '', {
@@ -305,13 +293,30 @@ export async function renderResumeDocx(
         );
       }
 
-      // Description bullets
       if (Array.isArray(item.description)) {
         for (const bullet of item.description) {
           if (bullet && bullet.trim()) {
             paragraphs.push(makeBulletItem(bullet.trim(), 0, 3));
           }
         }
+      }
+    }
+  };
+
+  // Render sections according to effective section order
+  const sectionOrder = getEffectiveSectionOrder(data);
+
+  for (const sectionId of sectionOrder) {
+    if (sectionId === 'work_experience') {
+      appendWorkExperience();
+    } else if (sectionId === 'education') {
+      appendEducation();
+    } else if (sectionId === 'skills_and_interests') {
+      appendSkills();
+    } else {
+      const customSec = (data.custom_sections || []).find((s) => s.id === sectionId);
+      if (customSec) {
+        appendCustomSection(customSec);
       }
     }
   }

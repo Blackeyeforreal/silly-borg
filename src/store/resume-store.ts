@@ -55,6 +55,27 @@ export function removeFromArray(obj: any, path: string, index: number): any {
   return setNestedValue(obj, path, newArray);
 }
 
+export function getEffectiveSectionOrder(resumeData: ResumeData | null): string[] {
+  if (!resumeData) return [];
+  const validIds: string[] = [];
+  if (resumeData.work_experience && resumeData.work_experience.length > 0) {
+    validIds.push('work_experience');
+  }
+  if (resumeData.education && resumeData.education.length > 0) {
+    validIds.push('education');
+  }
+  if (resumeData.skills_and_interests) {
+    validIds.push('skills_and_interests');
+  }
+  if (resumeData.custom_sections) {
+    resumeData.custom_sections.forEach((s) => validIds.push(s.id));
+  }
+
+  const existingOrder = (resumeData.section_order || []).filter((id) => validIds.includes(id));
+  const missing = validIds.filter((id) => !existingOrder.includes(id));
+  return [...existingOrder, ...missing];
+}
+
 export interface TemplateSettings {
   fontFamily: 'Garamond' | 'Times New Roman' | 'Georgia' | 'Calibri' | 'Arial';
   fontSize: 'compact' | 'standard' | 'spacious';
@@ -79,6 +100,10 @@ interface ResumeState {
   generationStep: string;
   activeEditingPath: string | null;
   templateSettings: TemplateSettings;
+  sidebarTab: 'forms' | 'rearrange' | 'design';
+  isSidebarOpen: boolean;
+  sidebarPosition: 'left' | 'right';
+  activeFormSection: string | null;
   
   setResumeData: (data: ResumeData | null) => void;
   updateField: (path: string, value: any) => void;
@@ -87,6 +112,13 @@ interface ResumeState {
   setActiveEditingPath: (path: string | null) => void;
   setTemplateSettings: (settings: Partial<TemplateSettings>) => void;
   resetTemplateSettings: () => void;
+  setSidebarTab: (tab: 'forms' | 'rearrange' | 'design') => void;
+  setSidebarOpen: (open: boolean) => void;
+  toggleSidebar: () => void;
+  setSidebarPosition: (pos: 'left' | 'right') => void;
+  setActiveFormSection: (section: string | null) => void;
+  reorderSections: (newOrder: string[]) => void;
+  moveSection: (sectionId: string, direction: 'up' | 'down') => void;
   setJobDescription: (desc: string) => void;
   setOriginalResumeText: (text: string) => void;
   setIsGenerating: (isGenerating: boolean) => void;
@@ -114,12 +146,51 @@ export const useResumeStore = create<ResumeState>()(
       generationStep: '',
       activeEditingPath: null,
       templateSettings: DEFAULT_TEMPLATE_SETTINGS,
+      sidebarTab: 'forms',
+      isSidebarOpen: true,
+      sidebarPosition: 'left',
+      activeFormSection: null,
 
       setActiveEditingPath: (path) => set({ activeEditingPath: path }),
       setTemplateSettings: (settings) => set((state) => ({
         templateSettings: { ...state.templateSettings, ...settings }
       })),
       resetTemplateSettings: () => set({ templateSettings: DEFAULT_TEMPLATE_SETTINGS }),
+      setSidebarTab: (tab) => set({ sidebarTab: tab, isSidebarOpen: true }),
+      setSidebarOpen: (open) => set({ isSidebarOpen: open }),
+      toggleSidebar: () => set((s) => ({ isSidebarOpen: !s.isSidebarOpen })),
+      setSidebarPosition: (pos) => set({ sidebarPosition: pos }),
+      setActiveFormSection: (section) => set({ activeFormSection: section }),
+
+      reorderSections: (newOrder) => set((state) => {
+        if (!state.resumeData) return state;
+        return {
+          resumeData: {
+            ...state.resumeData,
+            section_order: newOrder
+          }
+        };
+      }),
+
+      moveSection: (sectionId, direction) => set((state) => {
+        if (!state.resumeData) return state;
+        const currentOrder = getEffectiveSectionOrder(state.resumeData);
+        const index = currentOrder.indexOf(sectionId);
+        if (index === -1) return state;
+        const targetIndex = direction === 'up' ? index - 1 : index + 1;
+        if (targetIndex < 0 || targetIndex >= currentOrder.length) return state;
+
+        const newOrder = [...currentOrder];
+        const [removed] = newOrder.splice(index, 1);
+        newOrder.splice(targetIndex, 0, removed);
+
+        return {
+          resumeData: {
+            ...state.resumeData,
+            section_order: newOrder
+          }
+        };
+      }),
 
       setResumeData: (data) => set({ resumeData: data }),
       
@@ -141,8 +212,9 @@ export const useResumeStore = create<ResumeState>()(
       addCustomSection: (title, initialItem) => set((state) => {
         if (!state.resumeData) return state;
         const currentSections = state.resumeData.custom_sections || [];
+        const newSectionId = 'sec_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
         const newSection: CustomSection = {
-          id: 'sec_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
+          id: newSectionId,
           section_title: title.toUpperCase(),
           items: [
             initialItem || {
@@ -154,20 +226,24 @@ export const useResumeStore = create<ResumeState>()(
             }
           ]
         };
+        const currentOrder = getEffectiveSectionOrder(state.resumeData);
         return {
           resumeData: {
             ...state.resumeData,
-            custom_sections: [...currentSections, newSection]
+            custom_sections: [...currentSections, newSection],
+            section_order: [...currentOrder, newSectionId]
           }
         };
       }),
 
       removeCustomSection: (sectionId) => set((state) => {
         if (!state.resumeData || !state.resumeData.custom_sections) return state;
+        const currentOrder = getEffectiveSectionOrder(state.resumeData).filter((id) => id !== sectionId);
         return {
           resumeData: {
             ...state.resumeData,
-            custom_sections: state.resumeData.custom_sections.filter(s => s.id !== sectionId)
+            custom_sections: state.resumeData.custom_sections.filter((s) => s.id !== sectionId),
+            section_order: currentOrder
           }
         };
       }),
@@ -222,6 +298,9 @@ export const useResumeStore = create<ResumeState>()(
         } else if (sectionKey === 'skills_and_interests') {
           updated.skills_and_interests = undefined;
         }
+        if (updated.section_order) {
+          updated.section_order = updated.section_order.filter((id) => id !== sectionKey);
+        }
         return { resumeData: updated };
       }),
 
@@ -260,6 +339,11 @@ export const useResumeStore = create<ResumeState>()(
             interests: ['Open Source', 'Technology']
           };
         }
+        const currentOrder = getEffectiveSectionOrder(updated);
+        if (!currentOrder.includes(sectionKey)) {
+          currentOrder.push(sectionKey);
+        }
+        updated.section_order = currentOrder;
         return { resumeData: updated };
       }),
 
@@ -341,6 +425,8 @@ export const useResumeStore = create<ResumeState>()(
         isGenerating: false,
         generationStep: '',
         activeEditingPath: null,
+        sidebarTab: 'forms',
+        activeFormSection: null,
       })
     }),
     {

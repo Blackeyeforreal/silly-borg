@@ -63,7 +63,8 @@ export const ResumeDataSchema = z.object({
   work_experience: z.array(WorkExperienceSchema),
   education: z.array(EducationSchema),
   skills_and_interests: z.optional(SkillsAndInterestsSchema),
-  custom_sections: z.optional(z.array(CustomSectionSchema))
+  custom_sections: z.optional(z.array(CustomSectionSchema)),
+  section_order: z.optional(z.array(z.string()))
 });
 
 export type ResumeData = z.infer<typeof ResumeDataSchema>;

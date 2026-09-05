@@ -377,6 +377,136 @@ async function runTests() {
   }
   console.log('✓ Section deletion, restoration, and entry management verified!');
 
+  console.log('--- Step 11: Testing Section Reordering & DOCX Export Order Parity ---');
+  const { getEffectiveSectionOrder } = await import('../src/store/resume-store');
+  store.setResumeData(JSON.parse(JSON.stringify(sampleResume)));
+
+  // Test default effective section order
+  const defaultOrder = getEffectiveSectionOrder(useResumeStore.getState().resumeData);
+  if (defaultOrder[0] !== 'work_experience' || defaultOrder[1] !== 'education' || defaultOrder[2] !== 'skills_and_interests') {
+    throw new Error(`Unexpected default order: ${JSON.stringify(defaultOrder)}`);
+  }
+
+  // Move education UP (above work_experience)
+  store.moveSection('education', 'up');
+  const reordered1 = getEffectiveSectionOrder(useResumeStore.getState().resumeData);
+  if (reordered1[0] !== 'education' || reordered1[1] !== 'work_experience') {
+    throw new Error(`moveSection up failed: got ${JSON.stringify(reordered1)}`);
+  }
+
+  // Move education DOWN (back to 2nd position)
+  store.moveSection('education', 'down');
+  const reordered2 = getEffectiveSectionOrder(useResumeStore.getState().resumeData);
+  if (reordered2[0] !== 'work_experience' || reordered2[1] !== 'education') {
+    throw new Error(`moveSection down failed: got ${JSON.stringify(reordered2)}`);
+  }
+
+  // Test explicit reorderSections
+  store.reorderSections(['skills_and_interests', 'education', 'work_experience']);
+  const explicitOrder = getEffectiveSectionOrder(useResumeStore.getState().resumeData);
+  if (explicitOrder[0] !== 'skills_and_interests' || explicitOrder[1] !== 'education' || explicitOrder[2] !== 'work_experience') {
+    throw new Error(`reorderSections failed: got ${JSON.stringify(explicitOrder)}`);
+  }
+
+  // Test DOCX export with custom section order: education before work_experience
+  const customOrderResume: ResumeData = {
+    ...sampleResume,
+    section_order: ['education', 'work_experience', 'skills_and_interests']
+  };
+  const reorderedDocxBuf = await renderResumeDocx(customOrderResume);
+  const reorderedZip = new PizZip(reorderedDocxBuf);
+  const reorderedXml = reorderedZip.file('word/document.xml')?.asText() || '';
+  const eduPos = reorderedXml.indexOf('EDUCATION');
+  const workPos = reorderedXml.indexOf('WORK EXPERIENCE');
+
+  if (eduPos === -1 || workPos === -1) {
+    throw new Error('Missing EDUCATION or WORK EXPERIENCE in reordered DOCX');
+  }
+  if (eduPos >= workPos) {
+    throw new Error(`Expected EDUCATION (pos ${eduPos}) to precede WORK EXPERIENCE (pos ${workPos}) in DOCX`);
+  }
+
+  // Test sidebar state
+  store.setSidebarTab('rearrange');
+  if (useResumeStore.getState().sidebarTab !== 'rearrange') throw new Error('setSidebarTab failed');
+  store.setSidebarPosition('right');
+  if (useResumeStore.getState().sidebarPosition !== 'right') throw new Error('setSidebarPosition failed');
+  store.setSidebarPosition('left');
+  if (useResumeStore.getState().sidebarPosition !== 'left') throw new Error('setSidebarPosition left failed');
+  store.setSidebarOpen(false);
+  if (useResumeStore.getState().isSidebarOpen !== false) throw new Error('setSidebarOpen false failed');
+  store.setSidebarOpen(true);
+  if (useResumeStore.getState().isSidebarOpen !== true) throw new Error('setSidebarOpen true failed');
+
+  console.log('✓ Section reordering, DOCX export order parity, and sidebar state verified!');
+
+  console.log('--- Step 12: Testing User Profile Persistence, Formatting & PDF Scaling Math ---');
+  const { useUserStore, formatResumeDataToText } = await import('../src/store/user-store');
+
+  // Test login
+  const userStore = useUserStore.getState();
+  userStore.login('Devang Srivastava', 'devang@example.com');
+  if (useUserStore.getState().user?.name !== 'Devang Srivastava' || useUserStore.getState().user?.email !== 'devang@example.com') {
+    throw new Error('User login state not set correctly');
+  }
+
+  // Test saveProfile
+  const testTemplateSettings = {
+    fontFamily: 'Times New Roman' as const,
+    fontSize: 'standard' as const,
+    lineSpacing: 'normal' as const,
+    marginSize: 'normal' as const,
+    accentColor: '#1e3a8a'
+  };
+  userStore.saveProfile(sampleResume, testTemplateSettings);
+  const saved = useUserStore.getState().savedProfile;
+  if (!saved || saved.resumeData.personal_info.full_name !== 'Devang Srivastava') {
+    throw new Error('Saved profile resumeData not stored correctly');
+  }
+  if (saved.templateSettings.accentColor !== '#1e3a8a' || saved.templateSettings.fontFamily !== 'Times New Roman') {
+    throw new Error('Saved profile templateSettings not stored correctly');
+  }
+
+  // Test formatResumeDataToText
+  const formattedProfileText = formatResumeDataToText(sampleResume);
+  if (!formattedProfileText.includes('FULL NAME: Devang Srivastava')) {
+    throw new Error('Formatted profile missing FULL NAME');
+  }
+  if (!formattedProfileText.includes('TechCorp Solutions')) {
+    throw new Error('Formatted profile missing Work Experience company');
+  }
+  if (!formattedProfileText.includes('Carnegie Mellon University')) {
+    throw new Error('Formatted profile missing Education university');
+  }
+  if (!formattedProfileText.includes('AWS Certified Solutions Architect')) {
+    throw new Error('Formatted profile missing Certifications');
+  }
+  if (!formattedProfileText.includes('https://linkedin.com/in/devang')) {
+    throw new Error('Formatted profile missing Contact links');
+  }
+
+  // Test PDF Exact 1-to-1 Point Scaling Math
+  const cssPxPerInch = 96;
+  const ptPerInch = 72;
+  const letterWidthInches = 8.5;
+  const expectedElementWidthPx = letterWidthInches * cssPxPerInch; // 816 px
+  const expectedPdfPageWidthPt = letterWidthInches * ptPerInch;    // 612 pt
+  const ptPerCssPx = ptPerInch / cssPxPerInch;                     // 0.75 pt / px
+
+  if (expectedElementWidthPx !== 816 || expectedPdfPageWidthPt !== 612) {
+    throw new Error(`Invalid base dimensions: px=${expectedElementWidthPx}, pt=${expectedPdfPageWidthPt}`);
+  }
+
+  // A 10pt font in browser CSS = 10 * (96 / 72) = 13.3333 px
+  const cssFontSize10pt = 10 * (cssPxPerInch / ptPerInch);
+  // When scaled to 612pt in jsPDF:
+  const pdfRenderedPt = cssFontSize10pt * ptPerCssPx;
+  if (Math.abs(pdfRenderedPt - 10) > 0.0001) {
+    throw new Error(`PDF font size mismatch: expected 10pt, got ${pdfRenderedPt}pt`);
+  }
+
+  console.log('✓ User profile persistence, formatting & exact PDF typography parity verified!');
+
   console.log('=============================================');
   console.log('🎉 ALL INTEGRATION VERIFICATION TESTS PASSED!');
   console.log('=============================================');

@@ -24,7 +24,24 @@ export async function exportResumeToPdf(filename: string = 'resume.pdf'): Promis
       useCORS: true,
       logging: false,
       backgroundColor: '#ffffff',
-      windowWidth: 1024,
+      onclone: (clonedDoc, clonedEl) => {
+        // Enforce exact 8.5in (816 CSS px = 612 pt) width for exact 1-to-1 letter paper parity
+        const resumeEl = (clonedEl || clonedDoc.getElementById('resume-paper-element')) as HTMLElement;
+        if (resumeEl) {
+          resumeEl.style.width = '816px';
+          resumeEl.style.minWidth = '816px';
+          resumeEl.style.maxWidth = '816px';
+          resumeEl.style.boxSizing = 'border-box';
+          resumeEl.style.margin = '0 auto';
+          resumeEl.style.transform = 'none';
+        }
+
+        // Hide sidebars and non-printable elements in cloned document
+        clonedDoc.querySelectorAll('aside').forEach((aside) => aside.remove());
+        clonedDoc.querySelectorAll('.no-print').forEach((el) => {
+          (el as HTMLElement).style.display = 'none';
+        });
+      },
     });
 
     const imgData = canvas.toDataURL('image/jpeg', 0.98);
