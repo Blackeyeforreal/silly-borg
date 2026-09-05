@@ -599,6 +599,66 @@ async function runTests() {
   }
   console.log('✓ User profiles API persistent storage verified!');
 
+  // --- Suite 16: Resilient PDF Text Extractor & DOMMatrix Polyfill Verification ---
+  const { extractTextFromPdfBuffer, extractTextFromPdfStreamFallback } = await import('../src/lib/pdf-text-extractor');
+  if (typeof (globalThis as any).DOMMatrix === 'undefined') {
+    throw new Error('DOMMatrix polyfill failed to attach to globalThis');
+  }
+
+  // Create a minimal valid mock PDF buffer with a text stream
+  const mockPdfContent = `%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 55 >>
+stream
+BT
+/F1 12 Tf
+(Alex Chen) Tj
+(Senior Software Engineer) Tj
+ET
+endstream
+endobj
+xref
+0 5
+trailer
+<< /Root 1 0 R >>
+%%EOF`;
+
+  const mockPdfBuf = Buffer.from(mockPdfContent, 'utf-8');
+  const streamExtracted = extractTextFromPdfStreamFallback(mockPdfBuf);
+  if (!streamExtracted.includes('Alex Chen') || !streamExtracted.includes('Senior Software Engineer')) {
+    throw new Error(`PDF stream extractor failed to extract text. Got: ${streamExtracted}`);
+  }
+
+  const universalExtracted = await extractTextFromPdfBuffer(mockPdfBuf);
+  if (!universalExtracted.includes('Alex Chen')) {
+    throw new Error(`extractTextFromPdfBuffer failed. Got: ${universalExtracted}`);
+  }
+  console.log('✓ Serverless PDF text extractor & DOMMatrix polyfill verified!');
+
+  // --- Suite 17: Resilient Zero-Fail Resume Synthesis Verification ---
+  const { parseResumeTextToData, synthesizeTailoredResumeOffline } = await import('../src/lib/format-resume');
+  const rawResumeSnippet = `Alex Chen\nalex.chen@example.com | (555) 019-2834\nSenior Full-Stack Developer at CloudScale\nBuilt high concurrency systems with TypeScript and Node.js.`;
+  const parsedData = parseResumeTextToData(rawResumeSnippet, sampleResume);
+  if (parsedData.personal_info.contact.email !== 'alex.chen@example.com') {
+    throw new Error('parseResumeTextToData failed to extract email');
+  }
+
+  const offlineTailored = synthesizeTailoredResumeOffline(parsedData, 'Looking for a Senior Next.js, React, Docker, and PostgreSQL Engineer');
+  if (!offlineTailored.skills_and_interests?.technologies?.includes('Next.js') || 
+      !offlineTailored.skills_and_interests?.technologies?.includes('PostgreSQL')) {
+    throw new Error('synthesizeTailoredResumeOffline failed to align keywords');
+  }
+  console.log('✓ Zero-fail offline resume tailoring & keyword alignment engine verified!');
+
   console.log('=============================================');
   console.log('🎉 ALL INTEGRATION VERIFICATION TESTS PASSED!');
   console.log('=============================================');

@@ -45,10 +45,16 @@ export async function renderResumeDocx(
   data: ResumeData,
   templateSettings?: Partial<TemplateSettings>
 ): Promise<Buffer> {
-  const templatePath = path.join(process.cwd(), 'Template', 'Devang Srivastava - Resume.docx');
+  const candidatePaths = [
+    path.join(process.cwd(), 'Template', 'Devang Srivastava - Resume.docx'),
+    path.join(process.cwd(), '..', 'Template', 'Devang Srivastava - Resume.docx'),
+    path.join(__dirname, '..', '..', '..', 'Template', 'Devang Srivastava - Resume.docx'),
+    path.join(__dirname, '..', '..', 'Template', 'Devang Srivastava - Resume.docx'),
+  ];
+  const templatePath = candidatePaths.find((p) => fs.existsSync(p));
   
-  if (!fs.existsSync(templatePath)) {
-    throw new Error('Template DOCX file not found at: ' + templatePath);
+  if (!templatePath) {
+    throw new Error('Template DOCX file not found in paths: ' + candidatePaths.join(', '));
   }
 
   const templateContent = fs.readFileSync(templatePath);

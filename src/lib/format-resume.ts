@@ -134,3 +134,64 @@ export function synthesizeTailoredResumeOffline(baseResume: ResumeData, jobDescr
   return tailored;
 }
 
+/**
+ * Parses raw extracted resume text (from PDF, DOCX, or user paste) into a baseline ResumeData object.
+ */
+export function parseResumeTextToData(rawText: string, fallback?: ResumeData): ResumeData {
+  const base: ResumeData = fallback ? JSON.parse(JSON.stringify(fallback)) : {
+    personal_info: {
+      full_name: 'Applicant',
+      contact: { email: '', phone: '', location: '', links: '' }
+    },
+    work_experience: [],
+    education: [],
+    skills_and_interests: { skills: [], technologies: [] }
+  };
+
+  if (!rawText || !rawText.trim()) return base;
+
+  const lines = rawText.split('\n').map(l => l.trim()).filter(Boolean);
+
+  const defaultContact = { email: '', phone: '', location: '', links: '' };
+
+  // Extract email
+  const emailMatch = rawText.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
+  if (emailMatch) {
+    if (!base.personal_info) base.personal_info = { full_name: 'Applicant', contact: { ...defaultContact } };
+    if (!base.personal_info.contact) base.personal_info.contact = { ...defaultContact };
+    base.personal_info.contact.email = emailMatch[0];
+  }
+
+  // Extract phone
+  const phoneMatch = rawText.match(/(?:\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/);
+  if (phoneMatch) {
+    if (!base.personal_info) base.personal_info = { full_name: 'Applicant', contact: { ...defaultContact } };
+    if (!base.personal_info.contact) base.personal_info.contact = { ...defaultContact };
+    base.personal_info.contact.phone = phoneMatch[0];
+  }
+
+  // Extract name (first clean line that isn't email, phone, or url)
+  for (const line of lines.slice(0, 5)) {
+    if (
+      !line.includes('@') && 
+      !line.includes('http') && 
+      !line.includes('www.') && 
+      !line.includes('/') && 
+      line.length >= 3 && 
+      line.length <= 40 &&
+      !line.toLowerCase().includes('resume') &&
+      !line.toLowerCase().includes('curriculum')
+    ) {
+      const clean = line.replace(/^(full\s+name|name):\s*/i, '').trim();
+      if (clean) {
+        if (!base.personal_info) base.personal_info = { full_name: clean, contact: { ...defaultContact } };
+        base.personal_info.full_name = clean;
+        break;
+      }
+    }
+  }
+
+  return base;
+}
+
+

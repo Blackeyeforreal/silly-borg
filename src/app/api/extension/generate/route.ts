@@ -115,72 +115,67 @@ export async function POST(req: NextRequest) {
     const effectiveResumeText = formatResumeDataToText(userProfile.resumeData);
     const templateSettings = userProfile.templateSettings || DEFAULT_TEMPLATE_SETTINGS;
 
-    // 4. API Key Check
+    // 4. API Key Check & Resilience
     const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || process.env.GOOGLE_GENAI_API_KEY;
-    if (!apiKey) {
-      return NextResponse.json(
-        { error: 'GEMINI_API_KEY is not configured on the server.' },
-        { status: 500, headers: corsHeaders }
-      );
-    }
-
-    // 5. Generate tailored resume via Gemini
-    const ai = new GoogleGenAI({ apiKey });
-    const jsonSchema = getResumeJsonSchema();
-    const prompt = `${RESUME_GENERATION_SYSTEM_PROMPT}\n\nResume Text:\n${effectiveResumeText}\n\nJob Description:\n${jobDescription}`;
-
-    const candidateModels = ['gemini-3.6-flash', 'gemini-flash-latest', 'gemini-3.7-flash', 'gemini-3.5-flash', 'gemini-3.5-flash-lite'];
-    let result: any = null;
-    let lastError: any = null;
-
-    for (const modelName of candidateModels) {
-      for (let attempt = 1; attempt <= 2; attempt++) {
-        try {
-          result = await ai.models.generateContent({
-            model: modelName,
-            contents: prompt,
-            config: {
-              responseMimeType: 'application/json',
-              responseSchema: jsonSchema,
-            }
-          });
-          if (result?.text) break;
-        } catch (err: any) {
-          lastError = err;
-          console.warn(`Extension API: Attempt ${attempt} for model ${modelName} failed:`, err.message || err);
-          if (attempt < 2) {
-            await new Promise((resolve) => setTimeout(resolve, 1500));
-          }
-        }
-      }
-      if (result?.text) break;
-    }
 
     let validatedResume: ResumeData;
 
-    if (!result?.text) {
-      const isNetworkErr = 
-        lastError?.code === 'ENOTFOUND' ||
-        lastError?.message?.includes('ENOTFOUND') ||
-        lastError?.message?.includes('fetch failed') ||
-        lastError?.cause?.code === 'ENOTFOUND';
+    if (!apiKey) {
+      console.warn('GEMINI_API_KEY is not configured in environment. Tailoring resume using built-in keyword alignment engine.');
+      validatedResume = synthesizeTailoredResumeOffline(userProfile.resumeData, jobDescription);
+    } else {
+      // 5. Generate tailored resume via Gemini
+      const ai = new GoogleGenAI({ apiKey });
+      const jsonSchema = getResumeJsonSchema();
+      const prompt = `${RESUME_GENERATION_SYSTEM_PROMPT}\n\nResume Text:\n${effectiveResumeText}\n\nJob Description:\n${jobDescription}`;
 
-      if (isNetworkErr && userProfile?.resumeData) {
-        console.warn('Extension API: Gemini API unreachable via network, tailoring resume offline with keyword alignment...');
+      const candidateModels = [
+        'gemini-2.5-flash',
+        'gemini-2.0-flash',
+        'gemini-1.5-flash',
+        'gemini-flash-latest',
+        'gemini-2.5-pro'
+      ];
+      let result: any = null;
+      let lastError: any = null;
+
+      for (const modelName of candidateModels) {
+        for (let attempt = 1; attempt <= 2; attempt++) {
+          try {
+            result = await ai.models.generateContent({
+              model: modelName,
+              contents: prompt,
+              config: {
+                responseMimeType: 'application/json',
+                responseSchema: jsonSchema,
+              }
+            });
+            if (result?.text) break;
+          } catch (err: any) {
+            lastError = err;
+            console.warn(`Extension API: Attempt ${attempt} for model ${modelName} failed:`, err.message || err);
+            if (attempt < 2) {
+              await new Promise((resolve) => setTimeout(resolve, 1000));
+            }
+          }
+        }
+        if (result?.text) break;
+      }
+
+      if (!result?.text) {
+        console.warn('Gemini models unreachable, tailoring resume offline:', lastError?.message);
         validatedResume = synthesizeTailoredResumeOffline(userProfile.resumeData, jobDescription);
       } else {
-        throw lastError || new Error('Failed to generate resume from Gemini API');
-      }
-    } else {
-      let cleanedText = result.text.trim();
-      if (cleanedText.startsWith('```json')) {
-        cleanedText = cleanedText.replace(/^```json\s*/, '').replace(/\s*```$/, '');
-      } else if (cleanedText.startsWith('```')) {
-        cleanedText = cleanedText.replace(/^```\s*/, '').replace(/\s*```$/, '');
-      }
+        let cleanedText = result.text.trim();
+        if (cleanedText.startsWith('```json')) {
+          cleanedText = cleanedText.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+        } else if (cleanedText.startsWith('```')) {
+          cleanedText = cleanedText.replace(/^```\s*/, '').replace(/\s*```$/, '');
+        }
 
-      const parsedData = JSON.parse(cleanedText);
-      validatedResume = ResumeDataSchema.parse(parsedData);
+        const parsedData = JSON.parse(cleanedText);
+        validatedResume = ResumeDataSchema.parse(parsedData);
+      }
     }
 
     // 6. Render to DOCX buffer

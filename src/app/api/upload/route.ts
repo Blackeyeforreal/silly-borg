@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import mammoth from 'mammoth';
+import { extractTextFromPdfBuffer } from '@/lib/pdf-text-extractor';
 
 export const runtime = 'nodejs';
 
@@ -22,27 +23,10 @@ export async function POST(req: NextRequest) {
 
     if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
       try {
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        const pdfModule = require('pdf-parse');
-        if (pdfModule.PDFParse) {
-          const parser = new pdfModule.PDFParse({ data: new Uint8Array(buffer) });
-          const result = await parser.getText();
-          text = result.text || '';
-          if (typeof parser.destroy === 'function') {
-            await parser.destroy();
-          }
-        } else if (typeof pdfModule === 'function') {
-          const data = await pdfModule(buffer);
-          text = data.text || '';
-        } else if (typeof pdfModule.default === 'function') {
-          const data = await pdfModule.default(buffer);
-          text = data.text || '';
-        } else {
-          throw new Error('Unsupported pdf-parse module format');
-        }
+        text = await extractTextFromPdfBuffer(buffer);
       } catch (err: any) {
         console.error('PDF parsing error:', err);
-        throw new Error('Failed to parse PDF: ' + (err.message || String(err)));
+        return NextResponse.json({ error: err.message || 'Failed to extract text from PDF.' }, { status: 400 });
       }
     } else if (
       file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || 
@@ -53,12 +37,16 @@ export async function POST(req: NextRequest) {
     } else if (file.type === 'text/plain' || file.name.endsWith('.txt')) {
       text = buffer.toString('utf-8');
     } else {
-      return NextResponse.json({ error: 'Unsupported file type' }, { status: 400 });
+      return NextResponse.json({ error: 'Unsupported file type. Please upload a .pdf, .docx, or .txt file.' }, { status: 400 });
+    }
+
+    if (!text || !text.trim()) {
+      return NextResponse.json({ error: 'Could not find any readable text in this file.' }, { status: 400 });
     }
 
     return NextResponse.json({ text });
   } catch (error: any) {
     console.error('Error extracting text:', error);
-    return NextResponse.json({ error: 'Failed to extract text from file' }, { status: 500 });
+    return NextResponse.json({ error: error.message || 'Failed to extract text from file' }, { status: 500 });
   }
 }

@@ -37,9 +37,15 @@ export function FileUpload({ onTextExtracted }: FileUploadProps) {
         body: formData,
       });
 
-      if (!res.ok) throw new Error('Failed to extract text from file.');
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || `Upload failed (HTTP ${res.status})`);
+      }
       
       const data = await res.json();
+      if (!data.text) {
+        throw new Error('No text was found in the uploaded file.');
+      }
       onTextExtracted(data.text);
       addToast('File uploaded and text extracted successfully.', 'success');
     } catch (error) {
