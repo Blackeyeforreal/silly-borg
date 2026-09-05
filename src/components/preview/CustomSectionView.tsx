@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Trash2, Plus } from 'lucide-react';
+import { Trash2, Plus, ExternalLink } from 'lucide-react';
 import { EditableField } from './EditableField';
 import { EditableList } from './EditableList';
 import { useResumeStore } from '@/store/resume-store';
@@ -58,14 +58,30 @@ export function CustomSectionView({ section, sectionIndex }: CustomSectionViewPr
             <div key={itemIndex} className="group/item relative text-[10pt] leading-[1.25] text-black">
               {/* Item Title & Dates */}
               <div className="flex justify-between items-baseline leading-tight">
-                <EditableField
-                  value={item.title}
-                  onSave={(val) => updateField(`${itemPath}.title`, val)}
-                  fieldPath={`${itemPath}.title`}
-                  as="h3"
-                  className="font-bold text-[10.5pt] text-black"
-                  containerClassName="flex-1 min-w-0"
-                />
+                <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                  <EditableField
+                    value={item.title}
+                    onSave={(val) => updateField(`${itemPath}.title`, val)}
+                    fieldPath={`${itemPath}.title`}
+                    as="h3"
+                    className="font-bold text-[10.5pt] text-black"
+                    containerClassName="inline-flex"
+                  />
+                  {item.link && (
+                    <a
+                      href={item.link.startsWith('http') ? item.link : `https://${item.link}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:text-blue-800 text-[9pt] font-normal inline-flex items-center gap-0.5 underline shrink-0 ml-1"
+                      title={item.link}
+                    >
+                      <ExternalLink className="w-3 h-3 text-blue-500 no-print" />
+                      <span className="text-[8.5pt]">
+                        [{item.link.replace(/^https?:\/\/(www\.)?/, '').split('/')[0] || 'Link'}]
+                      </span>
+                    </a>
+                  )}
+                </div>
                 <div className="flex items-center gap-2 shrink-0 ml-4">
                   <EditableField
                     value={item.dates || ''}

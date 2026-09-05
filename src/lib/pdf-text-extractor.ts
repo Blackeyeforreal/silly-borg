@@ -58,12 +58,41 @@ async function extractWithPdfJsLegacy(buffer: Buffer): Promise<string> {
   for (let i = 1; i <= doc.numPages; i++) {
     const page = await doc.getPage(i);
     const content = await page.getTextContent();
-    const pageStrings = content.items
-      .map((item: any) => item.str || '')
-      .filter((s: string) => s.length > 0);
     
-    if (pageStrings.length > 0) {
-      pagesText.push(pageStrings.join(' '));
+    // Reconstruct line breaks using Y-position from each text item's transform matrix.
+    // item.transform is [scaleX, skewX, skewY, scaleY, translateX, translateY].
+    // Items with different translateY values are on different lines.
+    const items = content.items.filter((item: any) => typeof item.str === 'string' && item.str.length > 0) as any[];
+    if (items.length === 0) continue;
+
+    const lines: { y: number; items: { x: number; str: string }[] }[] = [];
+    const Y_TOLERANCE = 3; // pixels - items within this vertical distance are on the same line
+
+    for (const item of items) {
+      const x = item.transform ? item.transform[4] : 0;
+      const y = item.transform ? item.transform[5] : 0;
+      const str = item.str as string;
+
+      // Find existing line with similar Y
+      let existingLine = lines.find(l => Math.abs(l.y - y) < Y_TOLERANCE);
+      if (existingLine) {
+        existingLine.items.push({ x, str });
+      } else {
+        lines.push({ y, items: [{ x, str }] });
+      }
+    }
+
+    // Sort lines by Y position (top to bottom = descending Y in PDF coordinates)
+    lines.sort((a, b) => b.y - a.y);
+
+    // Within each line, sort items by X position (left to right)
+    const pageLines = lines.map(line => {
+      line.items.sort((a, b) => a.x - b.x);
+      return line.items.map(item => item.str).join(' ').trim();
+    }).filter(l => l.length > 0);
+
+    if (pageLines.length > 0) {
+      pagesText.push(pageLines.join('\n'));
     }
   }
 

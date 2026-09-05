@@ -134,12 +134,15 @@ export async function renderResumeDocx(
   }
 
   const contact = data.personal_info?.contact;
-  const contactLine = [
-    contact?.email,
-    contact?.phone,
-    contact?.location,
-    contact?.links,
-  ].filter(Boolean).map(s => String(s).trim()).join(' | ');
+  const contactParts: string[] = [];
+  if (contact?.email) contactParts.push(contact.email);
+  if (contact?.phone) contactParts.push(contact.phone);
+  if (contact?.location) contactParts.push(contact.location);
+  if (contact?.portfolio) contactParts.push(`[Portfolio](${contact.portfolio})`);
+  if (contact?.linkedin) contactParts.push(`[LinkedIn](${contact.linkedin})`);
+  if (contact?.github) contactParts.push(`[GitHub](${contact.github})`);
+  if (contact?.links) contactParts.push(contact.links);
+  const contactLine = contactParts.filter(Boolean).map(s => String(s).trim()).join(' | ');
 
   if (contactLine) {
     paragraphs.push(
@@ -171,8 +174,9 @@ export async function renderResumeDocx(
         if (role.location) rightParts.push(role.location);
         const roleRightText = rightParts.join(' | ');
 
+        const roleTitleText = role.link ? `[${role.title || ''}](${role.link})` : (role.title || '');
         paragraphs.push(
-          makeTwoColumnLine(role.title || '', roleRightText, {
+          makeTwoColumnLine(roleTitleText, roleRightText, {
             leftItalic: true,
             rightItalic: true,
             leftSize: 20,
@@ -279,8 +283,9 @@ export async function renderResumeDocx(
 
     for (let i = 0; i < sec.items.length; i++) {
       const item = sec.items[i];
+      const titleText = item.link ? `[${item.title || ''}](${item.link})` : (item.title || '');
       paragraphs.push(
-        makeTwoColumnLine(item.title || '', item.dates || '', {
+        makeTwoColumnLine(titleText, item.dates || '', {
           leftBold: true,
           leftSize: 21,
           rightSize: 20,

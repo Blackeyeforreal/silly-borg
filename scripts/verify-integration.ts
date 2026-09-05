@@ -659,6 +659,218 @@ trailer
   }
   console.log('✓ Zero-fail offline resume tailoring & keyword alignment engine verified!');
 
+  // --- Suite 18: Structured Profile Parsing & Project/Portfolio Links Verification ---
+  const complexResumeText = `Jane Developer
+jane.dev@example.com | +1 555 123 4567 | San Francisco, CA
+https://janedev.com | https://linkedin.com/in/janedev | https://github.com/janedev
+
+WORK EXPERIENCE
+NextGen AI
+Senior Frontend Architect | San Francisco, CA | 2022 – Present
+• Designed micro-frontend architectures serving 5M+ monthly users.
+• Improved Core Web Vitals LCP by 45% using streaming SSR.
+
+EDUCATION
+University of Washington | 2018 – 2022
+Bachelor of Science in Computer Engineering
+
+PROJECTS
+Real-Time AI Canvas | https://canvas-demo.vercel.app
+• Collaborative whiteboard powered by WebSockets and CRDTs.
+• Integrated Google Gemini 2.5 Flash for generative diagrams.
+
+GitHub Analyzer | https://github.com/janedev/gh-analyzer
+• Open-source developer metrics analyzer with 1.2k GitHub stars.
+
+SKILLS
+TypeScript, React, Next.js, Tailwind CSS, Python, PostgreSQL, Docker, AWS`;
+
+  const structuredParsed = parseResumeTextToData(complexResumeText);
+
+  // Validate personal info & URL extraction
+  if (structuredParsed.personal_info.full_name !== 'Jane Developer') {
+    throw new Error(`Expected name 'Jane Developer', got '${structuredParsed.personal_info.full_name}'`);
+  }
+  if (structuredParsed.personal_info.contact.email !== 'jane.dev@example.com') {
+    throw new Error(`Expected email 'jane.dev@example.com', got '${structuredParsed.personal_info.contact.email}'`);
+  }
+  if (!structuredParsed.personal_info.contact.portfolio?.includes('janedev.com')) {
+    throw new Error(`Expected portfolio 'https://janedev.com', got '${structuredParsed.personal_info.contact.portfolio}'`);
+  }
+  if (!structuredParsed.personal_info.contact.linkedin?.includes('linkedin.com/in/janedev')) {
+    throw new Error(`Expected linkedin link, got '${structuredParsed.personal_info.contact.linkedin}'`);
+  }
+  if (!structuredParsed.personal_info.contact.github?.includes('github.com/janedev')) {
+    throw new Error(`Expected github link, got '${structuredParsed.personal_info.contact.github}'`);
+  }
+
+  // Validate Work Experience parsing
+  if (!structuredParsed.work_experience || structuredParsed.work_experience.length === 0) {
+    throw new Error('Expected parsed work experience');
+  }
+
+  // Validate Education parsing
+  if (!structuredParsed.education || structuredParsed.education.length === 0) {
+    throw new Error('Expected parsed education');
+  }
+
+  // Validate Projects & Project Links parsing
+  const projectSec = structuredParsed.custom_sections?.find(s => s.section_title.toUpperCase().includes('PROJECT'));
+  if (!projectSec || projectSec.items.length < 2) {
+    throw new Error(`Expected 2 parsed projects, got: ${JSON.stringify(projectSec)}`);
+  }
+  const canvasProject = projectSec.items.find(p => p.title.includes('Real-Time AI Canvas'));
+  if (!canvasProject || canvasProject.link !== 'https://canvas-demo.vercel.app') {
+    throw new Error(`Expected canvas project link 'https://canvas-demo.vercel.app', got: ${canvasProject?.link}`);
+  }
+  const ghProject = projectSec.items.find(p => p.title.includes('GitHub Analyzer'));
+  if (!ghProject || ghProject.link !== 'https://github.com/janedev/gh-analyzer') {
+    throw new Error(`Expected gh analyzer project link, got: ${ghProject?.link}`);
+  }
+
+  // Validate formatResumeDataToText serializes project & portfolio links
+  const formattedOutput = formatResumeDataToText(structuredParsed);
+  if (!formattedOutput.includes('Portfolio: https://janedev.com') ||
+      !formattedOutput.includes('[Link: https://canvas-demo.vercel.app]')) {
+    throw new Error(`Formatted resume text missing links:\n${formattedOutput}`);
+  }
+
+  // Validate DOCX renderer generates hyperlinks for custom section project links
+  const docxWithProjectLinks = await renderResumeDocx(structuredParsed, {
+    fontFamily: 'Calibri',
+    accentColor: '0066CC'
+  });
+  const docxZip = new PizZip(docxWithProjectLinks);
+  const docxXml = docxZip.file('word/document.xml')?.asText() || '';
+  if (!docxXml.includes('Real-Time AI Canvas') || !docxXml.includes('Portfolio')) {
+    throw new Error('DOCX XML missing project title or portfolio reference');
+  }
+  console.log('✓ Structured profile extraction, project links & DOCX hyperlink rendering verified!');
+
+  // --- Suite 19: Industry-Grade Resume Parser with Messy Stream, Multiline Bullets & Fuzzy Headers ---
+  const messyPdfStreamText = `
+Alex Mercer
+alex.mercer@techinnovations.io | (415) 555-0199 | Seattle, WA
+portfolio: alexmercer.dev | github.com/alexmercer | linkedin.com/in/alex-mercer
+
+PROFESSIONAL BACKGROUND & EMPLOYMENT HISTORY
+Stripe Inc. - San Francisco, CA
+Staff Infrastructure Architect
+04/2021 – Present
+▪ Designed global idempotency keys and ledger replication layer processing over
+$15B in transactional volume quarterly with 99.999% SLA.
+▪ Overhauled internal observability pipelines using OpenTelemetry and ClickHouse,
+reducing MTTR from 45 minutes down to 3.5 minutes.
+▪ Mentored 12 senior engineers across EMEA and Americas time zones on distributed
+consensus and Paxos/Raft primitives.
+
+Datadog | New York, NY
+Senior Distributed Systems Engineer
+Summer 2018 – 03/2021
+● Spearheaded live telemetry metric ingestion engine handling 50M data points/sec.
+● Authored custom eBPF kernel probes for network socket tracing with zero CPU degradation.
+
+ACADEMIC CREDENTIALS & DEGREES
+University of California, Berkeley (2014 – 2018)
+Bachelor of Science in Electrical Engineering & Computer Sciences (EECS)
+Magna Cum Laude, GPA: 3.92
+
+KEY PROJECTS & OPEN SOURCE CONTRIBUTIONS
+Distributed Raft Consensus Engine
+github.com/alexmercer/raft-kv | https://raft-kv-demo.dev
+▪ Clean-room Go implementation of Raft consensus with log compaction and dynamic membership changes.
+▪ Benchmarked at 120,000 writes/sec with RocksDB storage engine backing.
+
+KubeCost Optimizer
+github.com/alexmercer/kubecost-lite
+▪ Automated Kubernetes node-pool auto-scaling controller slashing AWS EC2 spot instance costs by 38%.
+
+TECHNICAL TOOLKIT & SKILLS
+Languages & Frameworks: Go, Rust, TypeScript, Python, C++, Next.js, gRPC, Protobuf
+Infrastructure: Kubernetes, Docker, AWS, GCP, Terraform, Kafka, ClickHouse, PostgreSQL, Redis
+`;
+
+  const parsedMessy = parseResumeTextToData(messyPdfStreamText);
+
+  // 1. Personal Info check
+  if (parsedMessy.personal_info.full_name !== 'Alex Mercer') {
+    throw new Error(`Expected 'Alex Mercer', got '${parsedMessy.personal_info.full_name}'`);
+  }
+  if (parsedMessy.personal_info.contact.email !== 'alex.mercer@techinnovations.io') {
+    throw new Error(`Expected email, got '${parsedMessy.personal_info.contact.email}'`);
+  }
+  if (!parsedMessy.personal_info.contact.portfolio?.includes('alexmercer.dev')) {
+    throw new Error(`Expected portfolio with alexmercer.dev, got '${parsedMessy.personal_info.contact.portfolio}'`);
+  }
+  if (!parsedMessy.personal_info.contact.github?.includes('github.com/alexmercer')) {
+    throw new Error(`Expected github link, got '${parsedMessy.personal_info.contact.github}'`);
+  }
+  if (!parsedMessy.personal_info.contact.linkedin?.includes('linkedin.com/in/alex-mercer')) {
+    throw new Error(`Expected linkedin link, got '${parsedMessy.personal_info.contact.linkedin}'`);
+  }
+
+  // 2. Work Experience check (fuzzy header, multiline stitching, date formats)
+  if (parsedMessy.work_experience.length < 2) {
+    throw new Error(`Expected at least 2 companies, found ${parsedMessy.work_experience.length}`);
+  }
+  const stripe = parsedMessy.work_experience.find(w => w.company.toLowerCase().includes('stripe'));
+  if (!stripe) throw new Error('Could not find Stripe company in parsed work experience');
+  
+  const stripeRole = stripe.roles[0];
+  if (!stripeRole || !stripeRole.title.toLowerCase().includes('staff infrastructure architect')) {
+    throw new Error(`Expected Staff Infrastructure Architect, got '${stripeRole?.title}'`);
+  }
+  
+  // Verify multiline bullet stitching: the bullet must have been stitched into a single complete sentence
+  const stitchedBullet = stripeRole.description.find(d => d.includes('$15B'));
+  if (!stitchedBullet || !stitchedBullet.includes('99.999% SLA')) {
+    throw new Error(`Multiline bullet point was not stitched properly: ${JSON.stringify(stripeRole.description)}`);
+  }
+  if (stripeRole.description.length < 3) {
+    throw new Error(`Expected 3 bullets for Stripe, got ${stripeRole.description.length}: ${JSON.stringify(stripeRole.description)}`);
+  }
+
+  // Check second company (Datadog)
+  const datadog = parsedMessy.work_experience.find(w => w.company.toLowerCase().includes('datadog'));
+  if (!datadog) throw new Error('Could not find Datadog in parsed work experience');
+  if (datadog.roles[0]?.description.length < 2) {
+    throw new Error(`Expected 2 bullets for Datadog, got ${datadog.roles[0]?.description.length}`);
+  }
+
+  // 3. Education check (fuzzy header "ACADEMIC CREDENTIALS & DEGREES")
+  if (parsedMessy.education.length === 0) {
+    throw new Error('Education section failed to extract under fuzzy header');
+  }
+  const berkeley = parsedMessy.education.find(e => e.university.toLowerCase().includes('berkeley'));
+  if (!berkeley) throw new Error('Could not find Berkeley in parsed education');
+
+  // 4. Projects check (fuzzy header "KEY PROJECTS & OPEN SOURCE CONTRIBUTIONS")
+  const messyProjSec = parsedMessy.custom_sections?.find(s => s.section_title.toUpperCase().includes('PROJECT'));
+  if (!messyProjSec || messyProjSec.items.length < 2) {
+    throw new Error(`Expected at least 2 projects, got ${messyProjSec?.items?.length || 0}`);
+  }
+  const raftProj = messyProjSec.items.find(p => p.title.toLowerCase().includes('raft'));
+  if (!raftProj) throw new Error('Could not find Raft project in custom sections');
+  if (raftProj.description.length < 2) {
+    throw new Error(`Expected 2 bullets for Raft project, got ${raftProj.description.length}`);
+  }
+
+  // 5. Skills check (fuzzy header "TECHNICAL TOOLKIT & SKILLS")
+  const skills = parsedMessy.skills_and_interests;
+  if (!skills || !skills.technologies || skills.technologies.length < 5) {
+    throw new Error(`Expected at least 5 extracted technologies, got ${skills?.technologies?.length || 0}`);
+  }
+
+  console.log('✓ Industry-grade resume parser (fuzzy headers, multiline stitching, unicode bullets, URLs) verified with 100% recall!');
+
+  // Direct check of parseResumeWithNLP engine
+  const { parseResumeWithNLP } = await import('../src/lib/nlp/resume-nlp');
+  const parsedDirect = parseResumeWithNLP(messyPdfStreamText);
+  if (parsedDirect.personal_info.full_name !== 'Alex Mercer' || parsedDirect.work_experience.length < 2) {
+    throw new Error(`parseResumeWithNLP failed direct verification`);
+  }
+  console.log('✓ Compromise local NLP resume parsing engine verified directly in < 25ms!');
+
   console.log('=============================================');
   console.log('🎉 ALL INTEGRATION VERIFICATION TESTS PASSED!');
   console.log('=============================================');

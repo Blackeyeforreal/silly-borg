@@ -18,6 +18,9 @@ export function PersonalInfoSection({ data }: PersonalInfoSectionProps) {
     { value: data.contact?.email, path: 'personal_info.contact.email' },
     { value: data.contact?.phone, path: 'personal_info.contact.phone' },
     { value: data.contact?.location, path: 'personal_info.contact.location' },
+    { value: data.contact?.portfolio, path: 'personal_info.contact.portfolio' },
+    { value: data.contact?.linkedin, path: 'personal_info.contact.linkedin' },
+    { value: data.contact?.github, path: 'personal_info.contact.github' },
     { value: data.contact?.links, path: 'personal_info.contact.links' }
   ].filter(item => item.value);
 

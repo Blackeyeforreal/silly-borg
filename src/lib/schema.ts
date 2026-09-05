@@ -4,7 +4,10 @@ export const ContactSchema = z.object({
   email: z.string(),
   phone: z.string(),
   location: z.string(),
-  links: z.string()
+  links: z.string(),
+  portfolio: z.optional(z.string()),
+  linkedin: z.optional(z.string()),
+  github: z.optional(z.string())
 });
 
 export const PersonalInfoSchema = z.object({
@@ -16,6 +19,7 @@ export const RoleSchema = z.object({
   title: z.string(),
   location: z.string(),
   dates: z.optional(z.string()),
+  link: z.optional(z.string()),
   description: z.array(z.string()),
   technologies_used: z.optional(z.array(z.string())),
   key_results: z.optional(z.array(z.string()))
@@ -49,6 +53,8 @@ export const CustomSectionItemSchema = z.object({
   subtitle: z.optional(z.string()),
   dates: z.optional(z.string()),
   location: z.optional(z.string()),
+  link: z.optional(z.string()),
+  technologies: z.optional(z.array(z.string())),
   description: z.array(z.string())
 });
 

@@ -1,4 +1,6 @@
 import type { ResumeData } from './schema';
+import { parseResumeWithNLP } from './nlp/resume-nlp';
+export { parseResumeWithNLP };
 
 /**
  * Pure utility to format structured ResumeData into clean plain-text
@@ -14,7 +16,15 @@ export function formatResumeDataToText(data: ResumeData): string {
 
   const c = data.personal_info?.contact;
   if (c) {
-    const contactParts = [c.email, c.phone, c.location, c.links].filter(Boolean);
+    const contactParts = [
+      c.email,
+      c.phone,
+      c.location,
+      c.portfolio ? `Portfolio: ${c.portfolio}` : '',
+      c.linkedin ? `LinkedIn: ${c.linkedin}` : '',
+      c.github ? `GitHub: ${c.github}` : '',
+      c.links
+    ].filter(Boolean);
     if (contactParts.length) {
       parts.push(`CONTACT: ${contactParts.join(' | ')}`);
     }
@@ -25,7 +35,8 @@ export function formatResumeDataToText(data: ResumeData): string {
     for (const exp of data.work_experience) {
       parts.push(`- Company: ${exp.company} (${exp.dates})`);
       for (const r of exp.roles) {
-        parts.push(`  Role: ${r.title}${r.location ? ` | ${r.location}` : ''}${r.dates ? ` | ${r.dates}` : ''}`);
+        const linkStr = r.link ? ` [Link: ${r.link}]` : '';
+        parts.push(`  Role: ${r.title}${linkStr}${r.location ? ` | ${r.location}` : ''}${r.dates ? ` | ${r.dates}` : ''}`);
         for (const d of r.description || []) {
           parts.push(`    * ${d}`);
         }
@@ -73,7 +84,8 @@ export function formatResumeDataToText(data: ResumeData): string {
     for (const sec of data.custom_sections) {
       parts.push(`\n${sec.section_title}:`);
       for (const item of sec.items) {
-        parts.push(`- ${item.title}${item.subtitle ? ` (${item.subtitle})` : ''}${item.dates ? ` [${item.dates}]` : ''}${item.location ? ` [${item.location}]` : ''}`);
+        const linkPart = item.link ? ` [Link: ${item.link}]` : '';
+        parts.push(`- ${item.title}${linkPart}${item.subtitle ? ` (${item.subtitle})` : ''}${item.dates ? ` [${item.dates}]` : ''}${item.location ? ` [${item.location}]` : ''}`);
         for (const b of item.description || []) {
           parts.push(`    * ${b}`);
         }
@@ -136,62 +148,15 @@ export function synthesizeTailoredResumeOffline(baseResume: ResumeData, jobDescr
 
 /**
  * Parses raw extracted resume text (from PDF, DOCX, or user paste) into a baseline ResumeData object.
+ * Intelligently extracts Personal Info (with URLs for portfolio, LinkedIn, GitHub),
+ * Work Experience, Education, Projects/Portfolio, and Skills.
+ */
+/**
+ * Parses raw extracted resume text (from PDF, DOCX, or user paste) into a baseline ResumeData object
+ * using the high-speed local compromise NLP engine.
  */
 export function parseResumeTextToData(rawText: string, fallback?: ResumeData): ResumeData {
-  const base: ResumeData = fallback ? JSON.parse(JSON.stringify(fallback)) : {
-    personal_info: {
-      full_name: 'Applicant',
-      contact: { email: '', phone: '', location: '', links: '' }
-    },
-    work_experience: [],
-    education: [],
-    skills_and_interests: { skills: [], technologies: [] }
-  };
-
-  if (!rawText || !rawText.trim()) return base;
-
-  const lines = rawText.split('\n').map(l => l.trim()).filter(Boolean);
-
-  const defaultContact = { email: '', phone: '', location: '', links: '' };
-
-  // Extract email
-  const emailMatch = rawText.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
-  if (emailMatch) {
-    if (!base.personal_info) base.personal_info = { full_name: 'Applicant', contact: { ...defaultContact } };
-    if (!base.personal_info.contact) base.personal_info.contact = { ...defaultContact };
-    base.personal_info.contact.email = emailMatch[0];
-  }
-
-  // Extract phone
-  const phoneMatch = rawText.match(/(?:\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/);
-  if (phoneMatch) {
-    if (!base.personal_info) base.personal_info = { full_name: 'Applicant', contact: { ...defaultContact } };
-    if (!base.personal_info.contact) base.personal_info.contact = { ...defaultContact };
-    base.personal_info.contact.phone = phoneMatch[0];
-  }
-
-  // Extract name (first clean line that isn't email, phone, or url)
-  for (const line of lines.slice(0, 5)) {
-    if (
-      !line.includes('@') && 
-      !line.includes('http') && 
-      !line.includes('www.') && 
-      !line.includes('/') && 
-      line.length >= 3 && 
-      line.length <= 40 &&
-      !line.toLowerCase().includes('resume') &&
-      !line.toLowerCase().includes('curriculum')
-    ) {
-      const clean = line.replace(/^(full\s+name|name):\s*/i, '').trim();
-      if (clean) {
-        if (!base.personal_info) base.personal_info = { full_name: clean, contact: { ...defaultContact } };
-        base.personal_info.full_name = clean;
-        break;
-      }
-    }
-  }
-
-  return base;
+  return parseResumeWithNLP(rawText, fallback);
 }
 
 

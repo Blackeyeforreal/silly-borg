@@ -184,13 +184,52 @@ export function SectionForms({ onOpenAddSectionModal }: SectionFormsProps) {
               </div>
               <div>
                 <label className="block text-xs font-semibold text-gray-700 mb-1">
-                  Links (Portfolio / LinkedIn)
+                  Portfolio / Personal Website
+                </label>
+                <input
+                  type="url"
+                  value={resumeData.personal_info.contact.portfolio || ''}
+                  onChange={(e) => updateField('personal_info.contact.portfolio', e.target.value)}
+                  placeholder="https://janedoe.dev"
+                  className="w-full px-3 py-1.5 text-xs sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none font-mono text-blue-700"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">
+                  LinkedIn URL
+                </label>
+                <input
+                  type="url"
+                  value={resumeData.personal_info.contact.linkedin || ''}
+                  onChange={(e) => updateField('personal_info.contact.linkedin', e.target.value)}
+                  placeholder="https://linkedin.com/in/jane"
+                  className="w-full px-3 py-1.5 text-xs sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none font-mono text-sky-700"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">
+                  GitHub URL
+                </label>
+                <input
+                  type="url"
+                  value={resumeData.personal_info.contact.github || ''}
+                  onChange={(e) => updateField('personal_info.contact.github', e.target.value)}
+                  placeholder="https://github.com/jane"
+                  className="w-full px-3 py-1.5 text-xs sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none font-mono text-gray-800"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">
+                  Other Links / Handles
                 </label>
                 <input
                   type="text"
                   value={resumeData.personal_info.contact.links || ''}
                   onChange={(e) => updateField('personal_info.contact.links', e.target.value)}
-                  placeholder="linkedin.com/in/jane | github.com/jane"
+                  placeholder="twitter.com/jane"
                   className="w-full px-3 py-1.5 text-xs sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
                 />
               </div>
@@ -297,6 +336,17 @@ export function SectionForms({ onOpenAddSectionModal }: SectionFormsProps) {
                                   className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none"
                                 />
                               </div>
+                            </div>
+
+                            <div>
+                              <label className="block text-[10px] font-semibold text-gray-500">Role / Project Link (Optional)</label>
+                              <input
+                                type="url"
+                                value={role.link || ''}
+                                onChange={(e) => updateField(`work_experience[${cIdx}].roles[${rIdx}].link`, e.target.value)}
+                                placeholder="https://company.com/product"
+                                className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none font-mono text-blue-700"
+                              />
                             </div>
 
                             {/* Bullet Points */}
@@ -710,7 +760,7 @@ export function SectionForms({ onOpenAddSectionModal }: SectionFormsProps) {
                           </div>
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                           <div>
                             <label className="block text-[10px] font-semibold text-gray-500">Subtitle / Tech</label>
                             <input
@@ -722,12 +772,22 @@ export function SectionForms({ onOpenAddSectionModal }: SectionFormsProps) {
                             />
                           </div>
                           <div>
-                            <label className="block text-[10px] font-semibold text-gray-500">Location / URL</label>
+                            <label className="block text-[10px] font-semibold text-gray-500">Project / Demo Link</label>
+                            <input
+                              type="url"
+                              value={item.link || ''}
+                              onChange={(e) => updateField(`${itemPath}.link`, e.target.value)}
+                              placeholder="https://demo.app"
+                              className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none font-mono text-blue-700"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[10px] font-semibold text-gray-500">Location</label>
                             <input
                               type="text"
                               value={item.location || ''}
                               onChange={(e) => updateField(`${itemPath}.location`, e.target.value)}
-                              placeholder="github.com/project"
+                              placeholder="San Francisco, CA"
                               className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none"
                             />
                           </div>

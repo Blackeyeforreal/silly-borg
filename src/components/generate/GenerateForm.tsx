@@ -3,10 +3,13 @@
 import React, { useState, useEffect } from 'react';
 import { useResumeStore } from '@/store/resume-store';
 import { useUserStore, formatResumeDataToText } from '@/store/user-store';
+import { parseResumeTextToData } from '@/lib/format-resume';
 import { FileUpload } from './FileUpload';
+import { ProfileEditorForm } from './ProfileEditorForm';
 import { useToast } from '@/components/ui/Toast';
-import { Sparkles, Loader2, CheckCircle2, User, LogIn } from 'lucide-react';
+import { Sparkles, Loader2, CheckCircle2, User, LogIn, FileEdit } from 'lucide-react';
 import { sampleResumeData } from '@/lib/sample-data';
+import type { ResumeData } from '@/lib/schema';
 
 const DYNAMIC_GENERATION_STEPS = [
   'Analyzing target job requirements & tech stack...',
@@ -19,8 +22,10 @@ const DYNAMIC_GENERATION_STEPS = [
 ];
 
 export function GenerateForm() {
-  const [inputMode, setInputMode] = useState<'upload' | 'paste'>('upload');
+  const [inputMode, setInputMode] = useState<'upload' | 'paste' | 'form'>('upload');
   const [resumeText, setResumeText] = useState('');
+  const [structuredProfile, setStructuredProfile] = useState<ResumeData | null>(null);
+  const [isParsingText, setIsParsingText] = useState(false);
   
   const { user, savedProfile, setAuthModalOpen } = useUserStore();
   const [useSavedProfile, setUseSavedProfile] = useState(false);
@@ -63,9 +68,15 @@ export function GenerateForm() {
 
   const handleGenerate = async () => {
     const isUsingProfile = useSavedProfile && savedProfile?.resumeData;
-    const effectiveResumeText = isUsingProfile 
-      ? formatResumeDataToText(savedProfile.resumeData) 
-      : resumeText;
+    let effectiveResumeText = '';
+
+    if (isUsingProfile) {
+      effectiveResumeText = formatResumeDataToText(savedProfile.resumeData);
+    } else if (inputMode === 'form' && structuredProfile) {
+      effectiveResumeText = formatResumeDataToText(structuredProfile);
+    } else {
+      effectiveResumeText = resumeText;
+    }
 
     if (!effectiveResumeText.trim()) {
       addToast('Please provide your resume content or use your saved profile.', 'error');
@@ -184,20 +195,45 @@ export function GenerateForm() {
           {(!useSavedProfile || !savedProfile?.resumeData) && (
             <div className="flex bg-gray-100 p-1 rounded-lg">
               <button
+                type="button"
                 onClick={() => setInputMode('upload')}
-                className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                className={`px-3 sm:px-4 py-1.5 text-xs sm:text-sm font-medium rounded-md transition-colors ${
                   inputMode === 'upload' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
                 }`}
               >
                 Upload File
               </button>
               <button
-                onClick={() => setInputMode('paste')}
-                className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                type="button"
+                onClick={() => {
+                  if (!structuredProfile && resumeText.trim()) {
+                    setStructuredProfile(parseResumeTextToData(resumeText));
+                  }
+                  setInputMode('form');
+                }}
+                className={`px-3 sm:px-4 py-1.5 text-xs sm:text-sm font-medium rounded-md transition-colors flex items-center gap-1.5 ${
+                  inputMode === 'form' ? 'bg-white text-gray-900 shadow-sm font-semibold' : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                <FileEdit className="w-3.5 h-3.5 text-blue-600" />
+                <span>Structured Form</span>
+                {structuredProfile && (
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (structuredProfile && !resumeText.trim()) {
+                    setResumeText(formatResumeDataToText(structuredProfile));
+                  }
+                  setInputMode('paste');
+                }}
+                className={`px-3 sm:px-4 py-1.5 text-xs sm:text-sm font-medium rounded-md transition-colors ${
                   inputMode === 'paste' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
                 }`}
               >
-                Paste Text
+                Raw Text
               </button>
             </div>
           )}
@@ -231,19 +267,101 @@ export function GenerateForm() {
           </div>
         ) : (
           <>
-            {inputMode === 'upload' ? (
-              <FileUpload onTextExtracted={(text) => {
-                setResumeText(text);
-                setInputMode('paste');
-                addToast('Text extracted successfully. You can review it below.', 'success');
-              }} />
-            ) : (
-              <textarea
-                value={resumeText}
-                onChange={(e) => setResumeText(e.target.value)}
-                placeholder="Paste your current resume text here..."
-                className="w-full h-48 p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-y text-xs sm:text-sm"
+            {inputMode === 'upload' && (
+              <FileUpload 
+                onParsed={(parsed, rawText) => {
+                  setStructuredProfile(parsed);
+                  setResumeText(rawText);
+                  setInputMode('form');
+                }}
+                onTextExtracted={(text) => {
+                  setResumeText(text);
+                }} 
               />
+            )}
+
+            {inputMode === 'form' && (
+              <ProfileEditorForm
+                data={structuredProfile || parseResumeTextToData(resumeText)}
+                onChange={(updated) => {
+                  setStructuredProfile(updated);
+                  setResumeText(formatResumeDataToText(updated));
+                }}
+                onSwitchToRawText={() => {
+                  if (structuredProfile) {
+                    setResumeText(formatResumeDataToText(structuredProfile));
+                  }
+                  setInputMode('paste');
+                }}
+              />
+            )}
+
+            {inputMode === 'paste' && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-xs text-gray-500">
+                  <span>Paste raw resume text or edit here:</span>
+                  {resumeText.trim() && (
+                    <button
+                      type="button"
+                      disabled={isParsingText}
+                      onClick={async () => {
+                        setIsParsingText(true);
+                        try {
+                          const res = await fetch('/api/resume/parse', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ text: resumeText })
+                          });
+                          if (res.ok) {
+                            const parsedJson = await res.json();
+                            if (parsedJson.resume) {
+                              setStructuredProfile(parsedJson.resume);
+                              setInputMode('form');
+                              addToast(
+                                parsedJson.method === 'nlp'
+                                  ? `Parsed into structured sections via local NLP (${parsedJson.latencyMs || 25}ms)!`
+                                  : 'Converted raw text to structured form sections!',
+                                'success'
+                              );
+                              return;
+                            }
+                          }
+                        } catch (e) {
+                          console.warn('NLP parse request failed, falling back to client NLP:', e);
+                        } finally {
+                          setIsParsingText(false);
+                        }
+                        // Fallback
+                        setStructuredProfile(parseResumeTextToData(resumeText));
+                        setInputMode('form');
+                        addToast('Parsed into structured form sections with local NLP!', 'info');
+                      }}
+                      className="flex items-center gap-1.5 text-blue-600 hover:text-blue-800 font-semibold cursor-pointer underline disabled:opacity-50"
+                    >
+                      {isParsingText ? (
+                        <>
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          <span>Parsing with NLP...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="w-3.5 h-3.5 text-blue-500" />
+                          <span>Parse with Local NLP into Form →</span>
+                        </>
+                      )}
+                    </button>
+                  )}
+                </div>
+                <textarea
+                  value={resumeText}
+                  onChange={(e) => {
+                    setResumeText(e.target.value);
+                    setStructuredProfile(parseResumeTextToData(e.target.value));
+                  }}
+                  placeholder="Paste your current resume text here..."
+                  className="w-full h-48 p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-y text-xs sm:text-sm font-mono"
+                />
+              </div>
             )}
           </>
         )}
@@ -268,7 +386,7 @@ export function GenerateForm() {
           onClick={handleGenerate}
           disabled={
             isGenerating || 
-            (!resumeText.trim() && (!useSavedProfile || !savedProfile?.resumeData)) || 
+            (!resumeText.trim() && !structuredProfile && (!useSavedProfile || !savedProfile?.resumeData)) || 
             !jobDescription.trim()
           }
           className="flex-1 flex items-center justify-center min-h-[50px] py-3 px-4 border border-transparent rounded-lg shadow-sm text-base font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-400 disabled:cursor-not-allowed transition-all duration-300 cursor-pointer"
