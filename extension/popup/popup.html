@@ -3,25 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TailorCraft AI</title>
+  <title>TailorCraft</title>
   <style>
     :root {
-      --primary: #2563eb;
-      --primary-hover: #1d4ed8;
-      --primary-light: #eff6ff;
-      --primary-border: #bfdbfe;
-      --gray-50: #f9fafb;
-      --gray-100: #f3f4f6;
-      --gray-200: #e5e7eb;
-      --gray-300: #d1d5db;
-      --gray-400: #9ca3af;
-      --gray-600: #4b5563;
-      --gray-700: #374151;
-      --gray-900: #111827;
-      --success: #16a34a;
-      --success-light: #dcfce7;
-      --error: #dc2626;
-      --error-light: #fee2e2;
+      --bg: #F5F2EB;
+      --card-bg: #FFFFFF;
+      --charcoal: #141413;
+      --lime: #D4FF00;
+      --lime-hover: #bfee00;
+      --coral: #FF6B4A;
+      --coral-hover: #ff5530;
+      --muted: #76736C;
+      --border: #141413;
     }
 
     * {
@@ -31,410 +24,465 @@
     }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-      background: #f8fafc;
-      color: var(--gray-900);
-      width: 380px;
-      min-height: 480px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      background: var(--bg);
+      color: var(--charcoal);
+      width: 390px;
+      min-height: 520px;
       padding: 16px;
       margin: 0;
+      -webkit-font-smoothing: antialiased;
     }
 
+    /* Top Bar Header */
     .header {
       display: flex;
       align-items: center;
       justify-content: space-between;
       padding-bottom: 12px;
-      border-bottom: 1px solid var(--gray-200);
+      border-bottom: 2px solid var(--charcoal);
       margin-bottom: 14px;
     }
 
     .brand {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
     }
 
-    .logo-icon {
-      width: 32px;
-      height: 32px;
-      background: linear-gradient(135deg, #2563eb, #1d4ed8);
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      font-weight: bold;
-      font-size: 16px;
-      box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
+    .logo-badge {
+      background: var(--charcoal);
+      color: var(--lime);
+      font-weight: 900;
+      font-size: 14px;
+      padding: 4px 7px;
+      border: 1px solid var(--charcoal);
+      box-shadow: 2px 2px 0px var(--charcoal);
+      letter-spacing: 0.05em;
     }
 
-    .brand-text h1 {
-      font-size: 15px;
-      font-weight: 700;
-      color: var(--gray-900);
-      line-height: 1.2;
+    .brand-title {
+      font-size: 14px;
+      font-weight: 900;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      line-height: 1.1;
     }
 
-    .brand-text p {
-      font-size: 11px;
-      color: var(--gray-600);
+    .brand-sub {
+      font-size: 9px;
+      color: var(--muted);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
     }
 
-    .status-badge {
-      display: flex;
+    .status-pill {
+      display: inline-flex;
       align-items: center;
       gap: 5px;
-      font-size: 11px;
-      font-weight: 500;
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
       padding: 3px 8px;
-      border-radius: 9999px;
-      background: var(--primary-light);
-      color: var(--primary);
+      border: 1.5px solid var(--charcoal);
+      background: var(--card-bg);
+      box-shadow: 1.5px 1.5px 0px var(--charcoal);
     }
 
     .status-dot {
-      width: 6px;
-      height: 6px;
+      width: 7px;
+      height: 7px;
       border-radius: 50%;
       background: #22c55e;
     }
 
-    /* Auth card */
-    .card {
-      background: white;
-      border: 1px solid var(--gray-200);
-      border-radius: 10px;
-      padding: 14px;
+    /* Neo-Brutalist Box Cards */
+    .neo-card {
+      background: var(--card-bg);
+      border: 2px solid var(--charcoal);
+      box-shadow: 3px 3px 0px var(--charcoal);
+      padding: 12px;
       margin-bottom: 12px;
-      box-shadow: 0 1px 2px rgba(0,0,0,0.03);
     }
 
-    .user-info {
+    .card-label-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .user-info-row {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 10px;
+      gap: 8px;
     }
 
     .user-profile {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
       overflow: hidden;
     }
 
-    .avatar {
-      width: 34px;
-      height: 34px;
-      border-radius: 50%;
-      background: var(--primary);
-      color: white;
+    .avatar-box {
+      width: 28px;
+      height: 28px;
+      background: var(--charcoal);
+      color: var(--lime);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-weight: bold;
-      font-size: 14px;
-      shrink: 0;
-    }
-
-    .user-details {
-      overflow: hidden;
+      font-weight: 900;
+      font-size: 13px;
+      border: 1px solid var(--charcoal);
+      flex-shrink: 0;
     }
 
     .user-name {
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--gray-900);
+      font-size: 12px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
 
     .user-email {
-      font-size: 11px;
-      color: var(--gray-600);
+      font-size: 10px;
+      color: var(--muted);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
 
-    .btn-text {
-      background: transparent;
-      border: none;
-      color: var(--gray-600);
-      font-size: 11px;
-      cursor: pointer;
-      text-decoration: underline;
-      padding: 4px;
-    }
-    .btn-text:hover {
-      color: var(--error);
-    }
-
-    .profile-meta {
+    .sync-banner {
       margin-top: 8px;
       padding-top: 8px;
-      border-top: 1px dashed var(--gray-200);
+      border-top: 1px dashed #D5D2CA;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      font-size: 11px;
-      color: #047857;
+      font-size: 10px;
+      font-weight: 700;
     }
 
-    /* Input fields */
+    /* Inputs */
     .form-group {
       margin-bottom: 10px;
     }
 
-    .form-group label {
+    .form-label {
       display: block;
-      font-size: 11px;
-      font-weight: 600;
-      color: var(--gray-700);
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
       margin-bottom: 4px;
     }
 
-    .form-input {
+    .neo-input {
       width: 100%;
-      padding: 8px 10px;
-      border: 1px solid var(--gray-300);
-      border-radius: 6px;
-      font-size: 12px;
-      outline: none;
-      transition: border-color 0.15s;
-    }
-
-    .form-input:focus {
-      border-color: var(--primary);
-      box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
-    }
-
-    .textarea {
-      resize: vertical;
-      min-height: 95px;
+      border: 2px solid var(--charcoal);
+      background: var(--bg);
+      color: var(--charcoal);
       font-family: inherit;
+      font-size: 11px;
+      padding: 7px 9px;
+      outline: none;
+      transition: background 0.1s ease;
+    }
+    .neo-input:focus {
+      background: #FFFFFF;
     }
 
-    /* Buttons */
-    .btn {
+    .neo-textarea {
       width: 100%;
-      padding: 9px 14px;
-      border-radius: 7px;
-      font-size: 13px;
-      font-weight: 600;
+      min-height: 96px;
+      border: 2px solid var(--charcoal);
+      background: var(--bg);
+      color: var(--charcoal);
+      font-family: inherit;
+      font-size: 11px;
+      line-height: 1.4;
+      padding: 8px;
+      outline: none;
+      resize: vertical;
+    }
+    .neo-textarea:focus {
+      background: #FFFFFF;
+    }
+
+    /* Neo Buttons */
+    .neo-btn {
+      width: 100%;
+      border: 2px solid var(--charcoal);
+      box-shadow: 2.5px 2.5px 0px var(--charcoal);
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 9px 12px;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 6px;
-      transition: all 0.2s;
-      border: none;
+      transition: transform 0.08s ease, box-shadow 0.08s ease, background 0.1s ease;
     }
 
-    .btn-primary {
-      background: var(--primary);
-      color: white;
-      box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
+    .neo-btn:hover:not(:disabled) {
+      transform: translate(-1px, -1px);
+      box-shadow: 3.5px 3.5px 0px var(--charcoal);
     }
 
-    .btn-primary:hover:not(:disabled) {
-      background: var(--primary-hover);
+    .neo-btn:active:not(:disabled) {
+      transform: translate(1px, 1px);
+      box-shadow: 1.5px 1.5px 0px var(--charcoal);
     }
 
-    .btn-primary:disabled {
-      background: #93c5fd;
+    .neo-btn:disabled {
+      opacity: 0.55;
       cursor: not-allowed;
     }
 
-    .btn-secondary {
-      background: white;
-      color: var(--gray-700);
-      border: 1px solid var(--gray-300);
-      margin-top: 6px;
-      font-size: 12px;
-      padding: 7px 12px;
+    .neo-btn-primary {
+      background: var(--lime);
+      color: var(--charcoal);
+    }
+    .neo-btn-primary:hover:not(:disabled) {
+      background: var(--lime-hover);
     }
 
-    .btn-secondary:hover:not(:disabled) {
-      background: var(--gray-100);
+    .neo-btn-secondary {
+      background: #FFFFFF;
+      color: var(--charcoal);
+    }
+    .neo-btn-secondary:hover:not(:disabled) {
+      background: #FAF8F5;
     }
 
-    .btn-small {
+    .neo-btn-coral {
+      background: var(--coral);
+      color: #FFFFFF;
+    }
+
+    .neo-btn-tiny {
       width: auto;
-      padding: 4px 8px;
-      font-size: 11px;
-      border-radius: 5px;
-      background: var(--gray-100);
-      color: var(--gray-700);
-      border: 1px solid var(--gray-300);
+      padding: 3px 6px;
+      font-size: 9px;
+      font-weight: 900;
+      border: 1.5px solid var(--charcoal);
+      box-shadow: 1.5px 1.5px 0px var(--charcoal);
+      background: #FFFFFF;
       cursor: pointer;
     }
-    .btn-small:hover {
-      background: var(--gray-200);
+    .neo-btn-tiny:hover {
+      background: #F0EDE5;
     }
 
-    .label-row {
-      display: flex;
-      justify-content: space-between;
+    /* Progress Ticker */
+    .progress-box {
+      background: var(--charcoal);
+      color: var(--lime);
+      border: 2px solid var(--charcoal);
+      box-shadow: 3px 3px 0px var(--charcoal);
+      padding: 10px 12px;
+      margin-top: 8px;
+      display: none;
       align-items: center;
-      margin-bottom: 4px;
+      gap: 8px;
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: 0.05em;
+    }
+
+    .pulse-dot {
+      width: 8px;
+      height: 8px;
+      background: var(--lime);
+      animation: pulse 1s infinite alternate;
+    }
+    @keyframes pulse {
+      0% { opacity: 0.3; transform: scale(0.85); }
+      100% { opacity: 1; transform: scale(1.15); }
     }
 
     /* Alerts */
-    .alert {
-      padding: 10px 12px;
-      border-radius: 6px;
-      font-size: 12px;
-      margin-bottom: 12px;
+    .neo-alert {
+      padding: 8px 10px;
+      border: 2px solid var(--charcoal);
+      box-shadow: 2px 2px 0px var(--charcoal);
+      font-size: 10px;
+      font-weight: 800;
+      margin-bottom: 10px;
       display: flex;
-      align-items: flex-start;
-      gap: 8px;
-      line-height: 1.4;
+      align-items: center;
+      gap: 6px;
+    }
+    .neo-alert-success {
+      background: #DCFCE7;
+      color: #14532D;
+    }
+    .neo-alert-error {
+      background: #FEE2E2;
+      color: #7F1D1D;
     }
 
-    .alert-success {
-      background: var(--success-light);
-      border: 1px solid #86efac;
-      color: #14532d;
-    }
-
-    .alert-error {
-      background: var(--error-light);
-      border: 1px solid #fca5a5;
-      color: #7f1d1d;
-    }
-
-    .spinner {
-      border: 2px solid rgba(255, 255, 255, 0.3);
-      border-top: 2px solid white;
-      border-radius: 50%;
-      width: 14px;
-      height: 14px;
-      animation: spin 0.8s linear infinite;
-    }
-
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-
-    /* Settings footer */
-    .settings-footer {
+    /* Settings dropdown */
+    .settings-section {
       margin-top: 10px;
-      font-size: 11px;
-      color: var(--gray-600);
+      font-size: 10px;
     }
-
-    .settings-toggle {
-      display: inline-block;
+    .settings-toggle-btn {
+      color: var(--muted);
       cursor: pointer;
-      color: var(--gray-600);
-      text-decoration: none;
-      margin-bottom: 6px;
+      text-transform: uppercase;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
     }
-
+    .settings-toggle-btn:hover {
+      color: var(--charcoal);
+    }
     .settings-panel {
       display: none;
-      padding: 10px;
-      background: var(--gray-100);
-      border-radius: 6px;
       margin-top: 6px;
+      padding: 10px;
+      background: #FFFFFF;
+      border: 2px solid var(--charcoal);
+      box-shadow: 2px 2px 0px var(--charcoal);
     }
-
     .settings-panel.open {
       display: block;
     }
   </style>
 </head>
 <body>
+  <!-- Top Bar -->
   <div class="header">
     <div class="brand">
-      <div class="logo-icon">TC</div>
-      <div class="brand-text">
-        <h1>TailorCraft AI</h1>
-        <p>1-Click Resume Generator</p>
+      <div class="logo-badge">TC</div>
+      <div>
+        <div class="brand-title">TailorCraft</div>
+        <div class="brand-sub">Career AI · Ed. 2026</div>
       </div>
     </div>
-    <div class="status-badge">
+    <div class="status-pill">
       <span class="status-dot"></span>
-      <span id="connection-status">Ready</span>
+      <span id="connection-status">Online</span>
     </div>
   </div>
 
   <div id="alert-container"></div>
 
   <!-- AUTH SECTION: LOGGED OUT -->
-  <div id="logged-out-view" class="card" style="display: none;">
-    <p style="font-size: 12px; color: var(--gray-700); margin-bottom: 10px;">
-      Log in to access your master work history, education, and saved template styling.
+  <div id="logged-out-view" class="neo-card" style="display: none;">
+    <div class="card-label-row">
+      <span>// 00. Master Profile Authentication</span>
+    </div>
+    <p style="font-size: 10px; color: var(--muted); margin-bottom: 10px; line-height: 1.4;">
+      Connect your email to tailor documents from your SQLite database profile and design settings.
     </p>
 
     <div class="form-group">
-      <label for="login-name">Your Name</label>
-      <input type="text" id="login-name" class="form-input" placeholder="e.g. Alex Chen" value="Alex Chen">
+      <label class="form-label" for="login-name">Your Full Name</label>
+      <input type="text" id="login-name" class="neo-input" placeholder="e.g. Alex Chen" value="Alex Chen">
     </div>
 
     <div class="form-group">
-      <label for="login-email">Your Email</label>
-      <input type="email" id="login-email" class="form-input" placeholder="e.g. alex.chen@example.com" value="alex.chen@example.com">
+      <label class="form-label" for="login-email">Your Email Address</label>
+      <input type="email" id="login-email" class="neo-input" placeholder="e.g. alex.chen@example.com" value="alex.chen@example.com">
     </div>
 
-    <button id="btn-login" class="btn btn-primary">Log In & Sync Profile</button>
-    <button id="btn-demo-login" class="btn btn-secondary">1-Click Demo Login (Alex Chen)</button>
+    <button id="btn-login" class="neo-btn neo-btn-primary" style="margin-bottom: 8px;">
+      <span>⚡</span>
+      <span>Log In & Sync Profile</span>
+    </button>
+    <button id="btn-demo-login" class="neo-btn neo-btn-secondary">
+      <span>🧪</span>
+      <span>1-Click Demo Login (Alex Chen)</span>
+    </button>
   </div>
 
-  <!-- MAIN GENERATION SECTION: LOGGED IN -->
+  <!-- MAIN SECTION: LOGGED IN -->
   <div id="logged-in-view" style="display: none;">
-    <div class="card">
-      <div class="user-info">
+    <!-- Profile Card -->
+    <div class="neo-card">
+      <div class="user-info-row">
         <div class="user-profile">
-          <div id="user-avatar" class="avatar">A</div>
-          <div class="user-details">
+          <div id="user-avatar" class="avatar-box">A</div>
+          <div>
             <div id="user-display-name" class="user-name">Alex Chen</div>
             <div id="user-display-email" class="user-email">alex.chen@example.com</div>
           </div>
         </div>
-        <button id="btn-logout" class="btn-text">Switch</button>
+        <button id="btn-logout" class="neo-btn-tiny">Switch</button>
       </div>
-      <div class="profile-meta">
-        <span id="profile-meta-text">✓ Master Profile Synced</span>
-        <button id="btn-refresh-profile" class="btn-small" title="Sync profile from web server">Sync</button>
-      </div>
-    </div>
-
-    <!-- Job Description Input -->
-    <div class="card">
-      <div class="label-row">
-        <label for="job-desc" style="font-size: 12px; font-weight: 600; color: var(--gray-800);">
-          Job Description (from active tab)
-        </label>
-        <button id="btn-grab-selection" class="btn-small">Grab Selection</button>
-      </div>
-      <textarea id="job-desc" class="form-input textarea" placeholder="Highlight text on any job posting (LinkedIn, Indeed, etc.) or paste it here..."></textarea>
-      <div style="display: flex; justify-content: space-between; margin-top: 4px; font-size: 10px; color: var(--gray-400);">
-        <span id="char-count">0 characters</span>
-        <span>Auto-grabs highlighted text</span>
+      <div class="sync-banner">
+        <span id="profile-meta-text">✓ SQLite Profile Synced</span>
+        <button id="btn-refresh-profile" class="neo-btn-tiny" title="Refresh profile from database">Sync</button>
       </div>
     </div>
 
-    <!-- 1-Click Tailor Button -->
-    <button id="btn-generate" class="btn btn-primary" style="padding: 12px;">
-      <span id="btn-spinner" class="spinner" style="display: none;"></span>
-      <span id="btn-text">✨ Tailor & Download Resume (DOCX)</span>
-    </button>
+    <!-- Job Description Input Card -->
+    <div class="neo-card">
+      <div class="card-label-row">
+        <span>// 01. Target Job Description</span>
+        <button id="btn-grab-selection" class="neo-btn-tiny">Grab Selection</button>
+      </div>
+      <textarea id="job-desc" class="neo-textarea" placeholder="Highlight text on any job posting (LinkedIn, Indeed, etc.) or paste it here..."></textarea>
+      <div style="display: flex; justify-content: space-between; margin-top: 5px; font-size: 9px; color: var(--muted); font-weight: 700;">
+        <span id="char-count">0 chars</span>
+        <span>Auto-grabs tab selection</span>
+      </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div id="action-buttons-group" style="display: flex; flex-direction: column; gap: 8px;">
+      <button id="btn-generate-pdf" class="neo-btn neo-btn-primary">
+        <span>📄</span>
+        <span id="btn-pdf-label">Tailor & Download Resume (PDF)</span>
+      </button>
+
+      <button id="btn-generate-resume" class="neo-btn neo-btn-secondary" style="background: #EAE6DD;">
+        <span>⚡</span>
+        <span id="btn-resume-label">Tailor & Download Resume (DOCX)</span>
+      </button>
+
+      <button id="btn-generate-cover" class="neo-btn neo-btn-secondary">
+        <span>📝</span>
+        <span id="btn-cover-label">Generate Matched Cover Letter (DOCX)</span>
+      </button>
+    </div>
+
+
+    <!-- Progress Ticker -->
+    <div id="progress-box" class="progress-box">
+      <div class="pulse-dot"></div>
+      <span id="progress-ticker-text">[01/04] ANALYZING REQUIREMENTS...</span>
+    </div>
   </div>
 
   <!-- Settings Footer -->
-  <div class="settings-footer">
-    <span id="toggle-settings" class="settings-toggle">⚙️ API Settings</span>
+  <div class="settings-section">
+    <span id="toggle-settings" class="settings-toggle-btn">⚙️ API Settings</span>
     <div id="settings-panel" class="settings-panel">
       <div class="form-group">
-        <label for="api-url">API Server URL</label>
-        <input type="text" id="api-url" class="form-input" value="http://localhost:3000">
+        <label class="form-label" for="api-url">Server Endpoint URL</label>
+        <input type="text" id="api-url" class="neo-input" value="http://localhost:3000">
       </div>
-      <button id="btn-save-settings" class="btn-small" style="width: 100%;">Save Settings</button>
+      <button id="btn-save-settings" class="neo-btn neo-btn-primary" style="padding: 6px;">Save Settings</button>
     </div>
   </div>
 

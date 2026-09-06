@@ -22,9 +22,9 @@ interface UserState {
   savedProfile: SavedUserProfile | null;
   isAuthModalOpen: boolean;
 
-  login: (name: string, email: string) => void;
+  login: (name: string, email: string) => Promise<void>;
   logout: () => void;
-  saveProfile: (resumeData: ResumeData, templateSettings: TemplateSettings) => void;
+  saveProfile: (resumeData: ResumeData, templateSettings: TemplateSettings) => Promise<boolean>;
   clearProfile: () => void;
   setAuthModalOpen: (open: boolean) => void;
 }
@@ -38,34 +38,39 @@ export const useUserStore = create<UserState>()(
       savedProfile: null,
       isAuthModalOpen: false,
 
-      login: (name: string, email: string) => {
+      login: async (name: string, email: string) => {
         const id = 'usr_' + Date.now().toString(36);
         const cleanEmail = email.trim().toLowerCase();
         const cleanName = name.trim() || 'User';
 
         set({ 
           user: { id, name: cleanName, email: cleanEmail },
+          savedProfile: null, // Wipe out previous user's profile immediately
           isAuthModalOpen: false
         });
 
-        // Asynchronously check if backend has a saved profile for this user
+        // Asynchronously check if backend DB has a saved profile for this user
         if (typeof window !== 'undefined') {
-          fetch(`/api/user/profile?email=${encodeURIComponent(cleanEmail)}`)
-            .then((res) => (res.ok ? res.json() : null))
-            .then((data) => {
-              if (data?.savedProfile && !get().savedProfile) {
+          try {
+            const res = await fetch(`/api/user/profile?email=${encodeURIComponent(cleanEmail)}`);
+            if (res.ok) {
+              const data = await res.json();
+              if (get().user?.email === cleanEmail && data?.savedProfile) {
                 set({ savedProfile: data.savedProfile });
               }
-            })
-            .catch(() => {});
+            }
+          } catch (err) {
+            console.warn('Could not fetch user profile from db:', err);
+          }
         }
       },
 
       logout: () => {
-        set({ user: null });
+        // Clear both user account and profile data to prevent cross-account pollution
+        set({ user: null, savedProfile: null });
       },
 
-      saveProfile: (resumeData: ResumeData, templateSettings: TemplateSettings) => {
+      saveProfile: async (resumeData: ResumeData, templateSettings: TemplateSettings) => {
         const newProfile: SavedUserProfile = {
           resumeData,
           templateSettings,
@@ -74,19 +79,25 @@ export const useUserStore = create<UserState>()(
 
         set({ savedProfile: newProfile });
 
-        // Asynchronously persist to server profile storage for browser extension & multi-client access
         const currentUser = get().user;
         if (currentUser?.email && typeof window !== 'undefined') {
-          fetch('/api/user/profile', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              email: currentUser.email,
-              name: currentUser.name,
-              savedProfile: newProfile
-            })
-          }).catch((err) => console.warn('Could not sync profile to server:', err));
+          try {
+            const res = await fetch('/api/user/profile', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                email: currentUser.email,
+                name: currentUser.name,
+                savedProfile: newProfile
+              })
+            });
+            return res.ok;
+          } catch (err) {
+            console.warn('Could not sync profile to db:', err);
+            return false;
+          }
         }
+        return true;
       },
 
       clearProfile: () => {

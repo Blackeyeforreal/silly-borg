@@ -6,6 +6,7 @@ import { EditableField } from './EditableField';
 import { EditableList } from './EditableList';
 import { useResumeStore } from '@/store/resume-store';
 import type { CustomSection } from '@/lib/schema';
+import { getSemanticLinkLabel } from '@/lib/normalization/resume-normalizer';
 
 interface CustomSectionViewProps {
   section: CustomSection;
@@ -25,15 +26,15 @@ export function CustomSectionView({ section, sectionIndex }: CustomSectionViewPr
   const basePath = `custom_sections[${sectionIndex}]`;
 
   return (
-    <div className="mb-2 group/section">
+    <section className="mb-2.5 group/section">
       {/* Section Header with Delete Button */}
-      <div className="flex items-center justify-between border-b border-black mb-1.5 mt-2.5 pb-0.5">
+      <div className="flex items-center justify-between border-b border-[#141413] mb-2 mt-2 pb-0.5 section-header">
         <EditableField
           value={section.section_title}
           onSave={(val) => updateField(`${basePath}.section_title`, val.toUpperCase())}
           fieldPath={`${basePath}.section_title`}
           as="h2"
-          className="text-[12pt] font-bold uppercase tracking-normal text-black"
+          className="text-[10.5pt] font-bold uppercase tracking-[0.05em] text-[#141413]"
           containerClassName="flex-1"
         />
         <button
@@ -42,7 +43,7 @@ export function CustomSectionView({ section, sectionIndex }: CustomSectionViewPr
               removeCustomSection(section.id);
             }
           }}
-          className="opacity-0 group-hover/section:opacity-100 p-1 text-gray-400 hover:text-red-600 rounded transition-all no-print"
+          className="opacity-0 group-hover/section:opacity-100 p-1 text-gray-400 hover:text-red-600 rounded transition-all no-print cursor-pointer"
           title="Delete this section"
         >
           <Trash2 className="w-3.5 h-3.5" />
@@ -55,44 +56,44 @@ export function CustomSectionView({ section, sectionIndex }: CustomSectionViewPr
           const itemPath = `${basePath}.items[${itemIndex}]`;
 
           return (
-            <div key={itemIndex} className="group/item relative text-[10pt] leading-[1.25] text-black">
+            <div key={itemIndex} className="group/item relative text-[9.75pt] leading-[1.32] text-[#141413]">
               {/* Item Title & Dates */}
-              <div className="flex justify-between items-baseline leading-tight">
-                <div className="flex items-center gap-1.5 flex-1 min-w-0">
+              <div className="flex justify-between items-baseline gap-4 leading-tight mb-0.5">
+                <div className="flex items-baseline gap-1.5 flex-1 min-w-0">
                   <EditableField
                     value={item.title}
                     onSave={(val) => updateField(`${itemPath}.title`, val)}
                     fieldPath={`${itemPath}.title`}
                     as="h3"
-                    className="font-bold text-[10.5pt] text-black"
-                    containerClassName="inline-flex"
+                    className="font-bold text-[10.5pt] text-[#141413] break-words"
+                    containerClassName="inline-block max-w-full"
                   />
                   {item.link && (
                     <a
                       href={item.link.startsWith('http') ? item.link : `https://${item.link}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-blue-600 hover:text-blue-800 text-[9pt] font-normal inline-flex items-center gap-0.5 underline shrink-0 ml-1"
+                      className="text-[#0B57D0] hover:underline text-[9pt] font-normal inline-flex items-center gap-0.5 shrink-0 ml-1 font-sans"
                       title={item.link}
+                      onClick={(e) => e.stopPropagation()}
                     >
-                      <ExternalLink className="w-3 h-3 text-blue-500 no-print" />
-                      <span className="text-[8.5pt]">
-                        [{item.link.replace(/^https?:\/\/(www\.)?/, '').split('/')[0] || 'Link'}]
-                      </span>
+                      <span>[{getSemanticLinkLabel(item.link, 'Demo')}]</span>
+                      <ExternalLink className="w-2.5 h-2.5 opacity-70 no-print" />
                     </a>
                   )}
                 </div>
-                <div className="flex items-center gap-2 shrink-0 ml-4">
+
+                <div className="flex items-center gap-2 shrink-0 text-right">
                   <EditableField
                     value={item.dates || ''}
                     onSave={(val) => updateField(`${itemPath}.dates`, val)}
                     fieldPath={`${itemPath}.dates`}
-                    className="text-[10pt] font-normal text-right whitespace-nowrap text-black"
+                    className="text-[9.5pt] font-normal text-right whitespace-nowrap text-[#44423D]"
                     containerClassName="w-auto inline-flex items-center justify-end"
                   />
                   <button
                     onClick={() => removeCustomSectionItem(section.id, itemIndex)}
-                    className="opacity-0 group-hover/item:opacity-100 p-0.5 text-gray-400 hover:text-red-500 rounded no-print transition-opacity"
+                    className="opacity-0 group-hover/item:opacity-100 p-0.5 text-gray-400 hover:text-red-500 rounded no-print transition-opacity cursor-pointer"
                     title="Remove this entry"
                   >
                     <Trash2 className="w-3 h-3" />
@@ -102,12 +103,12 @@ export function CustomSectionView({ section, sectionIndex }: CustomSectionViewPr
 
               {/* Subtitle & Location */}
               {(item.subtitle || item.location) && (
-                <div className="flex justify-between items-baseline leading-tight mb-0.5">
+                <div className="flex justify-between items-baseline gap-4 leading-tight mb-1">
                   <EditableField
                     value={item.subtitle || ''}
                     onSave={(val) => updateField(`${itemPath}.subtitle`, val)}
                     fieldPath={`${itemPath}.subtitle`}
-                    className="italic font-normal text-[10pt] text-black"
+                    className="italic font-normal text-[10pt] text-[#44423D] break-words"
                     containerClassName="flex-1 min-w-0"
                   />
                   {item.location && (
@@ -115,7 +116,7 @@ export function CustomSectionView({ section, sectionIndex }: CustomSectionViewPr
                       value={item.location}
                       onSave={(val) => updateField(`${itemPath}.location`, val)}
                       fieldPath={`${itemPath}.location`}
-                      className="w-auto whitespace-nowrap text-[10pt] italic font-normal text-black ml-4 shrink-0"
+                      className="w-auto whitespace-nowrap text-[9.5pt] italic font-normal text-[#44423D] shrink-0 text-right"
                       containerClassName="w-auto inline-flex items-center"
                     />
                   )}
@@ -123,7 +124,7 @@ export function CustomSectionView({ section, sectionIndex }: CustomSectionViewPr
               )}
 
               {/* Description Bullets */}
-              <div className="text-[10pt] leading-[1.25] text-black">
+              <div className="text-[9.75pt] leading-[1.32] text-[#141413]">
                 <EditableList
                   items={item.description}
                   basePath={`${itemPath}.description`}
@@ -139,15 +140,15 @@ export function CustomSectionView({ section, sectionIndex }: CustomSectionViewPr
       </div>
 
       {/* Add Item Button */}
-      <div className="mt-1 no-print">
+      <div className="mt-1.5 no-print">
         <button
           onClick={() => addCustomSectionItem(section.id)}
-          className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-2 py-0.5 rounded transition-colors"
+          className="inline-flex items-center gap-1 text-xs text-[#0B57D0] hover:text-[#0842A0] hover:bg-blue-50 px-2 py-0.5 rounded transition-colors font-sans cursor-pointer"
         >
           <Plus className="w-3 h-3" />
           Add Entry to {section.section_title}
         </button>
       </div>
-    </div>
+    </section>
   );
 }

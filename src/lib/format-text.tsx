@@ -11,7 +11,7 @@ export interface FormattedRun {
 /**
  * Parses inline formatting tags (**bold**, *italic*, <u>underline</u>, <b>, <i>)
  */
-function parseInlineFormatting(rawText: string): FormattedRun[] {
+function parseInlineFormatting(rawText: string, linkUrl?: string): FormattedRun[] {
   if (!rawText) return [];
 
   const tokenRegex = /(\*\*|\*|<\/?u>|<\/?b>|<\/?i>|<\/?strong>|<\/?em>)/gi;
@@ -44,6 +44,7 @@ function parseInlineFormatting(rawText: string): FormattedRun[] {
         bold: isBold || undefined,
         italic: isItalic || undefined,
         underline: isUnderline || undefined,
+        linkUrl: linkUrl || undefined,
       });
     }
   }
@@ -52,8 +53,57 @@ function parseInlineFormatting(rawText: string): FormattedRun[] {
 }
 
 /**
+ * Parses raw URLs and emails from plain text segments that aren't already markdown links
+ */
+function parseRawUrlsAndEmails(text: string): { text: string; linkUrl?: string }[] {
+  if (!text) return [];
+
+  // Match URLs (http/https/www), common domains (e.g. github.com, linkedin.com), or emails
+  const pattern = /(https?:\/\/[^\s<]+|www\.[^\s<]+|[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}|(?:[a-zA-Z0-9-]+\.)+(?:com|org|net|io|me|dev|app|ai|co|edu|gov)(?:\/[^\s<]*)?)/gi;
+  let lastIndex = 0;
+  const tokens: { text: string; linkUrl?: string }[] = [];
+  let match: RegExpExecArray | null;
+
+  while ((match = pattern.exec(text)) !== null) {
+    const rawMatch = match[0];
+    const matchIndex = match.index;
+
+    // Separate trailing punctuation like '.', ',', ')', ';', '!' from the actual link
+    const punctMatch = rawMatch.match(/^(.*?)([.,;:!?)]*)$/);
+    const actualText = punctMatch ? punctMatch[1] : rawMatch;
+    const trailingPunct = punctMatch ? punctMatch[2] : '';
+
+    if (matchIndex > lastIndex) {
+      tokens.push({ text: text.substring(lastIndex, matchIndex) });
+    }
+
+    let url = actualText;
+    if (url.includes('@') && !url.startsWith('mailto:')) {
+      url = 'mailto:' + url;
+    } else if (url.startsWith('www.')) {
+      url = 'https://' + url;
+    } else if (!url.startsWith('http://') && !url.startsWith('https://') && !url.startsWith('mailto:') && !url.startsWith('tel:')) {
+      url = 'https://' + url;
+    }
+
+    tokens.push({ text: actualText, linkUrl: url });
+    if (trailingPunct) {
+      tokens.push({ text: trailingPunct });
+    }
+
+    lastIndex = matchIndex + rawMatch.length;
+  }
+
+  if (lastIndex < text.length) {
+    tokens.push({ text: text.substring(lastIndex) });
+  }
+
+  return tokens;
+}
+
+/**
  * Parses markdown and HTML style tokens (**bold**, *italic*, <u>underline</u>, and [label](url))
- * into a structured list of formatted runs for DOCX or UI rendering.
+ * plus autolinks raw URLs and emails into a structured list of formatted runs.
  */
 export function parseFormattedRuns(rawText: string): FormattedRun[] {
   if (!rawText) return [];
@@ -61,36 +111,54 @@ export function parseFormattedRuns(rawText: string): FormattedRun[] {
   // Match markdown links: [label](url)
   const linkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
   let lastIndex = 0;
-  const runs: FormattedRun[] = [];
+  const rawSegments: { text: string; linkUrl?: string; isMarkdownLink?: boolean }[] = [];
   let match: RegExpExecArray | null;
 
   while ((match = linkRegex.exec(rawText)) !== null) {
-    const beforeText = rawText.substring(lastIndex, match.index);
-    if (beforeText) {
-      runs.push(...parseInlineFormatting(beforeText));
+    if (match.index > lastIndex) {
+      rawSegments.push({ text: rawText.substring(lastIndex, match.index) });
     }
 
-    const label = match[1];
-    const url = match[2];
-    const labelRuns = parseInlineFormatting(label);
-
-    if (labelRuns.length === 0) {
-      runs.push({ text: label, linkUrl: url });
-    } else {
-      for (const lr of labelRuns) {
-        runs.push({ ...lr, linkUrl: url });
-      }
+    let url = match[2].trim();
+    if (url.includes('@') && !url.startsWith('mailto:') && !url.startsWith('http')) {
+      url = 'mailto:' + url;
+    } else if (!url.startsWith('http://') && !url.startsWith('https://') && !url.startsWith('mailto:') && !url.startsWith('tel:')) {
+      url = 'https://' + url;
     }
+
+    rawSegments.push({
+      text: match[1],
+      linkUrl: url,
+      isMarkdownLink: true
+    });
 
     lastIndex = linkRegex.lastIndex;
   }
 
-  const remaining = rawText.substring(lastIndex);
-  if (remaining) {
-    runs.push(...parseInlineFormatting(remaining));
+  if (lastIndex < rawText.length) {
+    rawSegments.push({ text: rawText.substring(lastIndex) });
   }
 
-  // Merge consecutive runs with identical styles
+  const runs: FormattedRun[] = [];
+
+  for (const seg of rawSegments) {
+    if (seg.isMarkdownLink) {
+      // Parse inline formatting inside markdown link label
+      runs.push(...parseInlineFormatting(seg.text, seg.linkUrl));
+    } else {
+      // Find raw URLs or emails in plain segments
+      const rawTokens = parseRawUrlsAndEmails(seg.text);
+      for (const tok of rawTokens) {
+        if (tok.linkUrl) {
+          runs.push({ text: tok.text, linkUrl: tok.linkUrl });
+        } else {
+          runs.push(...parseInlineFormatting(tok.text));
+        }
+      }
+    }
+  }
+
+  // Merge consecutive runs with identical styles and links
   const merged: FormattedRun[] = [];
   for (const r of runs) {
     const last = merged[merged.length - 1];
@@ -111,7 +179,7 @@ export function parseFormattedRuns(rawText: string): FormattedRun[] {
 }
 
 /**
- * Converts formatted text containing (**bold**, *italic*, <u>underline</u>, [label](url))
+ * Converts formatted text containing (**bold**, *italic*, <u>underline</u>, [label](url), raw URLs)
  * into React elements for live preview display.
  */
 export function formatTextToReact(text: string): React.ReactNode {
@@ -128,7 +196,7 @@ export function formatTextToReact(text: string): React.ReactNode {
       {runs.map((run, idx) => {
         let content: React.ReactNode = run.text;
         if (run.underline) {
-          content = <u key={`u-${idx}`} className="underline decoration-black">{content}</u>;
+          content = <u key={`u-${idx}`} className="underline decoration-current">{content}</u>;
         }
         if (run.italic) {
           content = <em key={`i-${idx}`} className="italic">{content}</em>;
@@ -137,7 +205,7 @@ export function formatTextToReact(text: string): React.ReactNode {
           content = <strong key={`b-${idx}`} className="font-bold">{content}</strong>;
         }
         if (run.linkUrl) {
-          const href = run.linkUrl.startsWith('http://') || run.linkUrl.startsWith('https://') || run.linkUrl.startsWith('mailto:')
+          const href = run.linkUrl.startsWith('http://') || run.linkUrl.startsWith('https://') || run.linkUrl.startsWith('mailto:') || run.linkUrl.startsWith('tel:')
             ? run.linkUrl
             : `https://${run.linkUrl}`;
           content = (
@@ -146,7 +214,7 @@ export function formatTextToReact(text: string): React.ReactNode {
               href={href}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-blue-600 hover:text-blue-800 underline decoration-blue-500 font-medium inline transition-colors"
+              className="text-[#0563C1] hover:text-[#044a90] underline decoration-[#0563C1] font-medium inline transition-colors"
               onClick={(e) => e.stopPropagation()}
             >
               {content}
@@ -227,7 +295,12 @@ export function insertHyperlink(
 ): { newText: string; newStart: number; newEnd: number } {
   const selectedText = fullText.substring(start, end);
   const label = customLabel || selectedText || 'Link';
-  const cleanUrl = url.trim();
+  let cleanUrl = url.trim();
+  if (cleanUrl.includes('@') && !cleanUrl.startsWith('mailto:') && !cleanUrl.startsWith('http')) {
+    cleanUrl = 'mailto:' + cleanUrl;
+  } else if (!cleanUrl.startsWith('http://') && !cleanUrl.startsWith('https://') && !cleanUrl.startsWith('mailto:') && !cleanUrl.startsWith('tel:')) {
+    cleanUrl = 'https://' + cleanUrl;
+  }
   const linkMarkdown = `[${label}](${cleanUrl})`;
 
   const before = fullText.substring(0, start);
@@ -237,4 +310,3 @@ export function insertHyperlink(
   const newEnd = start + linkMarkdown.length;
   return { newText, newStart, newEnd };
 }
-

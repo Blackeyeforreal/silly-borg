@@ -21,9 +21,9 @@ export function SkillsSection({ data }: SkillsSectionProps) {
   ];
 
   return (
-    <div className="mb-2">
-      <div className="flex items-center justify-between border-b border-black mb-1.5 mt-2.5 pb-0.5 group/header section-header">
-        <h2 className="text-[12pt] font-bold uppercase tracking-normal text-black">
+    <section className="mb-2.5">
+      <div className="flex items-center justify-between border-b border-[#141413] mb-2 mt-2 pb-0.5 group/header section-header">
+        <h2 className="text-[10.5pt] font-bold uppercase tracking-[0.05em] text-[#141413]">
           Certifications, Skills &amp; Interests
         </h2>
         <button
@@ -37,28 +37,28 @@ export function SkillsSection({ data }: SkillsSectionProps) {
           title="Delete Skills Section"
         >
           <Trash2 className="w-3.5 h-3.5" />
-          <span className="text-[11px] font-sans">Delete Section</span>
+          <span className="text-[10px] font-sans">Delete Section</span>
         </button>
       </div>
       
-      <ul className="list-disc ml-5 space-y-0.5 text-[10pt] leading-[1.25] text-black">
+      <ul className="list-disc ml-5 space-y-1 text-[9.75pt] leading-[1.34] text-[#141413]">
         {sections.map(({ label, key }) => {
           const items = data[key];
           if (!items || items.length === 0) return null;
 
           return (
-            <li key={key} className="pl-1 text-[10pt]">
-              <span className="font-bold mr-1 text-[10pt]">{label}:</span>
+            <li key={key} className="pl-1 text-[9.75pt]">
+              <span className="font-bold text-[#141413] mr-1">{label}:</span>
               <EditableField
                 value={items.join(', ')}
-                onSave={(val) => updateField(`skills_and_interests.${key}`, val.split(',').map(s => s.trim()))}
+                onSave={(val) => updateField(`skills_and_interests.${key}`, val.split(',').map(s => s.trim()).filter(Boolean))}
                 fieldPath={`skills_and_interests.${key}`}
-                className="inline text-[10pt]"
+                className="inline text-[9.75pt]"
               />
             </li>
           );
         })}
       </ul>
-    </div>
+    </section>
   );
 }

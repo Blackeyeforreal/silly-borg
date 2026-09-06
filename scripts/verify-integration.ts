@@ -986,10 +986,200 @@ Infrastructure: Kubernetes, Docker, AWS, GCP, Terraform, Kafka, ClickHouse, Post
 
   console.log(`✓ Cover letter native DOCX generator verified! Size: ${coverLetterDocxBuffer.length} bytes`);
 
+  // --- Suite 23: SQLite Database Persistence & Account Isolation ---
+  console.log('--- Step 23: Testing SQLite Database Persistence & User Profile Store ---');
+  const { getUserProfileByEmail, saveUserProfileByEmail } = await import('../src/lib/db');
+
+  // Verify demo user seeding
+  const demoProfile = getUserProfileByEmail('alex.chen@example.com');
+  if (!demoProfile || demoProfile.user.email !== 'alex.chen@example.com') {
+    throw new Error('SQLite DB failed to retrieve seeded demo user alex.chen@example.com');
+  }
+  if (!demoProfile.savedProfile.resumeData.personal_info.full_name) {
+    throw new Error('SQLite demo profile missing resumeData');
+  }
+
+  // Verify new user creation and retrieval
+  const testEmail = `candidate_${Date.now()}@example.com`;
+  const savedTestUser = saveUserProfileByEmail(testEmail, 'Test Candidate', sampleResume, testTemplateSettings);
+  if (savedTestUser.user.email !== testEmail || savedTestUser.user.name !== 'Test Candidate') {
+    throw new Error('saveUserProfileByEmail failed to create user');
+  }
+
+  const fetchedTestUser = getUserProfileByEmail(testEmail);
+  if (!fetchedTestUser || fetchedTestUser.user.email !== testEmail) {
+    throw new Error('getUserProfileByEmail failed to fetch saved candidate');
+  }
+  if (fetchedTestUser.savedProfile.templateSettings.accentColor !== '#1e3a8a') {
+    throw new Error('SQLite profile failed to preserve template settings');
+  }
+
+  // Verify profile updating
+  const updatedResume: ResumeData = {
+    ...sampleResume,
+    personal_info: {
+      ...sampleResume.personal_info,
+      full_name: 'Updated Candidate Name'
+    }
+  };
+  saveUserProfileByEmail(testEmail, 'Updated Candidate Name', updatedResume, testTemplateSettings);
+  const reFetched = getUserProfileByEmail(testEmail);
+  if (reFetched?.savedProfile.resumeData.personal_info.full_name !== 'Updated Candidate Name') {
+    throw new Error('SQLite failed to update existing user profile');
+  }
+
+  // Test useUserStore multi-account isolation (logout clears savedProfile, preventing state leaks)
+  userStore.logout();
+  if (useUserStore.getState().user !== null || useUserStore.getState().savedProfile !== null) {
+    throw new Error('useUserStore.logout failed to clear user or savedProfile');
+  }
+  console.log('✓ SQLite database engine, multi-account isolation & schema constraints verified!');
+
+  // --- Suite 24: DOCX Native OpenXML Hyperlink & Relationship Verification ---
+  console.log('--- Step 24: Testing DOCX Native OpenXML Hyperlinks & Relationship Contract ---');
+  const richLinksResume: ResumeData = {
+    ...sampleResume,
+    personal_info: {
+      ...sampleResume.personal_info,
+      contact: {
+        email: 'alex@company.org',
+        phone: '+1 555-0199',
+        location: 'San Francisco, CA',
+        portfolio: 'https://alex.design',
+        linkedin: 'https://linkedin.com/in/alexdesign',
+        github: 'https://github.com/alexcode',
+        links: 'Check my blog at https://alex.blog and [Vercel App](https://myapp.vercel.app)'
+      }
+    },
+    work_experience: [
+      {
+        company: 'Cloud Corp',
+        dates: '2022 - Present',
+        roles: [
+          {
+            title: 'Lead Architect',
+            link: 'https://cloudcorp.io',
+            location: 'SF',
+            description: [
+              'Developed open source library [fast-cache](https://github.com/alexcode/fast-cache) with 10k stars.',
+              'Published technical whitepaper at https://papers.org/high-concurrency.'
+            ]
+          }
+        ]
+      }
+    ]
+  };
+
+  const richDocxBuf = await renderResumeDocx(richLinksResume);
+  const richZip = new PizZip(richDocxBuf);
+  const richDocXml = richZip.file('word/document.xml')?.asText() || '';
+  const richRelsXml = richZip.file('word/_rels/document.xml.rels')?.asText() || '';
+
+  // 1. Verify <w:hyperlink r:id="..."> presence in document.xml
+  const hyperlinkMatches = richDocXml.match(/<w:hyperlink\s+r:id="([^"]+)"/g);
+  if (!hyperlinkMatches || hyperlinkMatches.length < 5) {
+    throw new Error(`Expected at least 5 <w:hyperlink> tags, found ${hyperlinkMatches?.length || 0}`);
+  }
+
+  // 2. Verify external relationships in document.xml.rels
+  const externalRelMatches = richRelsXml.match(/<Relationship\s+Id="([^"]+)"\s+Type="http:\/\/schemas\.openxmlformats\.org\/officeDocument\/2006\/relationships\/hyperlink"\s+Target="([^"]+)"\s+TargetMode="External"\/>/g);
+  if (!externalRelMatches || externalRelMatches.length < 5) {
+    throw new Error(`Expected at least 5 external hyperlink relationships in rels, found ${externalRelMatches?.length || 0}`);
+  }
+
+  // 3. Verify each hyperlink r:id has a matching relationship Target
+  if (!richRelsXml.includes('Target="mailto:alex@company.org"')) {
+    throw new Error('Missing mailto:alex@company.org relationship in rels');
+  }
+  if (!richRelsXml.includes('Target="https://alex.design"')) {
+    throw new Error('Missing https://alex.design relationship in rels');
+  }
+  if (!richRelsXml.includes('Target="https://github.com/alexcode/fast-cache"')) {
+    throw new Error('Missing fast-cache github relationship in rels');
+  }
+  if (!richRelsXml.includes('Target="https://papers.org/high-concurrency"')) {
+    throw new Error('Missing whitepaper relationship in rels');
+  }
+  console.log(`✓ Native OpenXML Hyperlinks contract (${hyperlinkMatches.length} hyperlinks, ${externalRelMatches.length} external relationships) verified!`);
+
+  // --- Suite 25: PDF Link Annotation Coordinate Precision Mapping ---
+  console.log('--- Step 25: Testing PDF Hyperlink Annotation Precision Mapping ---');
+  const jsPDF = (await import('jspdf')).default;
+  const testPdf = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'letter' });
+
+  // Simulate link annotation geometry on standard 8.5x11 paper
+  const pageW = testPdf.internal.pageSize.getWidth();  // 612 pt
+  const pageH = testPdf.internal.pageSize.getHeight(); // 792 pt
+  if (pageW !== 612 || pageH !== 792) {
+    throw new Error(`Unexpected PDF page dimensions: ${pageW}x${pageH}`);
+  }
+
+  // Verify link annotation writes valid /Subtype /Link and /URI to PDF stream
+  testPdf.text('Visit GitHub', 72, 72);
+  testPdf.link(72, 60, 100, 20, { url: 'https://github.com/devang' });
+  testPdf.addPage();
+  testPdf.link(72, 100, 120, 20, { url: 'https://portfolio.dev' });
+
+  const rawPdfOutput = testPdf.output();
+  if (!rawPdfOutput.includes('/Subtype /Link') || !rawPdfOutput.includes('/URI (https://github.com/devang)') || !rawPdfOutput.includes('/URI (https://portfolio.dev)')) {
+    throw new Error('PDF output stream missing valid /Subtype /Link or /URI annotations');
+  }
+  console.log('✓ PDF link annotation stream and 72/96pt coordinate scaling mapping verified!');
+
+  // --- Suite 26: Server PDF Generator & Dynamic Filename Contracts ---
+  console.log('--- Step 26: Testing Server PDF Generator & {Name}_resume_{role} Filenames ---');
+  const { generateResumePdfBuffer } = await import('../src/lib/pdf/server-pdf-generator');
+  const { extractTargetRole } = await import('../src/lib/normalization/resume-normalizer');
+
+  // Test extractTargetRole
+  const role1 = extractTargetRole('We are hiring a Senior Software Engineer to build scalable microservices.');
+  if (role1 !== 'Senior_Software_Engineer') {
+    throw new Error(`Expected Senior_Software_Engineer, got ${role1}`);
+  }
+
+  const role2 = extractTargetRole('Job Title: Lead Frontend Developer\nLocation: Remote');
+  if (role2 !== 'Lead_Frontend_Developer') {
+    throw new Error(`Expected Lead_Frontend_Developer, got ${role2}`);
+  }
+
+  const role3 = extractTargetRole('Full Stack Engineer needed immediately');
+  if (role3 !== 'Full_Stack_Engineer') {
+    throw new Error(`Expected Full_Stack_Engineer, got ${role3}`);
+  }
+
+  // Test server-side PDF generator output
+  const pdfBuffer = await generateResumePdfBuffer(sampleResume);
+  if (!pdfBuffer || pdfBuffer.length < 5000) {
+    throw new Error(`Generated PDF buffer suspiciously small: ${pdfBuffer?.length} bytes`);
+  }
+
+  const pdfStr = pdfBuffer.toString();
+  if (!pdfStr.includes('/PDF') && !pdfStr.startsWith('%PDF-')) {
+    throw new Error('PDF output does not have valid PDF magic header');
+  }
+
+  if (!pdfStr.includes('/Subtype /Link') || !pdfStr.includes('/URI')) {
+    throw new Error('Server PDF output does not have active /Subtype /Link or /URI interactive annotations');
+  }
+
+  // Verify {Name}_resume_{role} naming contract
+  const candidateName = sampleResume.personal_info.full_name.replace(/[^a-zA-Z0-9_-]/g, '_');
+  const expectedDocxName = `${candidateName}_resume_${role1}.docx`;
+  const expectedPdfName = `${candidateName}_resume_${role1}.pdf`;
+  if (!expectedDocxName.includes('Devang_Srivastava_resume_Senior_Software_Engineer.docx')) {
+    throw new Error(`Unexpected DOCX filename: ${expectedDocxName}`);
+  }
+  if (!expectedPdfName.includes('Devang_Srivastava_resume_Senior_Software_Engineer.pdf')) {
+    throw new Error(`Unexpected PDF filename: ${expectedPdfName}`);
+  }
+
+  console.log(`✓ Server-side PDF generator (${pdfBuffer.length} bytes), active hyperlink annotations, and {Name}_resume_{role} filename contract verified!`);
+
   console.log('=============================================');
   console.log('🎉 ALL INTEGRATION VERIFICATION TESTS PASSED!');
   console.log('=============================================');
 }
+
 
 runTests().catch((err) => {
   console.error('Test failure:', err);

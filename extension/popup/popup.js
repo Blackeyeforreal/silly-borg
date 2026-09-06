@@ -1,18 +1,28 @@
 /**
- * TailorCraft Extension - Popup Logic
+ * TailorCraft Extension - Neo-Brutalist Popup Controller
  */
 
 const DEFAULT_API_URL = 'http://localhost:3000';
 
-const DYNAMIC_STEPS = [
-  'Analyzing job requirements & tech stack...',
-  'Matching core competencies & achievements...',
-  'Highlighting high-impact quantifiable metrics...',
-  'Aligning resume keywords for ATS scoring...',
-  'Drafting role-tailored bullet points...',
-  'Formatting executive layout & typography...',
-  'Building Word DOCX document...',
-  'Downloading tailored resume...'
+const RESUME_STEPS = [
+  '[01/04] ANALYZING REQUIREMENTS...',
+  '[02/04] ALIGNING ATS KEYWORDS...',
+  '[03/04] NORMALIZING ACHIEVEMENTS...',
+  '[04/04] COMPILING WORD DOCX...'
+];
+
+const COVER_STEPS = [
+  '[01/04] ANALYZING JOB POSTING...',
+  '[02/04] MATCHING CAREER EXPERIENCE...',
+  '[03/04] DRAFTING EDITORIAL LETTER...',
+  '[04/04] COMPILING WORD DOCX...'
+];
+
+const PDF_STEPS = [
+  '[01/04] ANALYZING JOB REQS...',
+  '[02/04] ALIGNING ATS KEYWORDS...',
+  '[03/04] NORMALIZING ACHIEVEMENTS...',
+  '[04/04] COMPILING EDITORIAL PDF...'
 ];
 
 // DOM Elements
@@ -37,9 +47,13 @@ const jobDescTextarea = document.getElementById('job-desc');
 const charCount = document.getElementById('char-count');
 const btnGrabSelection = document.getElementById('btn-grab-selection');
 
-const btnGenerate = document.getElementById('btn-generate');
-const btnSpinner = document.getElementById('btn-spinner');
-const btnText = document.getElementById('btn-text');
+const btnGeneratePdf = document.getElementById('btn-generate-pdf');
+const btnGenerateResume = document.getElementById('btn-generate-resume');
+const btnGenerateCover = document.getElementById('btn-generate-cover');
+const actionButtonsGroup = document.getElementById('action-buttons-group');
+const progressBox = document.getElementById('progress-box');
+const progressTickerText = document.getElementById('progress-ticker-text');
+
 
 const toggleSettings = document.getElementById('toggle-settings');
 const settingsPanel = document.getElementById('settings-panel');
@@ -49,7 +63,7 @@ const btnSaveSettings = document.getElementById('btn-save-settings');
 let isGenerating = false;
 let stepTimer = null;
 
-// Initialize on popup load
+// Initialize
 document.addEventListener('DOMContentLoaded', async () => {
   setupEventListeners();
   await loadSettings();
@@ -58,9 +72,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 function showAlert(message, type = 'error') {
+  const isSuccess = type === 'success';
   alertContainer.innerHTML = `
-    <div class="alert alert-${type}">
-      <span>${type === 'success' ? '✓' : '⚠️'}</span>
+    <div class="neo-alert ${isSuccess ? 'neo-alert-success' : 'neo-alert-error'}">
+      <span>${isSuccess ? '✓' : '⚠️'}</span>
       <div>${message}</div>
     </div>
   `;
@@ -93,11 +108,11 @@ async function checkAuth() {
     userDisplayName.textContent = displayName;
     userDisplayEmail.textContent = userEmail;
 
-    // Check profile on server
     syncProfileFromServer(userEmail);
   } else {
     loggedInView.style.display = 'none';
     loggedOutView.style.display = 'block';
+    connectionStatus.textContent = 'Disconnected';
   }
 }
 
@@ -110,15 +125,15 @@ async function syncProfileFromServer(email) {
     if (response.ok) {
       const data = await response.json();
       const expCount = data?.savedProfile?.resumeData?.work_experience?.length || 0;
-      profileMetaText.textContent = `✓ Master Profile Synced (${expCount} jobs)`;
-      connectionStatus.textContent = 'Connected';
+      profileMetaText.textContent = `✓ SQLite Profile Synced (${expCount} jobs)`;
+      connectionStatus.textContent = 'Synced';
     } else {
-      profileMetaText.textContent = '⚠️ Master profile not found on server';
-      connectionStatus.textContent = 'Ready';
+      profileMetaText.textContent = '⚠️ Using Local Fallback Profile';
+      connectionStatus.textContent = 'Local';
     }
   } catch (err) {
     console.warn('Sync profile error:', err);
-    profileMetaText.textContent = '✓ Offline / Local Mode';
+    profileMetaText.textContent = '✓ Offline Profile Mode';
     connectionStatus.textContent = 'Offline';
   }
 }
@@ -129,7 +144,6 @@ async function grabSelectionFromActiveTab() {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     if (!tab || !tab.id) return;
 
-    // Avoid injecting into chrome:// or extension pages
     if (tab.url?.startsWith('chrome://') || tab.url?.startsWith('edge://') || tab.url?.startsWith('about:')) {
       return;
     }
@@ -154,28 +168,32 @@ async function grabSelectionFromActiveTab() {
 
 function updateCharCount() {
   const len = (jobDescTextarea.value || '').length;
-  charCount.textContent = `${len} characters`;
+  charCount.textContent = `${len} chars`;
 }
 
-function startEngagingLoading() {
+function startGenerationProgress(type) {
   isGenerating = true;
-  btnGenerate.disabled = true;
-  btnSpinner.style.display = 'inline-block';
+  if (btnGeneratePdf) btnGeneratePdf.disabled = true;
+  btnGenerateResume.disabled = true;
+  btnGenerateCover.disabled = true;
+  progressBox.style.display = 'flex';
 
+  const steps = type === 'cover-letter' ? COVER_STEPS : (type === 'pdf' ? PDF_STEPS : RESUME_STEPS);
   let stepIdx = 0;
-  btnText.textContent = DYNAMIC_STEPS[0];
+  progressTickerText.textContent = steps[0];
 
   stepTimer = setInterval(() => {
-    stepIdx = (stepIdx + 1) % DYNAMIC_STEPS.length;
-    btnText.textContent = DYNAMIC_STEPS[stepIdx];
-  }, 2000);
+    stepIdx = (stepIdx + 1) % steps.length;
+    progressTickerText.textContent = steps[stepIdx];
+  }, 1800);
 }
 
-function stopEngagingLoading() {
+function stopGenerationProgress() {
   isGenerating = false;
-  btnGenerate.disabled = false;
-  btnSpinner.style.display = 'none';
-  btnText.textContent = '✨ Tailor & Download Resume (DOCX)';
+  if (btnGeneratePdf) btnGeneratePdf.disabled = false;
+  btnGenerateResume.disabled = false;
+  btnGenerateCover.disabled = false;
+  progressBox.style.display = 'none';
 
   if (stepTimer) {
     clearInterval(stepTimer);
@@ -183,27 +201,28 @@ function stopEngagingLoading() {
   }
 }
 
-// Generate & Download Resume
-async function handleGenerateResume() {
+// Generate & Download Resume (DOCX/PDF) or Cover Letter
+async function handleGenerate(type = 'resume') {
   clearAlert();
   const text = (jobDescTextarea.value || '').trim();
 
   if (!text || text.length < 10) {
-    showAlert('Please highlight or paste a job description (at least 10 characters).');
+    showAlert('Please highlight or paste a job posting (at least 10 characters).');
     return;
   }
 
   const { userEmail } = await chrome.storage.local.get(['userEmail']);
   if (!userEmail) {
-    showAlert('Please log in first to use your master profile.');
+    showAlert('Please log in first to sync your profile.');
     checkAuth();
     return;
   }
 
-  startEngagingLoading();
+  startGenerationProgress(type);
 
   try {
     const apiUrl = await getApiUrl();
+    const isPdf = type === 'pdf';
 
     const response = await fetch(`${apiUrl}/api/extension/generate`, {
       method: 'POST',
@@ -214,26 +233,33 @@ async function handleGenerateResume() {
       },
       body: JSON.stringify({
         email: userEmail,
-        jobDescription: text
+        jobDescription: text,
+        type: isPdf ? 'pdf' : type,
+        format: isPdf ? 'pdf' : 'docx'
       })
     });
 
     if (!response.ok) {
       const errData = await response.json().catch(() => ({}));
-      throw new Error(errData.error || `HTTP ${response.status}: Failed to generate resume`);
+      throw new Error(errData.error || `HTTP ${response.status}: Failed to generate document`);
     }
 
     const data = await response.json();
-    if (!data.docxBase64) {
-      throw new Error('Server did not return a generated DOCX file.');
+    let dataUrl = '';
+    let filename = data.filename;
+
+    if (data.pdfBase64) {
+      dataUrl = `data:application/pdf;base64,${data.pdfBase64}`;
+      if (!filename) filename = 'Tailored_Resume.pdf';
+    } else if (data.docxBase64) {
+      dataUrl = `data:application/vnd.openxmlformats-officedocument.wordprocessingml.document;base64,${data.docxBase64}`;
+      if (!filename) filename = type === 'cover-letter' ? 'Tailored_Cover_Letter.docx' : 'Tailored_Resume.docx';
+    } else {
+      throw new Error('Server did not return a generated file.');
     }
 
-    btnText.textContent = 'Downloading resume...';
+    progressTickerText.textContent = 'DOWNLOADING FILE...';
 
-    const dataUrl = `data:application/vnd.openxmlformats-officedocument.wordprocessingml.document;base64,${data.docxBase64}`;
-    const filename = data.filename || 'Tailored_Resume.docx';
-
-    // Trigger download in browser
     await new Promise((resolve, reject) => {
       chrome.downloads.download({
         url: dataUrl,
@@ -248,15 +274,16 @@ async function handleGenerateResume() {
       });
     });
 
-    showAlert(`🎉 Successfully downloaded <strong>${filename}</strong> to your Downloads folder!`, 'success');
+    showAlert(`✓ Downloaded <strong>${filename}</strong> to Downloads!`, 'success');
 
   } catch (error) {
     console.error('Generation failed:', error);
-    showAlert(error.message || 'Failed to tailor resume. Please check your API server.');
+    showAlert(error.message || 'Generation failed. Verify API server is running.');
   } finally {
-    stopEngagingLoading();
+    stopGenerationProgress();
   }
 }
+
 
 function setupEventListeners() {
   // Login
@@ -307,18 +334,27 @@ function setupEventListeners() {
 
   jobDescTextarea.addEventListener('input', updateCharCount);
 
-  // Generate button
-  btnGenerate.addEventListener('click', handleGenerateResume);
+  // Generate Resume (PDF)
+  if (btnGeneratePdf) {
+    btnGeneratePdf.addEventListener('click', () => handleGenerate('pdf'));
+  }
 
-  // Settings
+  // Generate Resume (DOCX)
+  btnGenerateResume.addEventListener('click', () => handleGenerate('resume'));
+
+  // Generate Cover Letter
+  btnGenerateCover.addEventListener('click', () => handleGenerate('cover-letter'));
+
+  // Settings Toggle
   toggleSettings.addEventListener('click', () => {
     settingsPanel.classList.toggle('open');
   });
 
+  // Save Settings
   btnSaveSettings.addEventListener('click', async () => {
     const url = apiUrlInput.value.trim().replace(/\/+$/, '');
     await chrome.storage.local.set({ apiUrl: url });
     settingsPanel.classList.remove('open');
-    showAlert('API Server settings saved.', 'success');
+    showAlert('Server URL updated.', 'success');
   });
 }

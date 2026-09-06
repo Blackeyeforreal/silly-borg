@@ -55,14 +55,45 @@ export function ResumeToolbar() {
     setIsExporting(format);
 
     try {
+      const candidateName = (resumeData.personal_info?.full_name || 'Candidate')
+        .trim()
+        .replace(/[^a-zA-Z0-9_-]/g, '_');
+      const roleTitle = (resumeData.work_experience?.[0]?.roles?.[0]?.title || 'Software_Engineer')
+        .trim()
+        .replace(/[^a-zA-Z0-9_-]/g, '_');
+      const filename = `${candidateName}_resume_${roleTitle}.${format}`;
+
       if (format === 'pdf') {
         try {
           const { exportResumeToPdf } = await import('@/lib/pdf/exporter');
-          await exportResumeToPdf('resume.pdf');
-          addToast('Document exported as PDF', 'success');
+          await exportResumeToPdf(filename);
+          addToast(`Document exported as ${filename}`, 'success');
           return;
         } catch (pdfErr) {
-          console.error('Direct PDF export error, falling back to print dialog:', pdfErr);
+          console.warn('Client-side DOM PDF export error, attempting server PDF generation:', pdfErr);
+          try {
+            const response = await fetch('/api/resume/export/pdf', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ resumeData, resume: resumeData, templateSettings })
+            });
+            if (response.ok) {
+              const blob = await response.blob();
+              const url = window.URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = filename;
+              document.body.appendChild(a);
+              a.click();
+              document.body.removeChild(a);
+              window.URL.revokeObjectURL(url);
+              addToast(`Document exported as ${filename}`, 'success');
+              return;
+            }
+          } catch (serverErr) {
+            console.error('Server PDF fallback failed:', serverErr);
+          }
+
           addToast('Opening print dialog for PDF export...', 'info');
           setTimeout(() => {
             window.print();
@@ -85,13 +116,13 @@ export function ResumeToolbar() {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'resume.docx';
+      a.download = filename;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
       
-      addToast('Document exported as DOCX', 'success');
+      addToast(`Document exported as ${filename}`, 'success');
     } catch (error) {
       addToast(error instanceof Error ? error.message : `Failed to export ${format.toUpperCase()}`, 'error');
     } finally {

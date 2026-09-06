@@ -4,6 +4,7 @@ import PizZip from 'pizzip';
 import { ResumeData } from '../schema';
 import { parseFormattedRuns } from '../format-text';
 import { type TemplateSettings, getEffectiveSectionOrder } from '../../store/resume-store';
+import { normalizeResumeData, getSemanticLinkLabel } from '../normalization/resume-normalizer';
 
 function xmlEscape(str: string): string {
   if (!str) return '';
@@ -15,13 +16,59 @@ function xmlEscape(str: string): string {
     .replace(/'/g, '&apos;');
 }
 
+export class DocxLinkRegistry {
+  private links: { id: string; url: string }[] = [];
+  private nextId = 1;
+
+  register(url: string): string {
+    let cleanUrl = url.trim();
+    if (cleanUrl.includes('@') && !cleanUrl.startsWith('mailto:')) {
+      cleanUrl = 'mailto:' + cleanUrl;
+    } else if (cleanUrl.startsWith('www.')) {
+      cleanUrl = 'https://' + cleanUrl;
+    } else if (
+      !cleanUrl.startsWith('http://') &&
+      !cleanUrl.startsWith('https://') &&
+      !cleanUrl.startsWith('mailto:') &&
+      !cleanUrl.startsWith('tel:')
+    ) {
+      cleanUrl = 'https://' + cleanUrl;
+    }
+
+    const existing = this.links.find((l) => l.url === cleanUrl);
+    if (existing) return existing.id;
+
+    const id = `rIdLink_${this.nextId++}`;
+    this.links.push({ id, url: cleanUrl });
+    return id;
+  }
+
+  getRelationshipsXml(): string {
+    return this.links
+      .map((l) => {
+        return `<Relationship Id="${l.id}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink" Target="${xmlEscape(l.url)}" TargetMode="External"/>`;
+      })
+      .join('');
+  }
+
+  hasLinks(): boolean {
+    return this.links.length > 0;
+  }
+}
+
 /**
- * Converts formatted markdown/HTML text (**bold**, *italic*, <u>underline</u>, [label](url))
- * into native WordprocessingML <w:r> run elements.
+ * Converts formatted markdown/HTML text (**bold**, *italic*, <u>underline</u>, [label](url), raw URLs)
+ * into native WordprocessingML <w:r> and <w:hyperlink> elements.
  */
 function formatRunsToXml(
   text: string,
-  options: { bold?: boolean; italic?: boolean; size?: number; font?: string } = {}
+  options: {
+    bold?: boolean;
+    italic?: boolean;
+    size?: number;
+    font?: string;
+    linkRegistry?: DocxLinkRegistry;
+  } = {}
 ): string {
   const runs = parseFormattedRuns(text);
   if (runs.length === 0) return '';
@@ -30,19 +77,30 @@ function formatRunsToXml(
   const defItalic = !!options.italic;
   const size = options.size || 20;
   const font = options.font || 'Garamond';
+  const registry = options.linkRegistry;
 
-  return runs.map(r => {
-    const isB = r.bold !== undefined ? r.bold : defBold;
-    const isI = r.italic !== undefined ? r.italic : defItalic;
-    const isU = !!r.underline;
-    const isLink = !!r.linkUrl;
+  return runs
+    .map((r) => {
+      const isB = r.bold !== undefined ? r.bold : defBold;
+      const isI = r.italic !== undefined ? r.italic : defItalic;
+      const isU = !!r.underline;
+      const isLink = !!r.linkUrl;
 
-    return `<w:r><w:rPr><w:rFonts w:ascii="${font}" w:cs="${font}" w:eastAsia="${font}" w:hAnsi="${font}"/>${isB ? '<w:b w:val="1"/><w:bCs w:val="1"/>' : ''}${isI ? '<w:i w:val="1"/><w:iCs w:val="1"/>' : ''}${isU || isLink ? '<w:u w:val="single"/>' : ''}${isLink ? '<w:color w:val="0563C1"/>' : ''}<w:sz w:val="${size}"/><w:szCs w:val="${size}"/><w:rtl w:val="0"/></w:rPr><w:t xml:space="preserve">${xmlEscape(r.text)}</w:t></w:r>`;
-  }).join('');
+      const rPr = `<w:rPr><w:rFonts w:ascii="${font}" w:cs="${font}" w:eastAsia="${font}" w:hAnsi="${font}"/>${isB ? '<w:b w:val="1"/><w:bCs w:val="1"/>' : ''}${isI ? '<w:i w:val="1"/><w:iCs w:val="1"/>' : ''}${isU || isLink ? '<w:u w:val="single"/>' : ''}${isLink ? '<w:color w:val="0563C1"/>' : ''}<w:sz w:val="${size}"/><w:szCs w:val="${size}"/><w:rtl w:val="0"/></w:rPr>`;
+      const runXml = `<w:r>${rPr}<w:t xml:space="preserve">${xmlEscape(r.text)}</w:t></w:r>`;
+
+      if (isLink && registry && r.linkUrl) {
+        const relId = registry.register(r.linkUrl);
+        return `<w:hyperlink r:id="${relId}" w:history="1">${runXml}</w:hyperlink>`;
+      }
+
+      return runXml;
+    })
+    .join('');
 }
 
 export async function renderResumeDocx(
-  data: ResumeData,
+  rawResumeData: ResumeData,
   templateSettings?: Partial<TemplateSettings>
 ): Promise<Buffer> {
   const candidatePaths = [
@@ -52,10 +110,13 @@ export async function renderResumeDocx(
     path.join(__dirname, '..', '..', 'Template', 'Devang Srivastava - Resume.docx'),
   ];
   const templatePath = candidatePaths.find((p) => fs.existsSync(p));
-  
+
   if (!templatePath) {
     throw new Error('Template DOCX file not found in paths: ' + candidatePaths.join(', '));
   }
+
+  // Pre-process and normalize data
+  const data = normalizeResumeData(rawResumeData);
 
   const templateContent = fs.readFileSync(templatePath);
   const zip = new PizZip(templateContent);
@@ -65,17 +126,20 @@ export async function renderResumeDocx(
     throw new Error('Could not extract word/document.xml from template');
   }
 
+  const linkRegistry = new DocxLinkRegistry();
+
   // Template settings resolution
   const fontFamily = templateSettings?.fontFamily || 'Garamond';
   const rawColor = (templateSettings?.accentColor || '000000').replace('#', '').trim();
   const accentColor = /^[0-9A-Fa-f]{6}$/.test(rawColor) ? rawColor.toUpperCase() : '000000';
 
   const marginKey = templateSettings?.marginSize ?? 'normal';
-  const marginConfig = marginKey === 'compact'
-    ? { top: 180, bottom: 250, left: 504, right: 504 }
-    : marginKey === 'spacious'
-    ? { top: 360, bottom: 500, left: 1080, right: 1080 }
-    : { top: 180, bottom: 414, left: 720, right: 720 };
+  const marginConfig =
+    marginKey === 'compact'
+      ? { top: 180, bottom: 250, left: 504, right: 504 }
+      : marginKey === 'spacious'
+      ? { top: 360, bottom: 500, left: 1080, right: 1080 }
+      : { top: 180, bottom: 414, left: 720, right: 720 };
 
   const rightTabPos = 12240 - (marginConfig.left + marginConfig.right);
 
@@ -87,10 +151,10 @@ export async function renderResumeDocx(
 
   // Extract <w:sectPr> from the original document and apply dynamic margins
   const sectPrMatch = originalXml.match(/<w:sectPr\b[^>]*>[\s\S]*?<\/w:sectPr>/);
-  const rawSectPr = sectPrMatch 
-    ? sectPrMatch[0] 
+  const rawSectPr = sectPrMatch
+    ? sectPrMatch[0]
     : '<w:sectPr><w:headerReference r:id="rId7" w:type="default"/><w:headerReference r:id="rId8" w:type="first"/><w:footerReference r:id="rId9" w:type="first"/><w:pgSz w:h="15840" w:w="12240" w:orient="portrait"/><w:pgMar w:bottom="414" w:top="180" w:left="720" w:right="720" w:header="144" w:footer="288"/><w:pgNumType w:start="1"/><w:titlePg w:val="1"/></w:sectPr>';
-  
+
   const newPgMar = `<w:pgMar w:bottom="${marginConfig.bottom}" w:top="${marginConfig.top}" w:left="${marginConfig.left}" w:right="${marginConfig.right}" w:header="144" w:footer="288"/>`;
   const sectPrXml = rawSectPr.replace(/<w:pgMar\b[^>]*\/>/, newPgMar);
 
@@ -98,55 +162,103 @@ export async function renderResumeDocx(
 
   // Helper: Section header paragraph with bottom border
   const makeSectionHeader = (title: string) => {
-    return `<w:p><w:pPr><w:pBdr><w:bottom w:color="${accentColor}" w:space="1" w:sz="6" w:val="single"/></w:pBdr><w:spacing w:before="120" w:line="${lineSpacingVal}" w:lineRule="auto"/><w:rPr/></w:pPr><w:r><w:rPr><w:rFonts w:ascii="${fontFamily}" w:cs="${fontFamily}" w:eastAsia="${fontFamily}" w:hAnsi="${fontFamily}"/><w:b w:val="1"/><w:bCs w:val="1"/><w:sz w:val="${24 + fontSizeDelta}"/><w:szCs w:val="${24 + fontSizeDelta}"/><w:rtl w:val="0"/></w:rPr><w:t xml:space="preserve">${xmlEscape(title)}</w:t></w:r></w:p>`;
+    return `<w:p><w:pPr><w:pBdr><w:bottom w:color="${accentColor}" w:space="1" w:sz="6" w:val="single"/></w:pBdr><w:spacing w:before="120" w:line="${lineSpacingVal}" w:lineRule="auto"/><w:rPr/></w:pPr><w:r><w:rPr><w:rFonts w:ascii="${fontFamily}" w:cs="${fontFamily}" w:eastAsia="${fontFamily}" w:hAnsi="${fontFamily}"/><w:b w:val="1"/><w:bCs w:val="1"/><w:sz w:val="${
+      22 + fontSizeDelta
+    }"/><w:szCs w:val="${22 + fontSizeDelta}"/><w:rtl w:val="0"/></w:rPr><w:t xml:space="preserve">${xmlEscape(title)}</w:t></w:r></w:p>`;
   };
 
   // Helper: Two-column line with right-aligned tab stop
   const makeTwoColumnLine = (
-    leftText: string, 
-    rightText: string, 
-    options: { leftBold?: boolean; leftItalic?: boolean; rightItalic?: boolean; leftSize?: number; rightSize?: number; spacingBefore?: number } = {}
+    leftText: string,
+    rightText: string,
+    options: {
+      leftBold?: boolean;
+      leftItalic?: boolean;
+      rightItalic?: boolean;
+      leftSize?: number;
+      rightSize?: number;
+      spacingBefore?: number;
+    } = {}
   ) => {
     const leftSize = (options.leftSize || 20) + fontSizeDelta;
-    const rightSize = (options.rightSize || 20) + fontSizeDelta;
+    const rightSize = (options.rightSize || 19) + fontSizeDelta;
     const spacingBeforeAttr = options.spacingBefore ? ` w:before="${options.spacingBefore}"` : '';
 
-    return `<w:p><w:pPr><w:tabs><w:tab w:val="right" w:pos="${rightTabPos}"/></w:tabs><w:spacing${spacingBeforeAttr} w:line="${lineSpacingVal}" w:lineRule="auto"/><w:rPr/></w:pPr>${formatRunsToXml(leftText, { bold: options.leftBold, italic: options.leftItalic, size: leftSize, font: fontFamily })}<w:r><w:rPr><w:rFonts w:ascii="${fontFamily}" w:cs="${fontFamily}" w:eastAsia="${fontFamily}" w:hAnsi="${fontFamily}"/></w:rPr><w:tab/></w:r>${formatRunsToXml(rightText, { italic: options.rightItalic, size: rightSize, font: fontFamily })}</w:p>`;
+    return `<w:p><w:pPr><w:tabs><w:tab w:val="right" w:pos="${rightTabPos}"/></w:tabs><w:spacing${spacingBeforeAttr} w:line="${lineSpacingVal}" w:lineRule="auto"/><w:rPr/></w:pPr>${formatRunsToXml(
+      leftText,
+      { bold: options.leftBold, italic: options.leftItalic, size: leftSize, font: fontFamily, linkRegistry }
+    )}<w:r><w:rPr><w:rFonts w:ascii="${fontFamily}" w:cs="${fontFamily}" w:eastAsia="${fontFamily}" w:hAnsi="${fontFamily}"/></w:rPr><w:tab/></w:r>${formatRunsToXml(
+      rightText,
+      { italic: options.rightItalic, size: rightSize, font: fontFamily, linkRegistry }
+    )}</w:p>`;
   };
 
   // Helper: Bullet point (ilvl 0 = level 1 bullet, ilvl 1 = sub-bullet)
   const makeBulletItem = (text: string, ilvl: number = 0, numId: number = 3) => {
     const indAttr = ilvl === 0 ? '<w:ind w:left="360"/>' : '<w:ind w:left="720"/>';
-    return `<w:p><w:pPr><w:numPr><w:ilvl w:val="${ilvl}"/><w:numId w:val="${numId}"/></w:numPr><w:spacing w:line="${lineSpacingVal}" w:lineRule="auto"/>${indAttr}</w:pPr>${formatRunsToXml(text, { size: 20 + fontSizeDelta, font: fontFamily })}</w:p>`;
+    return `<w:p><w:pPr><w:numPr><w:ilvl w:val="${ilvl}"/><w:numId w:val="${numId}"/></w:numPr><w:spacing w:line="${lineSpacingVal}" w:lineRule="auto"/>${indAttr}</w:pPr>${formatRunsToXml(
+      text,
+      { size: 19 + fontSizeDelta, font: fontFamily, linkRegistry }
+    )}</w:p>`;
   };
 
   // Helper: Sub-bullet with bold label
   const makeLabeledSubBullet = (label: string, text: string, ilvl: number = 1, numId: number = 3) => {
     const indAttr = ilvl === 0 ? '<w:ind w:left="360"/>' : '<w:ind w:left="1080" w:hanging="360"/><w:jc w:val="both"/>';
-    return `<w:p><w:pPr><w:numPr><w:ilvl w:val="${ilvl}"/><w:numId w:val="${numId}"/></w:numPr><w:spacing w:line="${lineSpacingVal}" w:lineRule="auto"/>${indAttr}</w:pPr><w:r><w:rPr><w:rFonts w:ascii="${fontFamily}" w:cs="${fontFamily}" w:eastAsia="${fontFamily}" w:hAnsi="${fontFamily}"/><w:b w:val="1"/><w:bCs w:val="1"/><w:sz w:val="${20 + fontSizeDelta}"/><w:szCs w:val="${20 + fontSizeDelta}"/><w:rtl w:val="0"/></w:rPr><w:t xml:space="preserve">${xmlEscape(label)}: </w:t></w:r>${formatRunsToXml(text, { size: 20 + fontSizeDelta, font: fontFamily })}</w:p>`;
+    return `<w:p><w:pPr><w:numPr><w:ilvl w:val="${ilvl}"/><w:numId w:val="${numId}"/></w:numPr><w:spacing w:line="${lineSpacingVal}" w:lineRule="auto"/>${indAttr}</w:pPr><w:r><w:rPr><w:rFonts w:ascii="${fontFamily}" w:cs="${fontFamily}" w:eastAsia="${fontFamily}" w:hAnsi="${fontFamily}"/><w:b w:val="1"/><w:bCs w:val="1"/><w:sz w:val="${
+      19 + fontSizeDelta
+    }"/><w:szCs w:val="${19 + fontSizeDelta}"/><w:rtl w:val="0"/></w:rPr><w:t xml:space="preserve">${xmlEscape(
+      label
+    )}: </w:t></w:r>${formatRunsToXml(text, { size: 19 + fontSizeDelta, font: fontFamily, linkRegistry })}</w:p>`;
   };
 
   // 1. Personal Info
   if (data.personal_info?.full_name) {
     paragraphs.push(
-      `<w:p><w:pPr><w:pBdr><w:bottom w:color="${accentColor}" w:space="1" w:sz="6" w:val="single"/></w:pBdr><w:spacing w:line="${lineSpacingVal + 24}" w:lineRule="auto"/><w:rPr/></w:pPr><w:r><w:rPr><w:rFonts w:ascii="${fontFamily}" w:cs="${fontFamily}" w:eastAsia="${fontFamily}" w:hAnsi="${fontFamily}"/><w:b w:val="1"/><w:bCs w:val="1"/><w:sz w:val="${48 + fontSizeDelta * 2}"/><w:szCs w:val="${48 + fontSizeDelta * 2}"/><w:rtl w:val="0"/></w:rPr><w:t xml:space="preserve">${xmlEscape(data.personal_info.full_name)}</w:t></w:r></w:p>`
+      `<w:p><w:pPr><w:pBdr><w:bottom w:color="${accentColor}" w:space="2" w:sz="12" w:val="single"/></w:pBdr><w:spacing w:line="${
+        lineSpacingVal + 24
+      }" w:lineRule="auto"/><w:rPr/></w:pPr><w:r><w:rPr><w:rFonts w:ascii="${fontFamily}" w:cs="${fontFamily}" w:eastAsia="${fontFamily}" w:hAnsi="${fontFamily}"/><w:b w:val="1"/><w:bCs w:val="1"/><w:sz w:val="${
+        46 + fontSizeDelta * 2
+      }"/><w:szCs w:val="${46 + fontSizeDelta * 2}"/><w:rtl w:val="0"/></w:rPr><w:t xml:space="preserve">${xmlEscape(
+        data.personal_info.full_name
+      )}</w:t></w:r></w:p>`
     );
   }
 
   const contact = data.personal_info?.contact;
   const contactParts: string[] = [];
-  if (contact?.email) contactParts.push(contact.email);
+  if (contact?.email) {
+    contactParts.push(contact.email.includes('[') ? contact.email : `[${contact.email}](mailto:${contact.email})`);
+  }
   if (contact?.phone) contactParts.push(contact.phone);
   if (contact?.location) contactParts.push(contact.location);
-  if (contact?.portfolio) contactParts.push(`[Portfolio](${contact.portfolio})`);
-  if (contact?.linkedin) contactParts.push(`[LinkedIn](${contact.linkedin})`);
-  if (contact?.github) contactParts.push(`[GitHub](${contact.github})`);
+  if (contact?.portfolio) {
+    const pUrl = contact.portfolio.startsWith('http') ? contact.portfolio : `https://${contact.portfolio}`;
+    contactParts.push(contact.portfolio.includes('[') ? contact.portfolio : `[Portfolio](${pUrl})`);
+  }
+  if (contact?.linkedin) {
+    const lUrl = contact.linkedin.startsWith('http') ? contact.linkedin : `https://${contact.linkedin}`;
+    contactParts.push(contact.linkedin.includes('[') ? contact.linkedin : `[LinkedIn](${lUrl})`);
+  }
+  if (contact?.github) {
+    const gUrl = contact.github.startsWith('http') ? contact.github : `https://${contact.github}`;
+    contactParts.push(contact.github.includes('[') ? contact.github : `[GitHub](${gUrl})`);
+  }
   if (contact?.links) contactParts.push(contact.links);
-  const contactLine = contactParts.filter(Boolean).map(s => String(s).trim()).join(' | ');
+  const contactLine = contactParts
+    .filter(Boolean)
+    .map((s) => String(s).trim())
+    .join(' | ');
 
   if (contactLine) {
     paragraphs.push(
-      `<w:p><w:pPr><w:pBdr><w:bottom w:color="${accentColor}" w:space="1" w:sz="6" w:val="single"/></w:pBdr><w:spacing w:line="${lineSpacingVal + 24}" w:lineRule="auto"/><w:rPr/></w:pPr>${formatRunsToXml(contactLine, { size: 22 + fontSizeDelta, font: fontFamily })}</w:p>`
+      `<w:p><w:pPr><w:pBdr><w:bottom w:color="${accentColor}" w:space="1" w:sz="6" w:val="single"/></w:pBdr><w:spacing w:line="${
+        lineSpacingVal + 24
+      }" w:lineRule="auto"/><w:rPr/></w:pPr>${formatRunsToXml(contactLine, {
+        size: 19 + fontSizeDelta,
+        font: fontFamily,
+        linkRegistry,
+      })}</w:p>`
     );
   }
 
@@ -158,31 +270,41 @@ export async function renderResumeDocx(
 
     for (let cIndex = 0; cIndex < workExps.length; cIndex++) {
       const exp = workExps[cIndex];
+      const hasIdenticalFirstRole =
+        exp.roles?.length === 1 && exp.roles[0].title.toLowerCase().trim() === exp.company.toLowerCase().trim();
+
       paragraphs.push(
         makeTwoColumnLine(exp.company || '', exp.dates || '', {
           leftBold: true,
           leftSize: 21,
-          rightSize: 20,
+          rightSize: 19,
           spacingBefore: cIndex > 0 ? 80 : 40,
         })
       );
 
       const roles = exp.roles || [];
-      for (const role of roles) {
-        const rightParts: string[] = [];
-        if (role.dates && roles.length > 1) rightParts.push(role.dates);
-        if (role.location) rightParts.push(role.location);
-        const roleRightText = rightParts.join(' | ');
+      for (let rIdx = 0; rIdx < roles.length; rIdx++) {
+        const role = roles[rIdx];
+        if (hasIdenticalFirstRole && rIdx === 0) {
+          // Skip duplicate role line
+        } else {
+          const rightParts: string[] = [];
+          if (role.dates && role.dates !== exp.dates) rightParts.push(role.dates);
+          if (role.location) rightParts.push(role.location);
+          const roleRightText = rightParts.join(' | ');
 
-        const roleTitleText = role.link ? `[${role.title || ''}](${role.link})` : (role.title || '');
-        paragraphs.push(
-          makeTwoColumnLine(roleTitleText, roleRightText, {
-            leftItalic: true,
-            rightItalic: true,
-            leftSize: 20,
-            rightSize: 20,
-          })
-        );
+          const cleanLinkText = role.link ? ` [${getSemanticLinkLabel(role.link, 'Link')}](${role.link})` : '';
+          const roleTitleText = (role.title || '') + cleanLinkText;
+
+          paragraphs.push(
+            makeTwoColumnLine(roleTitleText, roleRightText, {
+              leftItalic: true,
+              rightItalic: true,
+              leftSize: 20,
+              rightSize: 19,
+            })
+          );
+        }
 
         if (Array.isArray(role.description)) {
           for (const desc of role.description) {
@@ -219,8 +341,8 @@ export async function renderResumeDocx(
       paragraphs.push(
         makeTwoColumnLine(edu.university || '', edu.graduation_date || '', {
           leftBold: true,
-          leftSize: 24,
-          rightSize: 24,
+          leftSize: 21,
+          rightSize: 19,
           spacingBefore: eIndex > 0 ? 80 : 40,
         })
       );
@@ -231,7 +353,7 @@ export async function renderResumeDocx(
           leftItalic: true,
           rightItalic: true,
           leftSize: 20,
-          rightSize: 20,
+          rightSize: 19,
         })
       );
 
@@ -253,12 +375,12 @@ export async function renderResumeDocx(
 
   const appendSkills = () => {
     const skills = data.skills_and_interests;
-    const hasSkills = skills && (
-      (skills.certifications && skills.certifications.length > 0) ||
-      (skills.technologies && skills.technologies.length > 0) ||
-      (skills.skills && skills.skills.length > 0) ||
-      (skills.interests && skills.interests.length > 0)
-    );
+    const hasSkills =
+      skills &&
+      ((skills.certifications && skills.certifications.length > 0) ||
+        (skills.technologies && skills.technologies.length > 0) ||
+        (skills.skills && skills.skills.length > 0) ||
+        (skills.interests && skills.interests.length > 0));
 
     if (!hasSkills) return;
     paragraphs.push(makeSectionHeader('CERTIFICATIONS, SKILLS & INTERESTS'));
@@ -283,12 +405,14 @@ export async function renderResumeDocx(
 
     for (let i = 0; i < sec.items.length; i++) {
       const item = sec.items[i];
-      const titleText = item.link ? `[${item.title || ''}](${item.link})` : (item.title || '');
+      const cleanProjLink = item.link ? ` [${getSemanticLinkLabel(item.link, 'Demo')}](${item.link})` : '';
+      const titleText = (item.title || '') + cleanProjLink;
+
       paragraphs.push(
         makeTwoColumnLine(titleText, item.dates || '', {
           leftBold: true,
           leftSize: 21,
-          rightSize: 20,
+          rightSize: 19,
           spacingBefore: i > 0 ? 80 : 40,
         })
       );
@@ -299,7 +423,7 @@ export async function renderResumeDocx(
             leftItalic: true,
             rightItalic: true,
             leftSize: 20,
-            rightSize: 20,
+            rightSize: 19,
           })
         );
       }
@@ -334,11 +458,25 @@ export async function renderResumeDocx(
 
   // Reconstruct the full word/document.xml with root tags and sectPr preserved
   const docStartMatch = originalXml.match(/^([\s\S]*?<w:body>)/);
-  const docStart = docStartMatch ? docStartMatch[1] : '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><w:body>';
+  const docStart = docStartMatch
+    ? docStartMatch[1]
+    : '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><w:body>';
   const docEnd = '</w:body></w:document>';
 
   const newXml = `${docStart}${paragraphs.join('')}${sectPrXml}${docEnd}`;
 
   zip.file('word/document.xml', newXml);
+
+  // Inject hyperlinks into word/_rels/document.xml.rels
+  if (linkRegistry.hasLinks()) {
+    const relsPath = 'word/_rels/document.xml.rels';
+    const originalRels = zip.file(relsPath)?.asText();
+    if (originalRels) {
+      const extraRelsXml = linkRegistry.getRelationshipsXml();
+      const updatedRels = originalRels.replace('</Relationships>', `${extraRelsXml}</Relationships>`);
+      zip.file(relsPath, updatedRels);
+    }
+  }
+
   return zip.generate({ type: 'nodebuffer', compression: 'DEFLATE' });
 }

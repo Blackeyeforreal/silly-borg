@@ -14,13 +14,21 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Missing resume data' }, { status: 400 });
     }
 
+    const candidateName = (resumeData.personal_info?.full_name || 'Candidate')
+      .trim()
+      .replace(/[^a-zA-Z0-9_-]/g, '_');
+    const roleTitle = (resumeData.work_experience?.[0]?.roles?.[0]?.title || 'Software_Engineer')
+      .trim()
+      .replace(/[^a-zA-Z0-9_-]/g, '_');
+    const filename = `${candidateName}_resume_${roleTitle}.docx`;
+
     try {
       const templateBuffer = await renderResumeDocx(resumeData, templateSettings);
       return new NextResponse(new Uint8Array(templateBuffer), {
         status: 200,
         headers: {
           'Content-Type': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-          'Content-Disposition': 'attachment; filename="resume.docx"',
+          'Content-Disposition': `attachment; filename="${filename}"`,
         },
       });
     } catch (tmplErr) {

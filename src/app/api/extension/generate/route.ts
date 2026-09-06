@@ -8,6 +8,12 @@ import { renderResumeDocx } from '@/lib/docx/renderer';
 import { sampleResumeData } from '@/lib/sample-data';
 import { DEFAULT_TEMPLATE_SETTINGS, TemplateSettings } from '@/store/resume-store';
 import { formatResumeDataToText, synthesizeTailoredResumeOffline } from '@/lib/format-resume';
+import { normalizeResumeData, extractTargetRole } from '@/lib/normalization/resume-normalizer';
+import { getUserProfileByEmail } from '@/lib/db';
+import { synthesizeCoverLetterOffline } from '@/lib/cover-letter/synthesizer';
+import { renderCoverLetterDocx } from '@/lib/docx/cover-letter-renderer';
+import { getCoverLetterJsonSchema, CoverLetterDataSchema } from '@/lib/cover-letter/schema';
+import { generateResumePdfBuffer } from '@/lib/pdf/server-pdf-generator';
 
 export const runtime = 'nodejs';
 export const maxDuration = 60;
@@ -22,6 +28,17 @@ const DATA_DIR = path.join(process.cwd(), '.data');
 const PROFILES_FILE = path.join(DATA_DIR, 'user-profiles.json');
 
 function getUserSavedProfile(email: string): { resumeData: ResumeData; templateSettings: TemplateSettings } | null {
+  // 1. Try SQLite Database first
+  try {
+    const dbProfile = getUserProfileByEmail(email);
+    if (dbProfile?.savedProfile?.resumeData) {
+      return dbProfile.savedProfile;
+    }
+  } catch (dbErr) {
+    console.warn('Error reading from SQLite db in extension route:', dbErr);
+  }
+
+  // 2. Try legacy JSON profiles file
   try {
     if (fs.existsSync(PROFILES_FILE)) {
       const content = fs.readFileSync(PROFILES_FILE, 'utf-8');
@@ -34,7 +51,7 @@ function getUserSavedProfile(email: string): { resumeData: ResumeData; templateS
     console.warn('Error reading profiles file:', err);
   }
 
-  // Pre-seed demo fallback
+  // 3. Pre-seed demo fallback
   if (email.includes('alex.chen') || email.includes('demo')) {
     return {
       resumeData: {
@@ -120,6 +137,51 @@ export async function POST(req: NextRequest) {
 
     let validatedResume: ResumeData;
 
+    const isCoverLetter = body.type === 'cover-letter' || body.target === 'cover-letter';
+
+    if (isCoverLetter) {
+      let coverLetterData;
+      if (!apiKey) {
+        coverLetterData = synthesizeCoverLetterOffline(userProfile.resumeData, jobDescription, 'professional');
+      } else {
+        try {
+          const ai = new GoogleGenAI({ apiKey });
+          const jsonSchema = getCoverLetterJsonSchema();
+          const resumeText = formatResumeDataToText(userProfile.resumeData);
+          const prompt = `You are an elite executive career coach. Write a compelling tailored cover letter for this candidate based on their resume and job description.\n\nResume Details:\n${resumeText}\n\nJob Description:\n${jobDescription}`;
+          const clRes = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: prompt,
+            config: {
+              responseMimeType: 'application/json',
+              responseSchema: jsonSchema,
+            }
+          });
+          const parsed = JSON.parse(clRes.text || '{}');
+          coverLetterData = CoverLetterDataSchema.parse(parsed);
+        } catch (clErr) {
+          console.warn('Cover letter AI synthesis fallback to offline:', clErr);
+          coverLetterData = synthesizeCoverLetterOffline(userProfile.resumeData, jobDescription, 'professional');
+        }
+      }
+
+      const docxBuffer = await renderCoverLetterDocx(coverLetterData, userProfile.resumeData, templateSettings);
+      const safeName = (userProfile.resumeData.personal_info?.full_name || 'Tailored').replace(/[^a-zA-Z0-9_-]/g, '_');
+      const filename = `Cover_Letter_${safeName}.docx`;
+
+      return NextResponse.json(
+        {
+          success: true,
+          type: 'cover-letter',
+          coverLetter: coverLetterData,
+          docxBase64: docxBuffer.toString('base64'),
+          filename,
+          user: { email, name: userProfile.resumeData.personal_info?.full_name || email }
+        },
+        { headers: corsHeaders }
+      );
+    }
+
     if (!apiKey) {
       console.warn('GEMINI_API_KEY is not configured in environment. Tailoring resume using built-in keyword alignment engine.');
       validatedResume = synthesizeTailoredResumeOffline(userProfile.resumeData, jobDescription);
@@ -178,14 +240,54 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // 6. Render to DOCX buffer
-    const docxBuffer = await renderResumeDocx(validatedResume, templateSettings);
+    // 6. Normalize resume data before rendering (clean prefixes, remove duplicates, extract semantic links)
+    const normalizedResume = normalizeResumeData(validatedResume);
 
-    const safeName = (validatedResume.personal_info?.full_name || 'Tailored')
+    // Format target role and candidate name for standard filename: {Name}_resume_{role}
+    const candidateName = (normalizedResume.personal_info?.full_name || userProfile.resumeData.personal_info?.full_name || 'Candidate')
+      .trim()
       .replace(/[^a-zA-Z0-9_-]/g, '_');
-    const filename = `Tailored_Resume_${safeName}.docx`;
+    
+    // Determine primary/target role from job description or latest experience
+    const defaultRole = normalizedResume.work_experience?.[0]?.roles?.[0]?.title || 'Software_Engineer';
+    const targetRole = extractTargetRole(jobDescription, defaultRole);
 
-    // 7. Check if client wants binary stream or base64 JSON
+    const wantsPdf = body.format === 'pdf' || body.type === 'pdf';
+
+    if (wantsPdf) {
+      const pdfBuffer = await generateResumePdfBuffer(normalizedResume, { templateSettings });
+      const filename = `${candidateName}_resume_${targetRole}.pdf`;
+
+      const acceptHeader = req.headers.get('accept') || '';
+      if (acceptHeader.includes('application/pdf')) {
+        return new NextResponse(new Uint8Array(pdfBuffer), {
+          status: 200,
+          headers: {
+            ...corsHeaders,
+            'Content-Type': 'application/pdf',
+            'Content-Disposition': `attachment; filename="${filename}"`,
+          }
+        });
+      }
+
+      return NextResponse.json(
+        {
+          success: true,
+          type: 'resume-pdf',
+          resume: normalizedResume,
+          pdfBase64: pdfBuffer.toString('base64'),
+          filename,
+          user: { email, name: normalizedResume.personal_info?.full_name || email }
+        },
+        { headers: corsHeaders }
+      );
+    }
+
+    // 7. Render to DOCX buffer
+    const docxBuffer = await renderResumeDocx(normalizedResume, templateSettings);
+    const filename = `${candidateName}_resume_${targetRole}.docx`;
+
+    // 8. Check if client wants binary stream or base64 JSON
     const acceptHeader = req.headers.get('accept') || '';
     const wantsBinary = body.format === 'docx' || acceptHeader.includes('application/vnd.openxmlformats-officedocument');
 
@@ -204,13 +306,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       {
         success: true,
-        resume: validatedResume,
+        type: 'resume',
+        resume: normalizedResume,
         docxBase64: docxBuffer.toString('base64'),
         filename,
-        user: { email, name: validatedResume.personal_info?.full_name || email }
+        user: { email, name: normalizedResume.personal_info?.full_name || email }
       },
       { headers: corsHeaders }
     );
+
   } catch (error: any) {
     console.error('Extension generate error:', error);
     return NextResponse.json(

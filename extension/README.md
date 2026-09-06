@@ -1,55 +1,70 @@
-# TailorCraft AI - Browser Extension
+# TailorCraft AI - Browser Extension (Manifest V3)
 
-A Manifest V3 browser extension that turns any job posting on the web into a tailored, ATS-optimized DOCX resume in **1 click**, using your saved master work history, education, and template styling.
+A Manifest V3 browser extension built with **Neo-Brutalist Swiss Editorial UI** that turns any job posting on the web into a tailored, ATS-optimized **Resume** or **Matched Cover Letter** in **1 click**, using your saved SQLite master profile and typography styling.
 
 ---
 
 ## Features
 
-- **1-Click Generation & Direct Download**: Takes job descriptions from the web and immediately downloads an ATS-compliant Word (`.docx`) file to your Downloads folder.
-- **Tab Selection Auto-Capture**: Automatically detects and extracts highlighted job descriptions from your active browser tab (LinkedIn, Indeed, Lever, Greenhouse, etc.).
-- **Right-Click Context Menu**: Highlight any job post -> Right-click -> **✨ Tailor Resume for Selected Job**.
-- **Dynamic Loading Feedback**: Real-time progress updates cycling through analysis, alignment, formatting, and file generation.
-- **User Authentication & Profile Sync**: Syncs with your saved profile and template styling from the web app or demo user.
+- **Multi-Format 1-Click Generation**:
+  - **📄 Tailor Resume (PDF)**: Typesets an editorial letter PDF resume directly with active, clickable OpenXML/PDF link annotations.
+  - **⚡ Tailor Resume (DOCX)**: Normalizes your work history, extracts semantic hyperlinks, eliminates duplicate roles/prefixes, and aligns ATS keywords to the job description.
+  - **📝 Tailor Cover Letter (DOCX)**: Drafts an executive 1-page cover letter referencing verified metrics and candidate achievements.
+- **Smart Standardized Filename**:
+  - Automatically names files using the standard convention: `{Name}_resume_{role}.pdf` or `{Name}_resume_{role}.docx` (e.g. `Devang_Srivastava_resume_Senior_Software_Engineer.pdf`).
+- **Reliable Hovering Floating Widget**:
+  - Automatically positions right above your text selection on any job board or webpage with quick-action buttons for `[📄 TAILOR PDF]`, `[⚡ DOCX]`, and `[📝 COVER]`.
+- **Right-Click Context Menus**:
+  - Highlight any text -> Right-click -> **📄 Tailor Resume (PDF)**
+  - Highlight any text -> Right-click -> **⚡ Tailor Resume (DOCX)**
+  - Highlight any text -> Right-click -> **📝 Tailor Cover Letter (DOCX)**
+- **Direct-to-Downloads Export**: Downloads high-fidelity PDF and Word (`.docx`) documents automatically without tedious file picker dialogs.
+- **SQLite Database Profile Sync**: Seamlessly syncs with your saved profile and template preferences from the local database.
 
 ---
 
-## How to Install in Google Chrome / Brave / Microsoft Edge
+## Installation Guide (Chrome / Brave / Edge)
 
 1. Open your browser and navigate to:
    - **Chrome**: `chrome://extensions`
    - **Brave**: `brave://extensions`
    - **Edge**: `edge://extensions`
-2. Enable **Developer mode** (toggle switch in the top right or bottom left corner).
-3. Click **Load unpacked** (or "Load unpacked extension").
-4. Select the `extension` folder located inside this project:
+2. Enable **Developer mode** (toggle in the top right or bottom left corner).
+3. Click **Load unpacked** (or click the reload icon if already loaded).
+4. Select the `extension` directory inside this repository:
    `c:\Users\devan\Documents\antigravity\silly-borg\extension`
-5. The **TailorCraft AI** icon (`TC`) will now appear in your browser extension toolbar! Pin it for easy access.
+5. The **TailorCraft** icon (`TC`) will appear in your browser extensions toolbar. Pin it for quick access!
 
 ---
 
 ## How to Use
 
-### Method 1: Extension Popup (Recommended)
-1. Highlight any job description on a webpage (e.g. LinkedIn, Indeed, company careers page).
-2. Click the **TC** extension icon in your browser toolbar.
-3. If not already logged in:
-   - Click **1-Click Demo Login (Alex Chen)** or enter your email.
-4. Your highlighted job description is **automatically grabbed** and loaded into the box!
-5. Click **✨ Tailor & Download Resume (DOCX)**.
-6. Watch the dynamic status messages as AI tailors your resume. Your customized Word document downloads automatically!
+### 1. Hovering Action Widget
+1. Highlight any job posting text on any website (LinkedIn, Indeed, Greenhouse, Lever, etc.).
+2. The hovering Neo-Brutalist toolbar immediately displays right above your selection:
+   - Click **📄 TAILOR PDF** to generate an editorial PDF resume.
+   - Click **⚡ DOCX** to generate an ATS-tailored Word resume.
+   - Click **📝 COVER** to generate a matched cover letter.
+3. Watch the progress ticker as AI normalizes and formats your document, then automatically downloads it with the format `{Name}_resume_{role}`.
 
-### Method 2: Right-Click Context Menu
-1. Highlight any job posting text on any webpage.
-2. Right-click the highlighted text.
-3. Select **✨ Tailor Resume for Selected Job**.
-4. The extension communicates with your local TailorCraft server in the background and downloads the tailored `.docx` file directly.
+### 2. Extension Popup
+1. Highlight text on a job posting (or open popup directly and paste text).
+2. Click the **TC** icon in your browser toolbar.
+3. The selected text is **automatically captured** into the job description box.
+4. Click either **📄 Tailor & Download Resume (PDF)**, **⚡ Tailor & Download Resume (DOCX)**, or **📝 Generate Matched Cover Letter (DOCX)**.
+
+### 3. Right-Click Context Menu
+1. Highlight any job posting text.
+2. Right-click and choose **📄 Tailor Resume (PDF)**, **⚡ Tailor Resume (DOCX)**, or **📝 Tailor Cover Letter (DOCX)**.
+3. Your document downloads automatically in the background with desktop notification confirmations.
+
 
 ---
 
 ## Configuration
 
-By default, the extension connects to `http://localhost:3000`. If you run your server on a custom port or domain:
+By default, the extension connects to `http://localhost:3000`.
+To use a different local port or hosted domain:
 1. Open the extension popup.
-2. Click **⚙️ API Settings** at the bottom.
-3. Update the **API Server URL** and click **Save Settings**.
+2. Click **⚙️ API SETTINGS** at the bottom.
+3. Enter your server URL and click **Save Settings**.

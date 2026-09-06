@@ -35,3 +35,7 @@ next-env.d.ts
 
 # Template extracted XML (dev only)
 Template/document.xml
+
+# Local SQLite Database & Data
+.data/*.db*
+
