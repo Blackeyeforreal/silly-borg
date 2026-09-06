@@ -257,13 +257,13 @@ export function ProfileEditorForm({ data, onChange, onSwitchToRawText }: Profile
   return (
     <div className="space-y-4 text-sm">
       {/* Top Banner with Quick Actions */}
-      <div className="p-3.5 bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 rounded-xl border border-blue-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div className="p-3.5 bg-[#F7F5F0] border border-[#DCD8CE] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <div className="flex items-center gap-2">
-            <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-blue-600 text-white text-[11px] font-bold">✓</span>
-            <span className="font-bold text-gray-900 text-xs sm:text-sm">Structured Profile Extracted</span>
+            <span className="inline-flex items-center justify-center w-4 h-4 bg-[#141413] text-[#FDFCFB] text-[10px] font-mono font-bold">✓</span>
+            <span className="font-mono text-xs uppercase tracking-wider font-semibold text-[#141413]">01 / Structured Profile Extracted</span>
           </div>
-          <p className="text-[11px] text-gray-600 mt-0.5">
+          <p className="text-[11px] text-[#706E6B] mt-0.5 font-sans">
             Review and edit your details, add live demo/GitHub links for projects, or save directly to your master account.
           </p>
         </div>
@@ -273,10 +273,10 @@ export function ProfileEditorForm({ data, onChange, onSwitchToRawText }: Profile
             <button
               type="button"
               onClick={onSwitchToRawText}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-700 bg-white hover:bg-gray-100 border border-gray-300 rounded-lg shadow-2xs transition-colors cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-mono uppercase tracking-wider text-[#141413] bg-white hover:bg-[#F2EFE9] border border-[#DCD8CE] transition-colors cursor-pointer"
               title="View and edit as plain text"
             >
-              <FileText className="w-3.5 h-3.5 text-gray-500" />
+              <FileText className="w-3.5 h-3.5 text-[#8C887B]" />
               Raw Text
             </button>
           )}
@@ -284,9 +284,9 @@ export function ProfileEditorForm({ data, onChange, onSwitchToRawText }: Profile
           <button
             type="button"
             onClick={handleSaveToProfile}
-            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow-2xs transition-colors cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-mono uppercase tracking-wider text-[#FDFCFB] bg-[#141413] hover:bg-black transition-colors cursor-pointer shadow-sm"
           >
-            <BookmarkCheck className="w-4 h-4" />
+            <BookmarkCheck className="w-3.5 h-3.5" />
             {user ? 'Save to Master Profile' : 'Log In & Save'}
           </button>
         </div>
@@ -414,11 +414,11 @@ export function ProfileEditorForm({ data, onChange, onSwitchToRawText }: Profile
           className="w-full flex items-center justify-between p-3.5 bg-gray-50/80 hover:bg-gray-100/70 transition-colors text-left cursor-pointer"
         >
           <div className="flex items-center gap-2 font-semibold text-gray-900 text-xs sm:text-sm">
-            <div className="p-1.5 rounded-lg bg-purple-100 text-purple-700">
+            <div className="p-1.5 bg-[#F7F5F0] text-[#141413] border border-[#DCD8CE]">
               <FolderGit2 className="w-4 h-4" />
             </div>
             <span>Featured Projects &amp; Demos</span>
-            <span className="text-[11px] font-normal text-purple-700 bg-purple-50 px-2 py-0.5 rounded-full border border-purple-200">
+            <span className="text-[10px] font-mono text-[#706E6B] bg-[#F7F5F0] px-2 py-0.5 border border-[#DCD8CE]">
               {projectItems.length} {projectItems.length === 1 ? 'project' : 'projects'}
             </span>
           </div>
@@ -426,14 +426,14 @@ export function ProfileEditorForm({ data, onChange, onSwitchToRawText }: Profile
         </button>
 
         {expandedSections.projects && (
-          <div className="p-4 space-y-4 border-t border-gray-100">
+          <div className="p-4 space-y-4 border-t border-[#EFECE6]">
             {projectItems.length === 0 ? (
-              <div className="text-center py-6 border border-dashed border-gray-300 rounded-xl bg-gray-50/60">
-                <p className="text-xs text-gray-600 mb-2">No projects added yet.</p>
+              <div className="text-center py-6 border border-dashed border-[#DCD8CE] bg-[#F7F5F0]">
+                <p className="text-xs text-[#706E6B] mb-2 font-mono">No projects added yet.</p>
                 <button
                   type="button"
                   onClick={handleAddProject}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-purple-700 bg-purple-50 hover:bg-purple-100 border border-purple-200 rounded-lg transition-colors cursor-pointer"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-mono uppercase tracking-wider text-[#141413] bg-white hover:bg-[#F2EFE9] border border-[#DCD8CE] transition-colors cursor-pointer"
                 >
                   <Plus className="w-3.5 h-3.5" /> Add First Project
                 </button>
@@ -526,7 +526,7 @@ export function ProfileEditorForm({ data, onChange, onSwitchToRawText }: Profile
                         <button
                           type="button"
                           onClick={() => handleAddProjectBullet(pIdx)}
-                          className="text-[11px] text-purple-700 hover:text-purple-900 font-medium inline-flex items-center gap-1 cursor-pointer"
+                          className="text-[11px] font-mono uppercase tracking-wider text-[#141413] hover:text-[#993322] inline-flex items-center gap-1 cursor-pointer"
                         >
                           <Plus className="w-3 h-3" /> Add Bullet
                         </button>
@@ -535,17 +535,17 @@ export function ProfileEditorForm({ data, onChange, onSwitchToRawText }: Profile
                       <div className="space-y-1.5">
                         {(project.description || []).map((bullet, bIdx) => (
                           <div key={bIdx} className="flex items-start gap-1.5">
-                            <span className="text-gray-400 mt-2 text-xs">•</span>
+                            <span className="text-[#8C887B] mt-2 text-xs font-mono">•</span>
                             <textarea
                               rows={2}
                               value={bullet}
                               onChange={(e) => handleUpdateProjectBullet(pIdx, bIdx, e.target.value)}
-                              className="flex-1 px-2.5 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none resize-y"
+                              className="flex-1 px-2.5 py-1.5 text-xs bg-white border border-[#DCD8CE] focus:border-[#141413] outline-none resize-y font-sans text-[#141413]"
                             />
                             <button
                               type="button"
                               onClick={() => handleRemoveProjectBullet(pIdx, bIdx)}
-                              className="p-1.5 text-gray-400 hover:text-red-500 transition-colors mt-0.5"
+                              className="p-1.5 text-[#8C887B] hover:text-[#993322] transition-colors mt-0.5"
                               title="Delete Bullet"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
@@ -560,7 +560,7 @@ export function ProfileEditorForm({ data, onChange, onSwitchToRawText }: Profile
                 <button
                   type="button"
                   onClick={handleAddProject}
-                  className="w-full py-2.5 border border-dashed border-purple-300 text-purple-700 bg-purple-50/50 hover:bg-purple-50 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                  className="w-full py-2.5 border border-dashed border-[#DCD8CE] text-[#141413] bg-[#F7F5F0] hover:bg-[#EFECE6] font-mono text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                 >
                   <Plus className="w-4 h-4" /> Add Another Project
                 </button>

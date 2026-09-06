@@ -9,7 +9,7 @@ import {
   Plus, 
   Loader2, 
   FolderPlus, 
-  Palette, 
+  Sliders, 
   FileEdit, 
   ArrowUpDown,
   PanelLeft,
@@ -18,10 +18,7 @@ import {
   User,
   LogOut,
   Zap,
-  FileSignature,
-  Sparkles,
-  CheckCircle2,
-  AlertTriangle
+  FileSignature
 } from 'lucide-react';
 import { useResumeStore } from '@/store/resume-store';
 import { useUserStore } from '@/store/user-store';
@@ -62,11 +59,11 @@ export function ResumeToolbar() {
         try {
           const { exportResumeToPdf } = await import('@/lib/pdf/exporter');
           await exportResumeToPdf('resume.pdf');
-          addToast('Successfully exported PDF', 'success');
+          addToast('Document exported as PDF', 'success');
           return;
         } catch (pdfErr) {
           console.error('Direct PDF export error, falling back to print dialog:', pdfErr);
-          addToast('Direct PDF export encountered an issue. Opening print dialog...', 'info');
+          addToast('Opening print dialog for PDF export...', 'info');
           setTimeout(() => {
             window.print();
           }, 300);
@@ -94,7 +91,7 @@ export function ResumeToolbar() {
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
       
-      addToast('Successfully exported DOCX', 'success');
+      addToast('Document exported as DOCX', 'success');
     } catch (error) {
       addToast(error instanceof Error ? error.message : `Failed to export ${format.toUpperCase()}`, 'error');
     } finally {
@@ -124,29 +121,28 @@ export function ResumeToolbar() {
   }, [undo, redo, pastStates.length, futureStates.length]);
 
   return (
-    <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-slate-200/80 shadow-2xs no-print">
-      <div className="max-w-7xl mx-auto px-3 sm:px-4 h-14 flex items-center justify-between gap-2 overflow-x-auto">
+    <header className="sticky top-0 z-40 bg-[#FDFCFB] border-b-2 border-[#141413] no-print">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 h-14 flex items-center justify-between gap-3 overflow-x-auto">
         
-        {/* Left: Brand & Undo/Redo & Tabs */}
-        <div className="flex items-center space-x-2 shrink-0">
-          {/* Logo Mark */}
-          <div className="flex items-center gap-2 mr-1">
-            <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-xs">
-              <Sparkles className="w-3.5 h-3.5" />
-            </div>
-            <span className="hidden xl:inline text-xs font-bold tracking-tight text-slate-900">
-              SillyBorg
+        {/* Left: Studio Identity, History, and Tabs */}
+        <div className="flex items-center space-x-3 shrink-0">
+          <div className="flex items-center gap-2">
+            <span className="font-mono text-xs tracking-wider uppercase font-black text-[#141413]">
+              SILLYBORG
+            </span>
+            <span className="sticker-pill bg-[#D4FF00] text-[#141413] text-[10px] hidden sm:inline-flex">
+              ⚡ GEN-Z
             </span>
           </div>
 
-          <div className="w-px h-5 bg-slate-200"></div>
+          <div className="w-px h-4 bg-[#141413]" />
 
           {/* Undo / Redo */}
-          <div className="flex items-center space-x-0.5 bg-slate-100/80 p-0.5 rounded-lg border border-slate-200/60">
+          <div className="flex items-center space-x-1">
             <button
               onClick={() => undo()}
               disabled={pastStates.length === 0}
-              className="p-1.5 text-slate-600 hover:bg-white hover:text-slate-900 rounded-md disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
+              className="p-1.5 text-[#141413] hover:bg-[#EFECE6] border border-[#141413] shadow-[1.5px_1.5px_0px_#141413] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer bg-white"
               title="Undo (Ctrl+Z)"
             >
               <Undo2 className="w-3.5 h-3.5" />
@@ -154,122 +150,119 @@ export function ResumeToolbar() {
             <button
               onClick={() => redo()}
               disabled={futureStates.length === 0}
-              className="p-1.5 text-slate-600 hover:bg-white hover:text-slate-900 rounded-md disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
+              className="p-1.5 text-[#141413] hover:bg-[#EFECE6] border border-[#141413] shadow-[1.5px_1.5px_0px_#141413] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer bg-white"
               title="Redo (Ctrl+Y)"
             >
               <Redo2 className="w-3.5 h-3.5" />
             </button>
           </div>
 
-          <div className="w-px h-5 bg-slate-200"></div>
+          <div className="w-px h-4 bg-[#141413] hidden sm:block" />
 
-          {/* Sidebar Tab Segmented Switcher */}
-          <div className="flex items-center bg-slate-100/80 p-0.5 rounded-lg border border-slate-200/60">
+          {/* Segmented Palette Tabs */}
+          <div className="hidden sm:flex items-center border-2 border-[#141413] bg-white shadow-[2px_2px_0px_#141413] p-0.5 font-mono text-[11px] tracking-wider uppercase font-bold">
             <button
               onClick={() => setSidebarTab('forms')}
-              className={`flex items-center px-2.5 py-1 text-xs font-semibold rounded-md transition-all cursor-pointer ${
+              className={`flex items-center gap-1 px-2.5 py-1 transition-colors cursor-pointer ${
                 isSidebarOpen && sidebarTab === 'forms'
-                  ? 'bg-white text-blue-700 shadow-2xs'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
+                  ? 'bg-[#141413] text-white'
+                  : 'text-[#141413] hover:bg-[#F2EFE9]'
               }`}
-              title="Edit sections using side forms"
             >
-              <FileEdit className="w-3.5 h-3.5 mr-1 text-blue-600" />
-              <span>Forms</span>
+              <FileEdit className="w-3 h-3" />
+              <span>Content</span>
             </button>
 
             <button
               onClick={() => setSidebarTab('rearrange')}
-              className={`flex items-center px-2.5 py-1 text-xs font-semibold rounded-md transition-all cursor-pointer ${
+              className={`flex items-center gap-1 px-2.5 py-1 transition-colors cursor-pointer ${
                 isSidebarOpen && sidebarTab === 'rearrange'
-                  ? 'bg-white text-blue-700 shadow-2xs'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
+                  ? 'bg-[#141413] text-white'
+                  : 'text-[#141413] hover:bg-[#F2EFE9]'
               }`}
-              title="Rearrange section order"
             >
-              <ArrowUpDown className="w-3.5 h-3.5 mr-1 text-slate-500" />
+              <ArrowUpDown className="w-3 h-3" />
               <span>Order</span>
             </button>
 
             <button
               onClick={() => setSidebarTab('design')}
-              className={`flex items-center px-2.5 py-1 text-xs font-semibold rounded-md transition-all cursor-pointer ${
+              className={`flex items-center gap-1 px-2.5 py-1 transition-colors cursor-pointer ${
                 isSidebarOpen && sidebarTab === 'design'
-                  ? 'bg-white text-purple-700 shadow-2xs'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
+                  ? 'bg-[#141413] text-white'
+                  : 'text-[#141413] hover:bg-[#F2EFE9]'
               }`}
-              title="Customize typography, colors, margins"
             >
-              <Palette className="w-3.5 h-3.5 mr-1 text-purple-600" />
-              <span>Template</span>
+              <Sliders className="w-3 h-3" />
+              <span>Typeset</span>
             </button>
           </div>
         </div>
 
-        {/* Right: Page Fit Pill, Cover Letter, Exports, New, User */}
+        {/* Right: Page Boundary Status, Cover Letter, Exports, Profile */}
         <div className="flex items-center space-x-2 shrink-0">
-          {/* 1-Page Fit Status Indicator / Quick Tuner */}
+          {/* Page 1 Boundary Auto-Tuner */}
           {isOverflowing ? (
             <button
               onClick={() => {
                 fitToSinglePage();
-                addToast('⚡ Auto-Tuned: Compact styling applied to fit 1 page!', 'success');
+                addToast('Auto-tuned: Adjusted spacing and font metrics to fit 1 page!', 'success');
               }}
-              className="flex items-center gap-1 px-2.5 py-1 text-xs font-bold text-amber-900 bg-amber-50 border border-amber-300 rounded-lg hover:bg-amber-100 shadow-2xs transition-all cursor-pointer animate-pulse hover:animate-none"
-              title="Resume spills onto 2 pages. Click to auto-fit to 1 page."
+              className="flex items-center gap-1.5 px-3 py-1 text-xs font-mono font-bold tracking-wider uppercase text-[#141413] bg-[#FF6B4A] border-2 border-[#141413] shadow-[2px_2px_0px_#141413] hover:shadow-[3px_3px_0px_#141413] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all cursor-pointer animate-pulse"
+              title="Resume spills onto page 2! Click to auto-tune into 1 page."
             >
-              <Zap className="w-3.5 h-3.5 text-amber-600 fill-amber-500" />
-              <span>{pageFitPercent}% • Fit 1-Page</span>
+              <Zap className="w-3.5 h-3.5 fill-[#141413] text-[#141413]" />
+              <span>🚨 {pageFitPercent}% • COOKED! FIT 1-PAGE</span>
             </button>
           ) : (
             <div 
-              className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-emerald-800 bg-emerald-50/80 border border-emerald-200 rounded-lg"
-              title="Resume fits cleanly within 1 page"
+              className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 text-xs font-mono font-bold tracking-wider uppercase text-[#141413] bg-[#D4FF00] border-2 border-[#141413] shadow-[2px_2px_0px_#141413]"
+              title="Content fits within single page constraint"
             >
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-              <span>{pageFitPercent > 0 ? `${pageFitPercent}% • 1 Page` : '1 Page'}</span>
+              <span>🔥 {pageFitPercent > 0 ? `${pageFitPercent}%` : '100%'} • VIBE CHECK PASSED</span>
             </div>
           )}
 
-          {/* 1-Click Matched Cover Letter */}
+          {/* Cover Letter Companion */}
           <button
             onClick={() => setCoverLetterOpen(true)}
-            className="flex items-center px-3 py-1.5 text-xs font-bold text-emerald-800 bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-300/90 rounded-lg hover:from-emerald-100 hover:to-teal-100 shadow-2xs transition-all cursor-pointer"
-            title="Generate matching tailored cover letter from this job description"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-mono font-bold tracking-wider uppercase text-[#141413] bg-[#E2D9FC] border-2 border-[#141413] shadow-[2px_2px_0px_#141413] hover:shadow-[3px_3px_0px_#141413] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all cursor-pointer"
+            title="Generate matching cover letter from this job requisition"
           >
-            <FileSignature className="w-3.5 h-3.5 mr-1.5 text-emerald-600" />
-            <span>Cover Letter</span>
+            <FileSignature className="w-3.5 h-3.5 text-[#141413]" />
+            <span className="hidden sm:inline">Cover Letter</span>
+            <span className="sm:hidden">Letter</span>
           </button>
 
           <button
             onClick={() => setIsAddSectionOpen(true)}
-            className="hidden md:flex items-center px-2.5 py-1.5 text-xs font-semibold text-blue-700 bg-blue-50 border border-blue-200/80 rounded-lg hover:bg-blue-100 transition-colors cursor-pointer"
+            className="hidden xl:flex items-center gap-1 px-2.5 py-1.5 text-xs font-mono font-bold tracking-wider uppercase text-[#141413] hover:bg-[#F2EFE9] border-2 border-[#141413] shadow-[2px_2px_0px_#141413] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none bg-white transition-all cursor-pointer"
           >
-            <FolderPlus className="w-3.5 h-3.5 mr-1 text-blue-600" />
-            Add Section
+            <FolderPlus className="w-3 h-3" />
+            <span>Section</span>
           </button>
 
-          <div className="w-px h-5 bg-slate-200 mx-0.5"></div>
+          <div className="w-px h-4 bg-[#141413]" />
 
-          {/* Export Group */}
-          <div className="flex items-center bg-slate-100/80 p-0.5 rounded-lg border border-slate-200/60">
+          {/* Exports: Tactile Neo-Brutalist Capsule */}
+          <div className="flex items-center border-2 border-[#141413] bg-[#141413] shadow-[2.5px_2.5px_0px_#141413] overflow-hidden">
             <button
               onClick={() => handleExport('docx')}
               disabled={!!isExporting}
-              className="flex items-center px-2.5 py-1 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-md shadow-2xs disabled:opacity-50 transition-all cursor-pointer"
+              className="flex items-center gap-1 px-2.5 py-1 text-xs font-mono font-bold tracking-wider uppercase bg-white hover:bg-[#D4FF00] text-[#141413] disabled:opacity-50 transition-colors cursor-pointer border-r-2 border-[#141413]"
               title="Download Microsoft Word .docx"
             >
-              {isExporting === 'docx' ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <Download className="w-3.5 h-3.5 mr-1 text-blue-600" />}
+              {isExporting === 'docx' ? <Loader2 className="w-3 h-3 animate-spin" /> : <Download className="w-3 h-3" />}
               <span>DOCX</span>
             </button>
-            
+
             <button
               onClick={() => handleExport('pdf')}
               disabled={!!isExporting}
-              className="flex items-center px-2.5 py-1 text-xs font-semibold text-slate-700 hover:text-slate-900 rounded-md hover:bg-white/80 disabled:opacity-50 transition-all cursor-pointer"
-              title="Download high-resolution vector PDF"
+              className="flex items-center gap-1 px-2.5 py-1 text-xs font-mono font-bold tracking-wider uppercase bg-white hover:bg-[#FF85B3] text-[#141413] disabled:opacity-50 transition-colors cursor-pointer"
+              title="Download print-ready PDF"
             >
-              {isExporting === 'pdf' ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <FileText className="w-3.5 h-3.5 mr-1 text-red-500" />}
+              {isExporting === 'pdf' ? <Loader2 className="w-3 h-3 animate-spin" /> : <FileText className="w-3 h-3" />}
               <span>PDF</span>
             </button>
           </div>
@@ -277,44 +270,42 @@ export function ResumeToolbar() {
           {/* New / Reset */}
           <button
             onClick={() => {
-              if (window.confirm('Are you sure you want to start over? Any unsaved changes will be lost.')) {
+              if (window.confirm('Start over? Current document will be reset.')) {
                 reset();
               }
             }}
-            className="flex items-center px-2.5 py-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-slate-200 rounded-lg transition-colors cursor-pointer"
-            title="Start over with a new resume"
+            className="p-1.5 text-[#141413] hover:bg-[#EFECE6] border border-[#141413] shadow-[1.5px_1.5px_0px_#141413] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all cursor-pointer bg-white"
+            title="Reset document"
           >
-            <Plus className="w-3.5 h-3.5 mr-1" />
-            <span>New</span>
+            <Plus className="w-4 h-4" />
           </button>
 
-          {/* User Account / Preferences */}
+          {/* User Profile */}
           {user ? (
-            <div className="flex items-center gap-1 pl-1 border-l border-slate-200">
+            <div className="flex items-center gap-1.5 pl-1.5 border-l border-[#E7E4DC]">
               <button
                 onClick={() => {
                   if (resumeData) {
                     saveProfile(resumeData, templateSettings);
-                    addToast('Saved current resume & template preferences to your profile!', 'success');
+                    addToast('Saved profile and typographic settings', 'success');
                   }
                 }}
-                className="hidden sm:flex items-center px-2.5 py-1.5 text-xs font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 rounded-lg hover:bg-emerald-100 transition-colors cursor-pointer"
-                title="Save current resume and style preferences to your account"
+                className="p-1.5 text-[#55534E] hover:text-[#141413] hover:bg-[#EFECE6] rounded-xs transition-colors cursor-pointer"
+                title="Save master profile"
               >
-                <BookmarkCheck className="w-3.5 h-3.5 mr-1 text-emerald-600" />
-                <span>Save</span>
+                <BookmarkCheck className="w-4 h-4 text-[#993322]" />
               </button>
 
               <div 
-                className="w-7 h-7 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center font-bold text-xs shadow-xs"
-                title={`Logged in as ${user.name} (${user.email})`}
+                className="w-6 h-6 rounded-xs bg-[#141413] text-[#F8F7F4] flex items-center justify-center font-mono text-[10px] font-bold"
+                title={`User: ${user.name}`}
               >
                 {user.name.charAt(0).toUpperCase()}
               </div>
 
               <button
                 onClick={logout}
-                className="p-1 text-slate-400 hover:text-red-600 rounded transition-colors cursor-pointer"
+                className="p-1 text-[#76736C] hover:text-[#993322] transition-colors cursor-pointer"
                 title="Sign out"
               >
                 <LogOut className="w-3.5 h-3.5" />
@@ -323,10 +314,10 @@ export function ResumeToolbar() {
           ) : (
             <button
               onClick={() => setAuthModalOpen(true)}
-              className="flex items-center px-2.5 py-1.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-lg transition-colors cursor-pointer"
+              className="p-1.5 text-[#55534E] hover:text-[#141413] transition-colors cursor-pointer"
+              title="Sign in"
             >
-              <User className="w-3.5 h-3.5 mr-1 text-slate-600" />
-              <span>Log In</span>
+              <User className="w-4 h-4" />
             </button>
           )}
         </div>

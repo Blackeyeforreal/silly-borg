@@ -26,77 +26,77 @@ interface SectionPreset {
 const PRESETS: SectionPreset[] = [
   {
     id: 'projects',
-    title: 'Projects',
-    description: 'Personal, academic, or open-source software projects',
-    icon: <FolderGit2 className="w-5 h-5 text-blue-600" />,
+    title: 'Featured Projects',
+    description: 'Personal, open-source, or commercial engineering projects',
+    icon: <FolderGit2 className="w-4 h-4 text-[#993322]" />,
     defaultItem: {
-      title: 'Full-Stack Web Application',
+      title: 'Full-Stack Distributed Application',
       subtitle: 'Next.js, TypeScript, PostgreSQL, Tailwind CSS',
       dates: '2024',
       location: 'github.com/username/project',
       description: [
-        'Designed and deployed an end-to-end cloud platform supporting 5,000+ active users.',
-        'Engineered responsive UI and implemented JWT authentication with Redis session caching.'
+        'Designed and deployed high-availability platform serving 5,000+ active users.',
+        'Engineered responsive architecture with low-latency session caching and strict type safety.'
       ]
     }
   },
   {
     id: 'publications',
     title: 'Publications & Research',
-    description: 'Academic papers, conference presentations, or technical articles',
-    icon: <BookOpen className="w-5 h-5 text-indigo-600" />,
+    description: 'Peer-reviewed academic papers, conference talks, or whitepapers',
+    icon: <BookOpen className="w-4 h-4 text-[#993322]" />,
     defaultItem: {
       title: 'Optimizing Distributed Cache Invalidation in Microservice Architectures',
       subtitle: 'IEEE International Conference on Cloud Computing',
       dates: 'May 2023',
       location: 'San Francisco, CA',
       description: [
-        'Co-authored peer-reviewed research on low-latency state synchronization in distributed databases.'
+        'Co-authored research on sub-millisecond state synchronization across distributed clusters.'
       ]
     }
   },
   {
     id: 'volunteering',
     title: 'Leadership & Volunteering',
-    description: 'Student leadership, community service, or mentorship',
-    icon: <Users className="w-5 h-5 text-emerald-600" />,
+    description: 'Community leadership, open source stewardship, or mentorship',
+    icon: <Users className="w-4 h-4 text-[#993322]" />,
     defaultItem: {
-      title: 'President & Technical Lead',
+      title: 'President & Technical Director',
       subtitle: 'ACM Student Chapter',
       dates: '2022 – 2023',
       location: 'University Campus',
       description: [
-        'Organized 12+ hands-on technical workshops and coordinated annual 48-hour collegiate hackathon.'
+        'Organized 12+ hands-on technical workshops and directed annual 48-hour collegiate hackathon.'
       ]
     }
   },
   {
     id: 'awards',
-    title: 'Awards & Honors',
-    description: 'Competitions, scholarships, or organizational recognition',
-    icon: <Trophy className="w-5 h-5 text-amber-600" />,
+    title: 'Honors & Awards',
+    description: 'Competitions, merit scholarships, or corporate distinctions',
+    icon: <Trophy className="w-4 h-4 text-[#993322]" />,
     defaultItem: {
-      title: '1st Place Winner — National Hackathon',
+      title: '1st Place Laureate — National Hackathon',
       subtitle: 'Issued by Tech Innovation Summit',
       dates: 'Oct 2023',
       location: 'National Level',
       description: [
-        'Awarded first place among 200+ competing teams for building an AI-powered accessibility solution.'
+        'Awarded first place among 200+ competing teams for building high-concurrency accessibility tool.'
       ]
     }
   },
   {
     id: 'certifications',
-    title: 'Certifications & Licenses',
-    description: 'Industry-recognized credentials, licenses, or professional training',
-    icon: <Award className="w-5 h-5 text-purple-600" />,
+    title: 'Certifications & Accreditations',
+    description: 'Industry certifications, specialized licenses, or verified credentials',
+    icon: <Award className="w-4 h-4 text-[#993322]" />,
     defaultItem: {
       title: 'AWS Certified Solutions Architect – Associate',
       subtitle: 'Amazon Web Services (AWS)',
       dates: 'Issued Jan 2024 · Expires Jan 2027',
       location: 'Credential ID: 12345678',
       description: [
-        'Demonstrated expertise in architecting secure, robust, and cost-effective distributed systems on AWS.'
+        'Demonstrated expertise in architecting resilient, fault-tolerant cloud infrastructures on AWS.'
       ]
     }
   }
@@ -128,65 +128,67 @@ export function AddSectionModal({ isOpen, onClose }: AddSectionModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4 no-print animate-in fade-in duration-150">
-      <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full overflow-hidden border border-gray-100">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#141413]/60 backdrop-blur-xs p-4 no-print animate-in fade-in duration-150">
+      <div className="bg-[#FDFCFB] rounded-xs shadow-2xl max-w-lg w-full overflow-hidden border border-[#E7E4DC]">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gray-50/50">
-          <div className="flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-blue-600" />
-            <h2 className="text-lg font-semibold text-gray-900">Add Resume Section</h2>
+        <div className="flex items-center justify-between px-6 py-3.5 border-b border-[#E7E4DC] bg-[#F8F7F4]">
+          <div className="flex items-center gap-2.5">
+            <span className="font-mono text-[10px] uppercase font-bold text-[#993322] border border-[#EACDC7] bg-[#FBF3F1] px-1.5 py-0.5 rounded-xs">
+              01 · CATALOG
+            </span>
+            <h2 className="font-serif-display text-lg text-[#141413]">Add Document Section</h2>
           </div>
           <button 
             onClick={onClose}
-            className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
+            className="p-1 text-[#76736C] hover:text-[#141413] hover:bg-[#EFECE6] rounded-xs transition-colors cursor-pointer"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Content */}
-        <div className="p-6 space-y-4 max-h-[75vh] overflow-y-auto">
+        <div className="p-6 space-y-4 max-h-[75vh] overflow-y-auto custom-scrollbar">
           {!isCustom ? (
             <>
               {(!hasWorkExp || !hasEdu || !hasSkills) && (
-                <div className="p-3 bg-amber-50/70 border border-amber-200 rounded-lg">
-                  <div className="text-xs font-semibold text-amber-900 mb-1.5 flex items-center gap-1.5">
-                    <span>Restore Standard Sections</span>
+                <div className="p-3 bg-[#FAF9F6] border border-dashed border-[#DCD8CE] rounded-xs">
+                  <div className="font-mono text-[11px] font-bold text-[#141413] mb-2 uppercase tracking-wider">
+                    Restore Archived Sections
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {!hasWorkExp && (
                       <button
                         type="button"
                         onClick={() => { restoreBuiltinSection('work_experience'); onClose(); }}
-                        className="px-2.5 py-1 text-xs font-medium bg-white border border-amber-300 rounded-md hover:bg-amber-100 text-amber-900 flex items-center gap-1 cursor-pointer transition-colors shadow-2xs"
+                        className="px-2.5 py-1 font-mono text-[11px] uppercase tracking-wider bg-white border border-[#DCD8CE] hover:border-[#141413] text-[#141413] rounded-xs flex items-center gap-1 cursor-pointer transition-colors"
                       >
-                        <Plus className="w-3 h-3 text-amber-700" /> Work Experience
+                        <Plus className="w-3 h-3 text-[#993322]" /> Work Experience
                       </button>
                     )}
                     {!hasEdu && (
                       <button
                         type="button"
                         onClick={() => { restoreBuiltinSection('education'); onClose(); }}
-                        className="px-2.5 py-1 text-xs font-medium bg-white border border-amber-300 rounded-md hover:bg-amber-100 text-amber-900 flex items-center gap-1 cursor-pointer transition-colors shadow-2xs"
+                        className="px-2.5 py-1 font-mono text-[11px] uppercase tracking-wider bg-white border border-[#DCD8CE] hover:border-[#141413] text-[#141413] rounded-xs flex items-center gap-1 cursor-pointer transition-colors"
                       >
-                        <Plus className="w-3 h-3 text-amber-700" /> Education
+                        <Plus className="w-3 h-3 text-[#993322]" /> Education
                       </button>
                     )}
                     {!hasSkills && (
                       <button
                         type="button"
                         onClick={() => { restoreBuiltinSection('skills_and_interests'); onClose(); }}
-                        className="px-2.5 py-1 text-xs font-medium bg-white border border-amber-300 rounded-md hover:bg-amber-100 text-amber-900 flex items-center gap-1 cursor-pointer transition-colors shadow-2xs"
+                        className="px-2.5 py-1 font-mono text-[11px] uppercase tracking-wider bg-white border border-[#DCD8CE] hover:border-[#141413] text-[#141413] rounded-xs flex items-center gap-1 cursor-pointer transition-colors"
                       >
-                        <Plus className="w-3 h-3 text-amber-700" /> Skills & Interests
+                        <Plus className="w-3 h-3 text-[#993322]" /> Skills &amp; Interests
                       </button>
                     )}
                   </div>
                 </div>
               )}
 
-              <p className="text-sm text-gray-600">
-                Choose a pre-formatted section to instantly add to your resume, or create a custom section.
+              <p className="font-sans text-xs text-[#76736C]">
+                Select a standardized structural section to append to the live sheet, or define a bespoke custom category.
               </p>
 
               <div className="space-y-2">
@@ -194,16 +196,16 @@ export function AddSectionModal({ isOpen, onClose }: AddSectionModalProps) {
                   <button
                     key={preset.id}
                     onClick={() => handleSelectPreset(preset)}
-                    className="w-full text-left p-3.5 rounded-lg border border-gray-200 hover:border-blue-500 hover:bg-blue-50/50 transition-all flex items-start gap-3.5 group cursor-pointer"
+                    className="w-full text-left p-3 rounded-xs border border-[#E7E4DC] hover:border-[#141413] bg-white transition-all flex items-start gap-3 group cursor-pointer paper-shadow"
                   >
-                    <div className="p-2 rounded-md bg-white border border-gray-200 group-hover:border-blue-300 shadow-xs shrink-0">
+                    <div className="p-2 rounded-xs bg-[#F8F7F4] border border-[#E7E4DC] shrink-0 mt-0.5">
                       {preset.icon}
                     </div>
                     <div>
-                      <h3 className="text-sm font-semibold text-gray-900 group-hover:text-blue-600">
+                      <h3 className="text-xs font-semibold text-[#141413]">
                         {preset.title}
                       </h3>
-                      <p className="text-xs text-gray-500 mt-0.5">
+                      <p className="text-[11px] text-[#76736C] mt-0.5 leading-snug">
                         {preset.description}
                       </p>
                     </div>
@@ -211,30 +213,30 @@ export function AddSectionModal({ isOpen, onClose }: AddSectionModalProps) {
                 ))}
               </div>
 
-              <div className="pt-2 border-t border-gray-100">
+              <div className="pt-2 border-t border-[#E7E4DC]">
                 <button
                   onClick={() => setIsCustom(true)}
-                  className="w-full py-2.5 px-4 text-sm font-medium text-gray-700 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                  className="w-full py-2.5 px-4 font-mono text-xs uppercase tracking-wider text-[#141413] bg-white hover:bg-[#F8F7F4] border border-dashed border-[#DCD8CE] hover:border-[#141413] rounded-xs flex items-center justify-center gap-2 transition-colors cursor-pointer"
                 >
-                  <Plus className="w-4 h-4 text-gray-500" />
-                  Create Custom Section with Title
+                  <Plus className="w-3.5 h-3.5 text-[#993322]" />
+                  Define Bespoke Section
                 </button>
               </div>
             </>
           ) : (
             <form onSubmit={handleCreateCustom} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block font-mono text-[11px] uppercase tracking-wider text-[#76736C] mb-1 font-medium">
                   Section Title
                 </label>
                 <input
                   type="text"
-                  placeholder="e.g. Patents, Speaking Engagements, Military Experience"
+                  placeholder="e.g. PATENTS, SPEAKING ENGAGEMENTS, MILITARY"
                   value={customTitle}
                   onChange={(e) => setCustomTitle(e.target.value)}
                   autoFocus
                   required
-                  className="w-full px-3.5 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                  className="w-full px-3 py-2 text-xs uppercase font-mono border border-[#DCD8CE] rounded-xs focus:border-[#141413] focus:ring-1 focus:ring-[#141413] outline-hidden text-[#141413] bg-white"
                 />
               </div>
 
@@ -242,14 +244,14 @@ export function AddSectionModal({ isOpen, onClose }: AddSectionModalProps) {
                 <button
                   type="button"
                   onClick={() => setIsCustom(false)}
-                  className="px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
+                  className="px-4 py-2 font-mono text-xs uppercase tracking-wider text-[#76736C] hover:text-[#141413] hover:bg-[#EFECE6] border border-[#DCD8CE] rounded-xs transition-colors cursor-pointer"
                 >
                   Back
                 </button>
                 <button
                   type="submit"
                   disabled={!customTitle.trim()}
-                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-xs transition-colors disabled:opacity-50 cursor-pointer"
+                  className="px-4 py-2 font-mono text-xs uppercase tracking-wider text-[#F8F7F4] bg-[#141413] hover:bg-[#2A2927] rounded-xs border border-[#141413] transition-colors disabled:opacity-50 cursor-pointer"
                 >
                   Add Section
                 </button>

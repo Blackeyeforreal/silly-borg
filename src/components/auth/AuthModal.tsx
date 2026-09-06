@@ -30,52 +30,52 @@ export function AuthModal() {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4 no-print animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#141413]/60 backdrop-blur-xs p-4 no-print animate-in fade-in duration-200">
       <div 
-        className="bg-white rounded-xl shadow-2xl border border-gray-200 w-full max-w-md overflow-hidden flex flex-col"
+        className="bg-[#FDFCFB] rounded-xs shadow-2xl border border-[#E7E4DC] w-full max-w-md overflow-hidden flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gray-50/70">
-          <div className="flex items-center gap-2">
-            <div className="p-2 bg-blue-100 text-blue-700 rounded-lg">
-              <LogIn className="w-5 h-5" />
-            </div>
+        <div className="flex items-center justify-between px-6 py-3.5 border-b border-[#E7E4DC] bg-[#F8F7F4]">
+          <div className="flex items-center gap-3">
+            <span className="font-mono text-[10px] uppercase font-bold text-[#993322] border border-[#EACDC7] bg-[#FBF3F1] px-1.5 py-0.5 rounded-xs">
+              00 · ACCOUNT
+            </span>
             <div>
-              <h2 className="text-base font-bold text-gray-900">
-                {user ? 'Switch Account' : 'Sign In to Resume Builder'}
+              <h2 className="font-serif-display text-lg text-[#141413] leading-none">
+                {user ? 'Switch Account' : 'Sign In to Studio'}
               </h2>
-              <p className="text-xs text-gray-500">Save your work history &amp; styling preferences</p>
+              <p className="font-mono text-[10px] text-[#76736C] uppercase tracking-wider mt-0.5">Persist master records &amp; specimens</p>
             </div>
           </div>
           <button
             onClick={() => setAuthModalOpen(false)}
-            className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
+            className="text-[#76736C] hover:text-[#141413] p-1.5 rounded-xs hover:bg-[#EFECE6] transition-colors cursor-pointer"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-gray-700 mb-1">Your Full Name</label>
+            <label className="block font-mono text-[10px] uppercase tracking-wider text-[#76736C] mb-1 font-medium">Candidate Name</label>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. Alex Morgan"
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+              className="w-full px-3 py-2 text-xs border border-[#DCD8CE] rounded-xs focus:border-[#141413] focus:ring-1 focus:ring-[#141413] outline-hidden text-[#141413] bg-white transition-colors"
               required
             />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-gray-700 mb-1">Email Address</label>
+            <label className="block font-mono text-[10px] uppercase tracking-wider text-[#76736C] mb-1 font-medium">Email Address</label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="alex@example.com"
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+              className="w-full px-3 py-2 text-xs border border-[#DCD8CE] rounded-xs focus:border-[#141413] focus:ring-1 focus:ring-[#141413] outline-hidden text-[#141413] bg-white transition-colors font-mono"
               required
             />
           </div>
@@ -83,19 +83,18 @@ export function AuthModal() {
           <div className="pt-2 flex flex-col gap-2">
             <button
               type="submit"
-              className="w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm rounded-lg shadow-sm transition-colors flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full py-2.5 px-4 bg-[#141413] hover:bg-[#2A2927] text-[#F8F7F4] font-mono text-xs uppercase tracking-wider rounded-xs border border-[#141413] transition-colors flex items-center justify-center gap-2 cursor-pointer"
             >
-              <UserCheck className="w-4 h-4" />
-              <span>Continue</span>
+              <UserCheck className="w-3.5 h-3.5 text-[#993322]" />
+              <span>Authenticate &amp; Continue</span>
             </button>
 
             <button
               type="button"
               onClick={handleDemoLogin}
-              className="w-full py-2 px-4 bg-gray-50 hover:bg-gray-100 text-gray-700 font-medium text-xs rounded-lg border border-gray-200 transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+              className="w-full py-2 px-4 bg-white hover:bg-[#F8F7F4] text-[#76736C] hover:text-[#141413] font-mono text-xs uppercase tracking-wider rounded-xs border border-[#DCD8CE] hover:border-[#141413] transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
             >
-              <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-              <span>1-Click Demo Login</span>
+              <span>Sample Account (Devang Srivastava)</span>
             </button>
           </div>
         </form>

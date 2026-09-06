@@ -8,13 +8,11 @@ import {
   Edit3, 
   Scissors, 
   Zap, 
-  AlertTriangle, 
-  CheckCircle2, 
+  Check, 
   Eye, 
   EyeOff,
   ZoomIn,
-  ZoomOut,
-  Maximize2
+  ZoomOut
 } from 'lucide-react';
 import { useResumeStore, getEffectiveSectionOrder } from '@/store/resume-store';
 import { useToast } from '@/components/ui/Toast';
@@ -41,9 +39,31 @@ export function ResumePreview() {
   const { addToast } = useToast();
   const [isAddSectionOpen, setIsAddSectionOpen] = useState(false);
   const [zoomLevel, setZoomLevel] = useState(1);
+  const [autoScale, setAutoScale] = useState(1);
+  const containerRef = useRef<HTMLDivElement>(null);
   const paperRef = useRef<HTMLDivElement>(null);
   const [paperHeight, setPaperHeight] = useState(0);
 
+  // Responsive document viewport scale calculation
+  useEffect(() => {
+    const handleResize = () => {
+      if (!containerRef.current) return;
+      const availableWidth = containerRef.current.offsetWidth;
+      const documentStandardWidth = 816; // 8.5in * 96px
+      if (availableWidth < documentStandardWidth + 24) {
+        const computed = Math.max(0.42, Number(((availableWidth - 16) / documentStandardWidth).toFixed(2)));
+        setAutoScale(computed);
+      } else {
+        setAutoScale(1);
+      }
+    };
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Real-time height measurement relative to standard 11in page (1056px)
   useEffect(() => {
     const el = paperRef.current;
     if (!el) return;
@@ -70,14 +90,15 @@ export function ResumePreview() {
   const isOverflowing = paperHeight > 1056;
   const percentUsed = Math.round((paperHeight / 1056) * 100) || 0;
   const overflowPx = Math.max(0, paperHeight - 1056);
+  const effectiveZoom = Number((autoScale * zoomLevel).toFixed(2));
 
   const handleFitToPage = () => {
     fitToSinglePage();
-    addToast('⚡ Auto-Tuned: Applied compact margins, tighter spacing, and optimal font scale to fit 1 page!', 'success');
+    addToast('Auto-tuned: Single-page margins & spacing applied', 'info');
   };
 
   const handleZoom = (delta: number) => {
-    setZoomLevel((prev) => Math.min(Math.max(Number((prev + delta).toFixed(2)), 0.7), 1.3));
+    setZoomLevel((prev) => Math.min(Math.max(Number((prev + delta).toFixed(2)), 0.6), 1.4));
   };
 
   const sectionOrder = getEffectiveSectionOrder(resumeData);
@@ -142,7 +163,7 @@ export function ResumePreview() {
   };
 
   return (
-    <div className="flex flex-col items-center w-full">
+    <div ref={containerRef} className="flex flex-col items-center w-full max-w-full">
       <style>{`
         .resume-paper h1,
         .resume-paper h2,
@@ -152,86 +173,74 @@ export function ResumePreview() {
         }
       `}</style>
 
-      {/* Floating Canvas Top Bar: Page Capacity & Zoom */}
-      <div className="w-full max-w-[8.5in] mb-4 flex items-center justify-between px-3.5 py-2 bg-white/95 backdrop-blur-md border border-slate-200/90 rounded-xl shadow-xs no-print text-xs font-sans gap-2">
-        <div className="flex items-center gap-2 sm:gap-3">
+      {/* Neo-Brutalist Viewport Controls Bar */}
+      <div className="w-full max-w-[8.5in] mb-4 flex items-center justify-between px-3.5 py-2 neo-box no-print text-xs font-mono gap-2">
+        {/* Page Fit Indicator */}
+        <div className="flex items-center gap-2">
           {isOverflowing ? (
-            <div className="flex items-center gap-1.5 text-amber-900 font-bold bg-amber-50 px-2.5 py-1 rounded-lg border border-amber-200">
-              <AlertTriangle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-              <span>Spills to Page 2 ({percentUsed}% filled)</span>
+            <div className="flex items-center gap-1.5 text-[#141413] bg-[#FF6B4A] px-2 py-0.5 border border-[#141413] font-black">
+              <span>🚨 SPILL: {percentUsed}% / 1P (+{overflowPx}PX)</span>
             </div>
           ) : (
-            <div className="flex items-center gap-1.5 text-emerald-900 font-bold bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200">
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-              <span>Fits 1 Page ({percentUsed}% filled)</span>
+            <div className="flex items-center gap-1.5 text-[#141413] bg-[#D4FF00] px-2 py-0.5 border border-[#141413] font-black">
+              <span>🔥 1-PAGE LOCK IN: {percentUsed}% DENSITY</span>
             </div>
           )}
-
-          {/* Mini Capacity Bar */}
-          <div className="hidden sm:flex items-center gap-1.5 text-[11px] text-slate-500">
-            <div className="w-20 h-2 bg-slate-100 rounded-full overflow-hidden border border-slate-200">
-              <div 
-                className={`h-full transition-all duration-300 rounded-full ${
-                  percentUsed > 100 ? 'bg-amber-500' : percentUsed > 90 ? 'bg-blue-500' : 'bg-emerald-500'
-                }`}
-                style={{ width: `${Math.min(percentUsed, 100)}%` }}
-              />
-            </div>
-          </div>
         </div>
 
+        {/* Actions & Zoom */}
         <div className="flex items-center gap-2">
           {isOverflowing && (
             <button
               type="button"
               onClick={handleFitToPage}
-              className="flex items-center gap-1 px-3 py-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold rounded-lg shadow-xs transition-all cursor-pointer text-xs animate-pulse hover:animate-none"
-              title="Automatically adjust margins, line spacing, and font scale to fit everything onto 1 page"
+              className="neo-btn flex items-center gap-1 px-2.5 py-1 bg-[#FF6B4A] hover:bg-[#FF5530] text-[#141413] font-black tracking-wider uppercase transition-all cursor-pointer text-[11px]"
+              title="Automatically tune margins, spacing, and font metrics to fit 1 page"
             >
-              <Zap className="w-3.5 h-3.5 text-yellow-300 fill-yellow-300" />
-              <span>Fit to 1 Page</span>
+              <Zap className="w-3.5 h-3.5 fill-[#141413] text-[#141413]" />
+              <span>Auto-Fit 1P</span>
             </button>
           )}
 
           <button
             type="button"
             onClick={togglePageBoundary}
-            className={`flex items-center gap-1 px-2.5 py-1 border rounded-lg transition-colors cursor-pointer text-[11px] ${
+            className={`neo-btn flex items-center gap-1 px-2 py-1 transition-all cursor-pointer text-[11px] uppercase tracking-wider font-bold ${
               showPageBoundary 
-                ? 'bg-blue-50 border-blue-200 text-blue-700 font-semibold' 
-                : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                ? 'bg-[#141413] text-white' 
+                : 'bg-white text-[#141413]'
             }`}
-            title="Toggle visual 1-page cutoff boundary line"
+            title="Toggle print cutoff guide line"
           >
-            {showPageBoundary ? <Eye className="w-3 h-3 text-blue-600" /> : <EyeOff className="w-3 h-3 text-slate-400" />}
-            <span className="hidden md:inline">{showPageBoundary ? 'Cutoff: On' : 'Cutoff: Off'}</span>
+            {showPageBoundary ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
+            <span className="hidden sm:inline">Cutoff</span>
           </button>
 
-          {/* Zoom Level Pill */}
-          <div className="hidden sm:flex items-center bg-slate-100/80 p-0.5 rounded-lg border border-slate-200/60">
+          {/* Zoom Controls */}
+          <div className="flex items-center border-2 border-[#141413] bg-white shadow-[1.5px_1.5px_0px_#141413] p-0.5">
             <button
               type="button"
               onClick={() => handleZoom(-0.05)}
-              disabled={zoomLevel <= 0.7}
-              className="p-1 text-slate-600 hover:bg-white rounded disabled:opacity-40 transition-colors cursor-pointer"
-              title="Zoom Out"
+              disabled={zoomLevel <= 0.6}
+              className="p-1 text-[#141413] hover:bg-[#F2EFE9] disabled:opacity-30 cursor-pointer"
+              title="Zoom out"
             >
               <ZoomOut className="w-3 h-3" />
             </button>
             <button
               type="button"
               onClick={() => setZoomLevel(1)}
-              className="px-1.5 text-[10px] font-bold text-slate-700 hover:text-blue-600 transition-colors cursor-pointer"
+              className="px-1 text-[10px] font-black text-[#141413] hover:text-[#FF6B4A] cursor-pointer"
               title="Reset Zoom to 100%"
             >
-              {Math.round(zoomLevel * 100)}%
+              {Math.round(effectiveZoom * 100)}%
             </button>
             <button
               type="button"
               onClick={() => handleZoom(0.05)}
-              disabled={zoomLevel >= 1.3}
-              className="p-1 text-slate-600 hover:bg-white rounded disabled:opacity-40 transition-colors cursor-pointer"
-              title="Zoom In"
+              disabled={zoomLevel >= 1.4}
+              className="p-1 text-[#141413] hover:bg-[#F2EFE9] disabled:opacity-30 cursor-pointer"
+              title="Zoom in"
             >
               <ZoomIn className="w-3 h-3" />
             </button>
@@ -239,122 +248,132 @@ export function ResumePreview() {
         </div>
       </div>
 
-      {/* Canvas Wrapper with Zoom Scaling */}
+      {/* Proportional Scaling Viewport Container */}
       <div 
-        className="transition-transform duration-150 origin-top flex justify-center w-full"
-        style={{ transform: `scale(${zoomLevel})` }}
+        className="w-full flex justify-center transition-all duration-150 origin-top"
+        style={{
+          height: paperHeight ? `${Math.ceil(paperHeight * effectiveZoom) + 32}px` : undefined
+        }}
       >
-        <div 
-          id="resume-paper-element"
-          ref={paperRef}
-          className={`bg-white resume-paper shadow-[0_20px_60px_-15px_rgba(0,0,0,0.12),0_1px_3px_rgba(0,0,0,0.06)] ring-1 ring-slate-900/5 rounded-xs font-serif text-black ${fontSizeClass} ${lineSpacingClass} relative transition-all shrink-0`}
+        <div
+          className="origin-top shrink-0 transition-transform duration-150"
           style={{
-            width: '8.5in',
-            maxWidth: '100%',
-            minHeight: '11in',
-            paddingTop: margins.top,
-            paddingBottom: margins.bottom,
-            paddingLeft: margins.left,
-            paddingRight: margins.right,
-            fontFamily: currentFontFamily,
+            width: '816px',
+            transform: `scale(${effectiveZoom})`,
           }}
         >
-          {/* Visual 1-Page Cutoff Boundary Line (11in = 1056px) */}
-          {showPageBoundary && isOverflowing && (
-            <div 
-              className="absolute left-0 right-0 z-30 pointer-events-none select-none no-print"
-              style={{ top: '1056px' }}
-            >
-              <div className="w-full border-t-2 border-dashed border-red-500/90 relative flex items-center justify-center">
-                <div className="bg-red-50 text-red-900 border border-red-300 shadow-xs px-3 py-1 rounded-full text-[11px] font-sans font-bold flex items-center gap-1.5 transform -translate-y-1/2">
-                  <Scissors className="w-3.5 h-3.5 text-red-600" />
-                  <span>Page 1 Boundary (Spilling {overflowPx}px into Page 2)</span>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {showPageBoundary && !isOverflowing && (
-            <div 
-              className="absolute left-0 right-0 z-30 pointer-events-none select-none no-print opacity-60 hover:opacity-100 transition-opacity"
-              style={{ top: '1056px' }}
-            >
-              <div className="w-full border-t border-dashed border-emerald-500/80 relative flex items-center justify-center">
-                <div className="bg-emerald-50 text-emerald-900 border border-emerald-300 shadow-2xs px-2.5 py-0.5 rounded-full text-[10px] font-sans font-medium flex items-center gap-1 transform -translate-y-1/2">
-                  <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-                  <span>1-Page Limit (Fits cleanly within single page)</span>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Personal Info Header */}
-          <div className="relative group/header-wrapper">
-            <div className="absolute right-0 -top-2 opacity-0 group-hover/header-wrapper:opacity-100 flex items-center gap-1 bg-white/95 backdrop-blur-xs border border-slate-200 rounded-md shadow-xs px-1.5 py-0.5 z-20 transition-opacity no-print">
-              <button
-                type="button"
-                onClick={() => handleEditSection('personal_info')}
-                className="flex items-center gap-1 text-[10px] text-slate-600 hover:text-blue-600 px-1 py-0.5 rounded cursor-pointer"
-                title="Edit Personal Info in Sidebar Form"
+          <div 
+            id="resume-paper-element"
+            ref={paperRef}
+            className={`bg-white resume-paper editorial-document-shadow border-2 border-[#141413] rounded-none font-serif text-black ${fontSizeClass} ${lineSpacingClass} relative transition-all`}
+            style={{
+              width: '8.5in', // 816px
+              minHeight: '11in', // 1056px
+              boxSizing: 'border-box',
+              paddingTop: margins.top,
+              paddingBottom: margins.bottom,
+              paddingLeft: margins.left,
+              paddingRight: margins.right,
+              fontFamily: currentFontFamily,
+            }}
+          >
+            {/* Visual 1-Page Cutoff Boundary Line (11in = 1056px) */}
+            {showPageBoundary && isOverflowing && (
+              <div 
+                className="absolute left-0 right-0 z-30 pointer-events-none select-none no-print"
+                style={{ top: '1056px' }}
               >
-                <Edit3 className="w-3 h-3 text-blue-600" />
-                <span className="font-sans font-medium">Edit Info</span>
+                <div className="w-full border-t-2 border-dashed border-[#141413] relative flex items-center justify-center">
+                  <div className="bg-[#FF6B4A] text-[#141413] border-2 border-[#141413] shadow-[2px_2px_0px_#141413] px-3 py-1 font-mono text-[10px] tracking-wider uppercase font-black flex items-center gap-1.5 transform -translate-y-1/2">
+                    <Scissors className="w-3.5 h-3.5 text-[#141413]" />
+                    <span>🚨 1-PAGE CUTOFF • RECRUITERS STOP READING (SPILL: +{overflowPx}PX)</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {showPageBoundary && !isOverflowing && (
+              <div 
+                className="absolute left-0 right-0 z-30 pointer-events-none select-none no-print opacity-80 hover:opacity-100 transition-opacity"
+                style={{ top: '1056px' }}
+              >
+                <div className="w-full border-t-2 border-dashed border-[#141413] relative flex items-center justify-center">
+                  <div className="bg-[#D4FF00] text-[#141413] border-2 border-[#141413] shadow-[2px_2px_0px_#141413] px-3 py-1 font-mono text-[10px] tracking-wider uppercase font-black flex items-center gap-1 transform -translate-y-1/2">
+                    <Check className="w-3.5 h-3.5 text-[#141413]" />
+                    <span>🔥 1-PAGE PERFECT FIT • ZERO SPILL</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Personal Info Header */}
+            <div className="relative group/header-wrapper">
+              <div className="absolute right-0 -top-2 opacity-0 group-hover/header-wrapper:opacity-100 flex items-center gap-1 bg-white border border-[#E7E4DC] px-1.5 py-0.5 z-20 transition-opacity no-print">
+                <button
+                  type="button"
+                  onClick={() => handleEditSection('personal_info')}
+                  className="flex items-center gap-1 font-mono text-[10px] uppercase text-[#55534E] hover:text-[#141413] cursor-pointer"
+                  title="Edit info in panel"
+                >
+                  <Edit3 className="w-3 h-3 text-[#993322]" />
+                  <span>Edit</span>
+                </button>
+              </div>
+              <PersonalInfoSection data={resumeData.personal_info} />
+            </div>
+
+            {/* Dynamic Reorderable Sections */}
+            {sectionOrder.map((sectionId, idx) => {
+              const isFirst = idx === 0;
+              const isLast = idx === sectionOrder.length - 1;
+
+              return (
+                <div key={sectionId} className="relative group/section-wrapper">
+                  {/* On-Canvas Hover Quick Reorder & Edit Bar */}
+                  <div className="absolute right-0 -top-1 opacity-0 group-hover/section-wrapper:opacity-100 flex items-center gap-1 bg-white border border-[#E7E4DC] px-1 py-0.5 z-20 transition-opacity no-print">
+                    <button
+                      type="button"
+                      onClick={() => moveSection(sectionId, 'up')}
+                      disabled={isFirst}
+                      className="p-1 text-[#55534E] hover:text-[#141413] disabled:opacity-20 cursor-pointer"
+                      title="Move Section Up"
+                    >
+                      <ArrowUp className="w-3 h-3" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => moveSection(sectionId, 'down')}
+                      disabled={isLast}
+                      className="p-1 text-[#55534E] hover:text-[#141413] disabled:opacity-20 cursor-pointer"
+                      title="Move Section Down"
+                    >
+                      <ArrowDown className="w-3 h-3" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleEditSection(sectionId)}
+                      className="p-1 text-[#55534E] hover:text-[#141413] cursor-pointer ml-0.5"
+                      title="Edit in panel"
+                    >
+                      <Edit3 className="w-3 h-3 text-[#993322]" />
+                    </button>
+                  </div>
+
+                  {renderSection(sectionId)}
+                </div>
+              );
+            })}
+
+            {/* Bottom Add Section Action */}
+            <div className="pt-4 pb-2 border-t border-dashed border-[#E7E4DC] mt-4 text-center no-print">
+              <button
+                onClick={() => setIsAddSectionOpen(true)}
+                className="inline-flex items-center gap-1.5 px-4 py-2 font-mono text-[11px] tracking-wider uppercase font-semibold text-[#141413] hover:text-[#993322] bg-[#F8F7F4] hover:bg-white border border-[#E7E4DC] hover:border-[#141413] transition-colors cursor-pointer"
+              >
+                <Plus className="w-3 h-3" />
+                <span>Add Section (Projects, Publications, Awards)</span>
               </button>
             </div>
-            <PersonalInfoSection data={resumeData.personal_info} />
-          </div>
-
-          {/* Dynamic Reorderable Sections */}
-          {sectionOrder.map((sectionId, idx) => {
-            const isFirst = idx === 0;
-            const isLast = idx === sectionOrder.length - 1;
-
-            return (
-              <div key={sectionId} className="relative group/section-wrapper">
-                {/* On-Canvas Hover Quick Reorder & Edit Bar */}
-                <div className="absolute right-0 -top-1 opacity-0 group-hover/section-wrapper:opacity-100 flex items-center gap-1 bg-white/95 backdrop-blur-xs border border-slate-200 rounded-md shadow-xs px-1.5 py-0.5 z-20 transition-opacity no-print">
-                  <button
-                    type="button"
-                    onClick={() => moveSection(sectionId, 'up')}
-                    disabled={isFirst}
-                    className="p-1 text-slate-500 hover:text-blue-600 hover:bg-slate-100 rounded disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-slate-500 transition-colors cursor-pointer"
-                    title="Move Section Up"
-                  >
-                    <ArrowUp className="w-3 h-3" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => moveSection(sectionId, 'down')}
-                    disabled={isLast}
-                    className="p-1 text-slate-500 hover:text-blue-600 hover:bg-slate-100 rounded disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-slate-500 transition-colors cursor-pointer"
-                    title="Move Section Down"
-                  >
-                    <ArrowDown className="w-3 h-3" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleEditSection(sectionId)}
-                    className="p-1 text-slate-500 hover:text-blue-600 hover:bg-slate-100 rounded transition-colors cursor-pointer ml-0.5"
-                    title="Edit in Sidebar Form"
-                  >
-                    <Edit3 className="w-3 h-3" />
-                  </button>
-                </div>
-
-                {renderSection(sectionId)}
-              </div>
-            );
-          })}
-
-          {/* Bottom Add Section Action */}
-          <div className="pt-4 pb-2 border-t border-dashed border-slate-200 mt-4 text-center no-print">
-            <button
-              onClick={() => setIsAddSectionOpen(true)}
-              className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-blue-700 bg-blue-50/80 hover:bg-blue-100 border border-blue-200/80 rounded-lg transition-all shadow-2xs hover:shadow-xs cursor-pointer"
-            >
-              <Plus className="w-3.5 h-3.5 text-blue-600" />
-              Add Section (Projects, Publications, Awards, etc.)
-            </button>
           </div>
         </div>
       </div>

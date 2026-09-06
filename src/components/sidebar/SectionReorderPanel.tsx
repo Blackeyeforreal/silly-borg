@@ -116,36 +116,33 @@ export function SectionReorderPanel({ onOpenAddSectionModal }: SectionReorderPan
   };
 
   return (
-    <div className="space-y-6 text-sm">
-      {/* Explanation Banner */}
-      <div className="bg-blue-50/80 border border-blue-100 rounded-lg p-3 text-xs text-blue-900 flex items-start gap-2">
-        <Sparkles className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
-        <p>
-          Rearrange the order of sections on your resume. The order here immediately updates the live resume preview, and will be preserved in your exported DOCX and PDF.
-        </p>
+    <div className="space-y-5 text-xs text-[#141413]">
+      {/* Editorial Note */}
+      <div className="bg-[#F8F7F4] border-l-2 border-[#993322] p-3 text-[11px] text-[#76736C] font-mono leading-relaxed">
+        <span className="text-[#993322] font-semibold">[ STRUCTURE ]</span> Reorder document sections. The hierarchy defined here translates directly to live canvas, PDF, and DOCX.
       </div>
 
       {/* Pinned Personal Info */}
       <div>
-        <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">
-          Header (Always Top)
+        <label className="block font-mono text-[11px] font-bold uppercase tracking-wider text-[#76736C] mb-2">
+          Header (Fixed · Top)
         </label>
-        <div className="flex items-center justify-between p-3 rounded-lg border border-gray-200 bg-gray-50/70 text-gray-700">
+        <div className="flex items-center justify-between p-3 rounded-xs border border-[#E7E4DC] bg-[#F8F7F4]">
           <div className="flex items-center gap-2.5">
-            <span className="w-6 h-6 rounded-full bg-gray-200 text-gray-600 flex items-center justify-center text-xs font-semibold">
-              ★
+            <span className="font-mono text-[10px] uppercase font-bold text-[#993322] border border-[#EACDC7] bg-[#FBF3F1] px-1.5 py-0.5 rounded-xs">
+              00
             </span>
             <div>
-              <div className="font-semibold text-gray-900">Personal Info &amp; Contact</div>
-              <div className="text-[11px] text-gray-500">{resumeData.personal_info.full_name || 'Your Name'}</div>
+              <div className="font-semibold text-[#141413] text-xs">Personal Info &amp; Contact</div>
+              <div className="font-mono text-[11px] text-[#76736C]">{resumeData.personal_info.full_name || 'Candidate Name'}</div>
             </div>
           </div>
           <button
             type="button"
             onClick={() => handleEditSection('personal_info')}
-            className="text-xs text-blue-600 hover:text-blue-800 flex items-center gap-1 font-medium px-2 py-1 rounded hover:bg-blue-50 transition-colors"
+            className="font-mono text-[11px] text-[#141413] hover:text-[#993322] uppercase tracking-wider flex items-center gap-1 font-semibold px-2 py-1 rounded-xs border border-[#DCD8CE] hover:border-[#141413] bg-white transition-colors cursor-pointer"
           >
-            <Edit3 className="w-3.5 h-3.5" /> Edit
+            <Edit3 className="w-3 h-3" /> Edit
           </button>
         </div>
       </div>
@@ -153,14 +150,14 @@ export function SectionReorderPanel({ onOpenAddSectionModal }: SectionReorderPan
       {/* Reorderable Section List */}
       <div>
         <div className="flex items-center justify-between mb-2">
-          <label className="block text-xs font-bold uppercase tracking-wider text-gray-700">
-            Resume Sections ({currentOrder.length})
+          <label className="block font-mono text-[11px] font-bold uppercase tracking-wider text-[#141413]">
+            Document Sections ({currentOrder.length})
           </label>
           {onOpenAddSectionModal && (
             <button
               type="button"
               onClick={onOpenAddSectionModal}
-              className="text-xs text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1 cursor-pointer"
+              className="font-mono text-[11px] uppercase tracking-wider text-[#993322] hover:text-[#802B1D] font-semibold flex items-center gap-1 cursor-pointer"
             >
               <Plus className="w-3.5 h-3.5" /> Add Section
             </button>
@@ -168,7 +165,7 @@ export function SectionReorderPanel({ onOpenAddSectionModal }: SectionReorderPan
         </div>
 
         {currentOrder.length === 0 ? (
-          <div className="p-4 text-center border-2 border-dashed border-gray-200 rounded-lg text-gray-500 text-xs">
+          <div className="p-4 text-center border border-dashed border-[#DCD8CE] rounded-xs text-[#76736C] font-mono text-xs">
             No sections currently active. Add or restore sections below.
           </div>
         ) : (
@@ -182,20 +179,20 @@ export function SectionReorderPanel({ onOpenAddSectionModal }: SectionReorderPan
               return (
                 <div
                   key={sectionId}
-                  className="flex items-center justify-between p-2.5 rounded-lg border border-gray-200 bg-white hover:border-gray-300 hover:shadow-xs transition-all group"
+                  className="flex items-center justify-between p-2.5 rounded-xs border border-[#E7E4DC] bg-white hover:border-[#141413] transition-all group paper-shadow"
                 >
                   <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                    <span className="w-5 text-center text-xs font-mono font-bold text-gray-400">
-                      {index + 1}
+                    <span className="w-6 font-mono text-xs font-bold text-[#76736C]">
+                      {String(index + 1).padStart(2, '0')}
                     </span>
-                    <div className="p-1.5 rounded-md bg-gray-100 text-gray-600">
-                      <Icon className="w-4 h-4" />
+                    <div className="p-1.5 rounded-xs bg-[#F8F7F4] border border-[#E7E4DC] text-[#141413]">
+                      <Icon className="w-3.5 h-3.5 text-[#993322]" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <div className="font-semibold text-gray-900 truncate text-xs sm:text-sm">
+                      <div className="font-semibold text-[#141413] truncate text-xs">
                         {meta.title}
                       </div>
-                      <div className="text-[11px] text-gray-500">
+                      <div className="font-mono text-[10px] text-[#76736C]">
                         {meta.count}
                       </div>
                     </div>
@@ -206,39 +203,39 @@ export function SectionReorderPanel({ onOpenAddSectionModal }: SectionReorderPan
                     <button
                       type="button"
                       onClick={() => handleEditSection(sectionId)}
-                      className="p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
-                      title="Edit section in form"
+                      className="p-1 text-[#76736C] hover:text-[#141413] hover:bg-[#F3F1EC] rounded-xs transition-colors cursor-pointer"
+                      title="Edit section in records"
                     >
-                      <Edit3 className="w-4 h-4" />
+                      <Edit3 className="w-3.5 h-3.5" />
                     </button>
 
                     <button
                       type="button"
                       onClick={() => moveSection(sectionId, 'up')}
                       disabled={isFirst}
-                      className="p-1 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-gray-500 transition-colors cursor-pointer"
+                      className="p-1 text-[#76736C] hover:text-[#141413] hover:bg-[#F3F1EC] rounded-xs disabled:opacity-20 transition-colors cursor-pointer"
                       title="Move Section Up"
                     >
-                      <ArrowUp className="w-4 h-4" />
+                      <ArrowUp className="w-3.5 h-3.5" />
                     </button>
 
                     <button
                       type="button"
                       onClick={() => moveSection(sectionId, 'down')}
                       disabled={isLast}
-                      className="p-1 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-gray-500 transition-colors cursor-pointer"
+                      className="p-1 text-[#76736C] hover:text-[#141413] hover:bg-[#F3F1EC] rounded-xs disabled:opacity-20 transition-colors cursor-pointer"
                       title="Move Section Down"
                     >
-                      <ArrowDown className="w-4 h-4" />
+                      <ArrowDown className="w-3.5 h-3.5" />
                     </button>
 
                     <button
                       type="button"
                       onClick={meta.deleteAction}
-                      className="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors cursor-pointer ml-0.5"
+                      className="p-1 text-[#76736C] hover:text-[#993322] hover:bg-[#FBF3F1] rounded-xs transition-colors cursor-pointer ml-0.5"
                       title="Delete this section"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   </div>
                 </div>
@@ -250,9 +247,9 @@ export function SectionReorderPanel({ onOpenAddSectionModal }: SectionReorderPan
 
       {/* Restore Deleted Built-in Sections */}
       {deletedBuiltins.length > 0 && (
-        <div className="pt-2 border-t border-gray-100">
-          <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">
-            Restore Removed Sections
+        <div className="pt-2 border-t border-[#E7E4DC]">
+          <label className="block font-mono text-[11px] font-bold uppercase tracking-wider text-[#76736C] mb-2">
+            Archived Sections
           </label>
           <div className="space-y-1.5">
             {deletedBuiltins.map((key) => {
@@ -265,13 +262,13 @@ export function SectionReorderPanel({ onOpenAddSectionModal }: SectionReorderPan
               return (
                 <div 
                   key={key} 
-                  className="flex items-center justify-between p-2 rounded-lg border border-dashed border-gray-300 bg-gray-50 text-xs"
+                  className="flex items-center justify-between p-2 rounded-xs border border-dashed border-[#DCD8CE] bg-[#F8F7F4] text-xs"
                 >
-                  <span className="text-gray-600 font-medium">{label}</span>
+                  <span className="text-[#141413] font-medium">{label}</span>
                   <button
                     type="button"
                     onClick={() => restoreBuiltinSection(key)}
-                    className="flex items-center gap-1 text-blue-600 hover:text-blue-800 font-semibold px-2 py-0.5 rounded hover:bg-blue-50 transition-colors cursor-pointer"
+                    className="flex items-center gap-1 font-mono text-xs uppercase tracking-wider text-[#993322] hover:text-[#802B1D] font-semibold px-2 py-0.5 rounded-xs transition-colors cursor-pointer"
                   >
                     <RotateCcw className="w-3 h-3" /> Restore
                   </button>

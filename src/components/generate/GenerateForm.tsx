@@ -8,56 +8,53 @@ import { FileUpload } from './FileUpload';
 import { ProfileEditorForm } from './ProfileEditorForm';
 import { useToast } from '@/components/ui/Toast';
 import { 
-  Sparkles, 
   Loader2, 
-  CheckCircle2, 
+  Check, 
   User, 
   FileEdit, 
-  Briefcase, 
   ArrowRight,
   UploadCloud,
   FileText,
-  Wand2
+  Briefcase
 } from 'lucide-react';
 import { sampleResumeData } from '@/lib/sample-data';
 import type { ResumeData } from '@/lib/schema';
 
-const DYNAMIC_GENERATION_STEPS = [
-  'Analyzing target job requirements & tech stack...',
-  'Matching core competencies & achievements...',
-  'Highlighting high-impact quantifiable metrics...',
-  'Aligning resume keywords for ATS scoring...',
-  'Drafting role-tailored bullet points...',
-  'Formatting clean executive layout...',
-  'Finalizing tailored resume document...'
+const EDITORIAL_GENERATION_STEPS = [
+  'Indexing target requirements & technical stack...',
+  'Extracting core competencies & impact metrics...',
+  'Synthesizing achievement bullets with XYZ structure...',
+  'Aligning terminology for ATS evaluation...',
+  'Typesetting single-page editorial layout...',
+  'Finalizing career document...'
 ];
 
 const SAMPLE_JOBS = [
   {
-    title: 'Senior Full-Stack Engineer',
-    badge: 'Next.js & TS',
-    description: `Company: Stripe / Vercel
-Role: Senior Full-Stack Engineer
+    title: 'Founding Engineer',
+    company: 'YC STARTUP',
+    description: `Company: YC AI Startup
+Role: Founding Full-Stack Engineer
 Location: San Francisco, CA / Remote
 
 About the Role:
-We are seeking a Senior Full-Stack Engineer to architect and scale mission-critical web applications. You will work across modern frontend frameworks (Next.js, React, TypeScript, Tailwind CSS) and robust backend distributed systems (Node.js, PostgreSQL, Redis, Docker).
+We are seeking a Founding Full-Stack Engineer to architect and scale mission-critical web applications. You will work across modern frontend frameworks (Next.js, React, TypeScript, Tailwind CSS) and robust backend distributed systems (Node.js, PostgreSQL, Redis, Docker).
 
 Responsibilities:
 • Architect performant, accessible, and responsive user interfaces with sub-second latency.
 • Build scalable microservices and REST/GraphQL APIs handling high concurrency.
-• Collaborate with product managers and designers to rapidly ship high-impact features.
+• Collaborate directly with founders to rapidly ship high-impact features.
 • Champion engineering excellence, automated testing, and CI/CD pipelines.`
   },
   {
-    title: 'Staff Systems Architect',
-    badge: 'Go & K8s',
-    description: `Company: Datadog / CloudScale
-Role: Staff Distributed Systems Architect
+    title: 'Distributed Systems Hacker',
+    company: 'DATADOG',
+    description: `Company: Datadog
+Role: Staff Distributed Systems Hacker
 Location: New York, NY / Remote
 
 About the Role:
-Looking for a Staff Infrastructure Architect to lead our global ledger, telemetry, and distributed consensus tier.
+Looking for an Infrastructure Architect to lead our global ledger, telemetry, and distributed consensus tier.
 
 Requirements:
 • 6+ years building high-throughput distributed systems in Go, Rust, or C++.
@@ -67,8 +64,8 @@ Requirements:
   },
   {
     title: 'Lead Frontend Specialist',
-    badge: 'React & UI',
-    description: `Company: Linear / Figma
+    company: 'LINEAR',
+    description: `Company: Linear
 Role: Lead Frontend Specialist
 Location: Remote
 
@@ -110,16 +107,16 @@ export function GenerateForm() {
     generationStep
   } = useResumeStore();
 
-  // Dynamic engaging loading status cycling
+  // Step cycling during generation
   useEffect(() => {
     if (!isGenerating) return;
 
     let index = 0;
-    setGenerationStep(DYNAMIC_GENERATION_STEPS[0]);
+    setGenerationStep(EDITORIAL_GENERATION_STEPS[0]);
 
     const timer = setInterval(() => {
-      index = (index + 1) % DYNAMIC_GENERATION_STEPS.length;
-      setGenerationStep(DYNAMIC_GENERATION_STEPS[index]);
+      index = (index + 1) % EDITORIAL_GENERATION_STEPS.length;
+      setGenerationStep(EDITORIAL_GENERATION_STEPS[index]);
     }, 2200);
 
     return () => clearInterval(timer);
@@ -140,11 +137,11 @@ export function GenerateForm() {
     }
 
     if (!effectiveResumeText.trim()) {
-      addToast('Please provide your resume content or use your saved profile.', 'error');
+      addToast('Please provide your resume content or load a profile specimen.', 'error');
       return;
     }
     if (!jobDescription.trim()) {
-      addToast('Please provide a job description.', 'error');
+      addToast('Please enter a target job description or select a preset.', 'error');
       return;
     }
 
@@ -169,23 +166,17 @@ export function GenerateForm() {
         throw new Error(errData.error || `Failed to generate resume (HTTP ${response.status})`);
       }
 
-      setGenerationStep('Formatting resume data...');
+      setGenerationStep('Applying typographic hierarchy...');
       
       const data = await response.json();
       if (data.resume) {
         setResumeData(data.resume);
-        // Automatically restore user's saved template preferences if available
         if (isUsingProfile && savedProfile?.templateSettings) {
           setTemplateSettings(savedProfile.templateSettings);
         }
-        addToast(
-          isUsingProfile 
-            ? 'Resume generated from your saved profile and template preferences!' 
-            : 'Resume generated successfully!', 
-          'success'
-        );
+        addToast('Document tailored and typeset successfully.', 'success');
       } else {
-        throw new Error('Invalid response format');
+        throw new Error('Invalid response payload');
       }
     } catch (error) {
       addToast(error instanceof Error ? error.message : 'Error generating resume', 'error');
@@ -199,88 +190,79 @@ export function GenerateForm() {
     setStructuredProfile(sampleResumeData);
     setResumeText(formatResumeDataToText(sampleResumeData));
     setInputMode('form');
-    addToast('Loaded sample profile! Select a job description below to tailor.', 'info');
+    addToast('Loaded master specimen profile. Select a target role below.', 'info');
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-xl border border-slate-200/80 p-6 sm:p-8 space-y-8 backdrop-blur-md">
-      {/* Logged in User Banner */}
+    <div className="bg-white border border-[#E7E4DC] p-6 sm:p-10 space-y-8">
+      {/* Account / Master Profile Banner */}
       {user ? (
-        <div className="p-4 rounded-xl border border-blue-200/80 bg-gradient-to-r from-blue-50/80 to-indigo-50/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center font-bold text-sm shadow-xs shrink-0">
-              {user.name.charAt(0).toUpperCase()}
+        <div className="p-4 border border-[#E7E4DC] bg-[#F8F7F4] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <div className="font-mono text-[10px] tracking-[0.16em] uppercase text-[#76736C]">
+              USER SESSION
             </div>
-            <div>
-              <div className="text-xs font-bold text-slate-900">
-                Welcome back, {user.name} <span className="text-slate-500 font-normal">({user.email})</span>
+            <div className="text-xs font-semibold text-[#141413]">
+              {user.name} <span className="font-normal text-[#76736C]">({user.email})</span>
+            </div>
+            {savedProfile?.resumeData && (
+              <div className="font-mono text-[10px] text-[#993322] mt-0.5">
+                • Master profile loaded ({savedProfile.resumeData.work_experience?.length || 0} roles, {savedProfile.resumeData.education?.length || 0} credentials)
               </div>
-              {savedProfile?.resumeData ? (
-                <div className="text-[11px] text-blue-700 font-medium">
-                  Master profile active ({savedProfile.resumeData.work_experience?.length || 0} companies, {savedProfile.resumeData.education?.length || 0} degrees).
-                </div>
-              ) : (
-                <div className="text-[11px] text-amber-700">
-                  No saved profile yet. Generate once and click "Save Profile" to keep your history.
-                </div>
-              )}
-            </div>
+            )}
           </div>
 
           {savedProfile?.resumeData && (
-            <label className="flex items-center gap-2 cursor-pointer bg-white px-3 py-1.5 rounded-lg border border-blue-200 shadow-2xs shrink-0 hover:border-blue-300 transition-colors">
+            <label className="flex items-center gap-2 cursor-pointer bg-white px-3 py-1.5 border border-[#E7E4DC] shrink-0 font-mono text-xs text-[#141413]">
               <input
                 type="checkbox"
                 checked={useSavedProfile}
                 onChange={(e) => setUseSavedProfile(e.target.checked)}
-                className="rounded text-blue-600 focus:ring-blue-500 w-4 h-4 cursor-pointer"
+                className="w-3.5 h-3.5 text-[#141413] rounded-xs cursor-pointer"
               />
-              <span className="text-xs font-semibold text-blue-950">Use Saved Profile</span>
+              <span>Use Master Profile</span>
             </label>
           )}
         </div>
       ) : (
-        <div className="p-3.5 rounded-xl border border-slate-200 bg-slate-50/80 flex items-center justify-between gap-2 text-xs text-slate-600">
+        <div className="p-3 border border-[#E7E4DC] bg-[#F8F7F4] flex items-center justify-between gap-2 text-xs text-[#55534E]">
           <div className="flex items-center gap-2">
-            <div className="p-1 bg-slate-200/70 rounded-md text-slate-600">
-              <User className="w-3.5 h-3.5" />
-            </div>
-            <span>Have an account? Log in to save your master work experience and template styling.</span>
+            <span className="font-mono text-[10px] uppercase tracking-wider text-[#76736C]">[ PROFILE ]</span>
+            <span>Sign in to store master work experience and typographic settings across sessions.</span>
           </div>
           <button
             type="button"
             onClick={() => setAuthModalOpen(true)}
-            className="text-blue-600 hover:text-blue-800 font-semibold px-2.5 py-1 rounded hover:bg-blue-50 border border-blue-200/80 bg-white transition-colors cursor-pointer shrink-0"
+            className="font-mono text-[11px] tracking-wider uppercase text-[#141413] hover:text-[#993322] font-semibold underline cursor-pointer shrink-0"
           >
-            Log In
+            Sign In
           </button>
         </div>
       )}
 
-      {/* Step 1: Resume Input Section */}
+      {/* Section 01: Resume Input */}
       <section className="space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-1 border-b border-slate-100">
-          <div className="flex items-center gap-2">
-            <span className="w-6 h-6 rounded-full bg-blue-600 text-white font-bold text-xs flex items-center justify-center">
-              1
-            </span>
-            <h2 className="text-base font-bold text-slate-900">Your Current Resume</h2>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b-2 border-[#141413]">
+          <div className="flex items-center gap-2 font-mono text-xs tracking-wider uppercase text-[#141413] font-black">
+            <span className="bg-[#D4FF00] px-1.5 py-0.5 border border-[#141413]">01</span>
+            <span>/</span>
+            <span>DUMP YOUR RESUME</span>
           </div>
           
           {(!useSavedProfile || !savedProfile?.resumeData) && (
             <div className="flex items-center gap-2">
-              <div className="flex bg-slate-100 p-0.5 rounded-lg border border-slate-200/60">
+              <div className="flex border-2 border-[#141413] bg-white shadow-[2px_2px_0px_#141413] p-0.5 font-mono text-[11px] tracking-wider uppercase font-bold">
                 <button
                   type="button"
                   onClick={() => setInputMode('upload')}
-                  className={`flex items-center gap-1 px-3 py-1 text-xs font-semibold rounded-md transition-all cursor-pointer ${
+                  className={`flex items-center gap-1.5 px-3 py-1 transition-colors cursor-pointer ${
                     inputMode === 'upload' 
-                      ? 'bg-white text-slate-900 shadow-2xs font-bold' 
-                      : 'text-slate-600 hover:text-slate-900'
+                      ? 'bg-[#141413] text-white' 
+                      : 'text-[#141413] hover:bg-[#F2EFE9]'
                   }`}
                 >
-                  <UploadCloud className="w-3.5 h-3.5 text-blue-600" />
-                  <span>Upload File</span>
+                  <UploadCloud className="w-3 h-3" />
+                  <span>Upload</span>
                 </button>
                 <button
                   type="button"
@@ -290,14 +272,14 @@ export function GenerateForm() {
                     }
                     setInputMode('form');
                   }}
-                  className={`flex items-center gap-1 px-3 py-1 text-xs font-semibold rounded-md transition-all cursor-pointer ${
+                  className={`flex items-center gap-1.5 px-3 py-1 transition-colors cursor-pointer ${
                     inputMode === 'form' 
-                      ? 'bg-white text-slate-900 shadow-2xs font-bold' 
-                      : 'text-slate-600 hover:text-slate-900'
+                      ? 'bg-[#141413] text-white' 
+                      : 'text-[#141413] hover:bg-[#F2EFE9]'
                   }`}
                 >
-                  <FileEdit className="w-3.5 h-3.5 text-indigo-600" />
-                  <span>Structured Form</span>
+                  <FileEdit className="w-3 h-3" />
+                  <span>Sections</span>
                 </button>
                 <button
                   type="button"
@@ -307,14 +289,14 @@ export function GenerateForm() {
                     }
                     setInputMode('paste');
                   }}
-                  className={`flex items-center gap-1 px-3 py-1 text-xs font-semibold rounded-md transition-all cursor-pointer ${
+                  className={`flex items-center gap-1.5 px-3 py-1 transition-colors cursor-pointer ${
                     inputMode === 'paste' 
-                      ? 'bg-white text-slate-900 shadow-2xs font-bold' 
-                      : 'text-slate-600 hover:text-slate-900'
+                      ? 'bg-[#141413] text-white' 
+                      : 'text-[#141413] hover:bg-[#F2EFE9]'
                   }`}
                 >
-                  <FileText className="w-3.5 h-3.5 text-slate-600" />
-                  <span>Raw Text</span>
+                  <FileText className="w-3 h-3" />
+                  <span>Text</span>
                 </button>
               </div>
 
@@ -322,10 +304,9 @@ export function GenerateForm() {
                 <button
                   type="button"
                   onClick={handleLoadSampleResume}
-                  className="text-[11px] font-semibold text-blue-600 hover:text-blue-800 bg-blue-50/70 hover:bg-blue-100 border border-blue-200/80 px-2.5 py-1 rounded-md transition-colors cursor-pointer"
-                  title="Prefill with complete sample resume"
+                  className="neo-btn px-2.5 py-1 bg-[#FFFDF8] hover:bg-[#D4FF00] font-mono text-[10px] tracking-wider uppercase text-[#141413] font-bold transition-all cursor-pointer"
                 >
-                  Use Sample
+                  Load Sample
                 </button>
               )}
             </div>
@@ -333,26 +314,26 @@ export function GenerateForm() {
         </div>
 
         {useSavedProfile && savedProfile?.resumeData ? (
-          <div className="p-4 rounded-xl border border-emerald-200 bg-emerald-50/60 text-emerald-950 space-y-2">
+          <div className="p-4 border border-[#E7E4DC] bg-[#F8F7F4] space-y-2 font-mono text-xs text-[#141413]">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span className="font-bold text-xs sm:text-sm">
-                  Using saved profile: {savedProfile.resumeData.personal_info.full_name || user?.name}
+                <Check className="w-4 h-4 text-[#993322]" />
+                <span className="font-bold">
+                  MASTER PROFILE: {savedProfile.resumeData.personal_info.full_name || user?.name}
                 </span>
               </div>
               <button
                 type="button"
                 onClick={() => setUseSavedProfile(false)}
-                className="text-xs text-emerald-800 hover:text-emerald-950 underline font-medium cursor-pointer"
+                className="text-[#76736C] hover:text-[#141413] underline cursor-pointer"
               >
-                Upload different resume instead
+                Use other source
               </button>
             </div>
-            <div className="text-xs text-emerald-800 space-y-1 pl-6">
+            <div className="text-[11px] text-[#55534E] space-y-0.5">
               <p>• Contact: {savedProfile.resumeData.personal_info.contact.email} | {savedProfile.resumeData.personal_info.contact.phone}</p>
-              <p>• Work Experience: {savedProfile.resumeData.work_experience?.map(w => w.company).join(', ') || 'None recorded'}</p>
-              <p>• Education: {savedProfile.resumeData.education?.map(e => e.university).join(', ') || 'None recorded'}</p>
+              <p>• Work Experience: {savedProfile.resumeData.work_experience?.map(w => w.company).join(', ') || 'None'}</p>
+              <p>• Education: {savedProfile.resumeData.education?.map(e => e.university).join(', ') || 'None'}</p>
             </div>
           </div>
         ) : (
@@ -388,8 +369,8 @@ export function GenerateForm() {
 
             {inputMode === 'paste' && (
               <div className="space-y-2">
-                <div className="flex items-center justify-between text-xs text-slate-500">
-                  <span>Paste raw resume text or edit here:</span>
+                <div className="flex items-center justify-between text-xs text-[#76736C] font-mono">
+                  <span>RAW RESUME TEXT INPUT:</span>
                   {resumeText.trim() && (
                     <button
                       type="button"
@@ -407,32 +388,22 @@ export function GenerateForm() {
                             if (parsedJson.resume) {
                               setStructuredProfile(parsedJson.resume);
                               setInputMode('form');
-                              addToast('Converted raw text to structured sections with NLP!', 'success');
+                              addToast('Parsed into structured sections', 'success');
                               return;
                             }
                           }
                         } catch (e) {
-                          console.warn('NLP parse request failed, falling back to local NLP:', e);
+                          console.warn('NLP parse error:', e);
                         } finally {
                           setIsParsingText(false);
                         }
                         setStructuredProfile(parseResumeTextToData(resumeText));
                         setInputMode('form');
-                        addToast('Parsed into structured form sections with local NLP!', 'info');
+                        addToast('Parsed into structured sections via local NLP', 'info');
                       }}
-                      className="flex items-center gap-1.5 text-blue-600 hover:text-blue-800 font-semibold cursor-pointer underline disabled:opacity-50"
+                      className="text-[#141413] hover:text-[#993322] font-semibold cursor-pointer underline disabled:opacity-50"
                     >
-                      {isParsingText ? (
-                        <>
-                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                          <span>Parsing with NLP...</span>
-                        </>
-                      ) : (
-                        <>
-                          <Sparkles className="w-3.5 h-3.5 text-blue-500" />
-                          <span>Parse with NLP into Form →</span>
-                        </>
-                      )}
+                      {isParsingText ? 'Parsing structure...' : 'Parse into Form Sections →'}
                     </button>
                   )}
                 </div>
@@ -442,8 +413,8 @@ export function GenerateForm() {
                     setResumeText(e.target.value);
                     setStructuredProfile(parseResumeTextToData(e.target.value));
                   }}
-                  placeholder="Paste your current resume text here..."
-                  className="w-full h-44 p-4 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-hidden resize-y text-xs sm:text-sm font-mono transition-colors"
+                  placeholder="Paste existing resume text here..."
+                  className="w-full h-44 p-4 border border-[#E7E4DC] bg-[#F8F7F4] focus:bg-white focus:border-[#141413] outline-hidden resize-y font-mono text-xs text-[#141413] leading-relaxed transition-colors"
                 />
               </div>
             )}
@@ -451,34 +422,32 @@ export function GenerateForm() {
         )}
       </section>
 
-      {/* Step 2: Job Description Section */}
+      {/* Section 02: Job Description Input */}
       <section className="space-y-3">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-1 border-b border-slate-100">
-          <div className="flex items-center gap-2">
-            <span className="w-6 h-6 rounded-full bg-indigo-600 text-white font-bold text-xs flex items-center justify-center">
-              2
-            </span>
-            <h2 className="text-base font-bold text-slate-900">Target Job Description</h2>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b-2 border-[#141413]">
+          <div className="flex items-center gap-2 font-mono text-xs tracking-wider uppercase text-[#141413] font-black">
+            <span className="bg-[#E2D9FC] px-1.5 py-0.5 border border-[#141413]">02</span>
+            <span>/</span>
+            <span>TARGET GIG / REQUISITION</span>
           </div>
-          <span className="text-xs text-slate-400 font-mono">{jobDescription.length} characters</span>
+          <span className="font-mono text-[11px] font-bold text-[#76736C]">{jobDescription.length} CHARS</span>
         </div>
 
-        {/* Quick Sample Job Chips */}
+        {/* Preset Job Chips */}
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-[11px] font-semibold text-slate-500">Quick Fill:</span>
+          <span className="font-mono text-[10px] tracking-wider uppercase text-[#141413] font-bold">HOT GIG PRESETS:</span>
           {SAMPLE_JOBS.map((job) => (
             <button
               key={job.title}
               type="button"
               onClick={() => {
                 setJobDescription(job.description);
-                addToast(`Loaded ${job.title} job description!`, 'info');
+                addToast(`Loaded ${job.title} requisition`, 'info');
               }}
-              className="inline-flex items-center gap-1.5 text-[11px] font-medium text-slate-700 hover:text-indigo-700 bg-slate-100/80 hover:bg-indigo-50 border border-slate-200/80 hover:border-indigo-200 px-2.5 py-1 rounded-lg transition-all cursor-pointer"
+              className="neo-btn font-mono text-[11px] tracking-wider uppercase text-[#141413] bg-white hover:bg-[#D4FF00] px-2.5 py-1 transition-all cursor-pointer flex items-center gap-1.5"
             >
-              <Briefcase className="w-3 h-3 text-indigo-500" />
+              <span className="bg-[#141413] text-white px-1 text-[9px]">[{job.company}]</span>
               <span>{job.title}</span>
-              <span className="text-[9px] text-slate-400 font-normal">({job.badge})</span>
             </button>
           ))}
         </div>
@@ -486,12 +455,12 @@ export function GenerateForm() {
         <textarea
           value={jobDescription}
           onChange={(e) => setJobDescription(e.target.value)}
-          placeholder="Paste the target job description or click one of the quick-fill chips above..."
-          className="w-full h-44 p-4 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-hidden resize-y text-xs sm:text-sm transition-colors"
+          placeholder="Paste the target job description or click one of the hot gig presets above..."
+          className="w-full h-44 p-4 border-2 border-[#141413] bg-[#FFFDF8] focus:bg-white outline-hidden resize-y text-xs sm:text-sm text-[#141413] leading-relaxed transition-colors font-sans"
         />
       </section>
 
-      {/* Primary Action Buttons */}
+      {/* Primary Actions */}
       <div className="flex flex-col sm:flex-row gap-3 pt-2">
         <button
           onClick={handleGenerate}
@@ -500,20 +469,17 @@ export function GenerateForm() {
             (!resumeText.trim() && !structuredProfile && (!useSavedProfile || !savedProfile?.resumeData)) || 
             !jobDescription.trim()
           }
-          className="flex-1 flex items-center justify-center min-h-[52px] py-3.5 px-6 rounded-xl font-bold text-white bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:via-indigo-700 hover:to-purple-700 shadow-md shadow-indigo-500/20 hover:shadow-lg hover:shadow-indigo-500/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 cursor-pointer text-base"
+          className="flex-1 neo-btn flex items-center justify-center min-h-[52px] py-3.5 px-6 font-mono text-sm tracking-wider uppercase font-black text-[#141413] bg-[#D4FF00] hover:bg-[#C8F500] disabled:bg-[#E5E2DA] disabled:text-[#A39F97] disabled:shadow-none disabled:cursor-not-allowed transition-all cursor-pointer"
         >
           {isGenerating ? (
-            <div className="flex items-center justify-center gap-3 px-2">
-              <Loader2 className="w-5 h-5 animate-spin text-white shrink-0" />
-              <span className="font-semibold text-sm sm:text-base tracking-tight text-white transition-opacity duration-300">
-                {generationStep || 'Analyzing job requirements & matching achievements...'}
+            <div className="flex items-center justify-center gap-2.5">
+              <Loader2 className="w-4 h-4 animate-spin text-[#141413]" />
+              <span className="tracking-wider">
+                {generationStep || 'Cooking your resume...'}
               </span>
             </div>
           ) : (
-            <div className="flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-yellow-300" />
-              <span>Tailor &amp; Generate Resume</span>
-            </div>
+            <span>⚡ Cook Resume (Zero Yap) →</span>
           )}
         </button>
 
@@ -521,13 +487,12 @@ export function GenerateForm() {
           type="button"
           onClick={() => {
             setResumeData(sampleResumeData);
-            addToast('Loaded interactive studio preview with sample profile.', 'info');
+            addToast('Loaded specimen document in workspace', 'info');
           }}
           disabled={isGenerating}
-          className="flex items-center justify-center py-3.5 px-5 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 bg-slate-50 hover:bg-slate-100 hover:text-slate-900 transition-colors cursor-pointer"
-          title="Directly launch editor with demo resume"
+          className="neo-btn flex items-center justify-center py-3.5 px-5 bg-white hover:bg-[#E2D9FC] font-mono text-xs tracking-wider uppercase font-bold text-[#141413] transition-all cursor-pointer"
         >
-          Explore Live Canvas →
+          Live Studio Canvas →
         </button>
       </div>
     </div>

@@ -50,36 +50,36 @@ export function TemplateSettingsModal({ isOpen, onClose }: TemplateSettingsModal
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4 no-print animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#141413]/60 backdrop-blur-xs p-4 no-print animate-in fade-in duration-200">
       <div 
-        className="bg-white rounded-xl shadow-2xl border border-gray-200 w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]"
+        className="bg-[#FDFCFB] rounded-xs shadow-2xl border border-[#E7E4DC] w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gray-50/70">
-          <div className="flex items-center gap-2">
-            <div className="p-2 bg-purple-100 text-purple-700 rounded-lg">
-              <Palette className="w-5 h-5" />
-            </div>
+        <div className="flex items-center justify-between px-6 py-3.5 border-b border-[#E7E4DC] bg-[#F8F7F4]">
+          <div className="flex items-center gap-3">
+            <span className="font-mono text-[10px] uppercase font-bold text-[#993322] border border-[#EACDC7] bg-[#FBF3F1] px-1.5 py-0.5 rounded-xs">
+              01 · SPECIMEN
+            </span>
             <div>
-              <h2 className="text-base font-bold text-gray-900">Customize Template</h2>
-              <p className="text-xs text-gray-500">Fine-tune styling for both Web Preview and DOCX export</p>
+              <h2 className="font-serif-display text-lg text-[#141413] leading-none">Customize Template</h2>
+              <p className="font-mono text-[10px] text-[#76736C] uppercase tracking-wider mt-0.5">Calibrate Web Preview &amp; DOCX exports</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
+            className="text-[#76736C] hover:text-[#141413] p-1.5 rounded-xs hover:bg-[#EFECE6] transition-colors cursor-pointer"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Content */}
-        <div className="p-6 space-y-5 overflow-y-auto">
+        <div className="p-6 space-y-5 overflow-y-auto custom-scrollbar">
           {/* Font Family */}
           <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-2">
-              Typography / Font Family
+            <label className="block font-mono text-[11px] font-bold uppercase tracking-wider text-[#141413] mb-2">
+              01 · Typography Specimen
             </label>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {FONT_OPTIONS.map((f) => {
@@ -89,17 +89,17 @@ export function TemplateSettingsModal({ isOpen, onClose }: TemplateSettingsModal
                     key={f.id}
                     type="button"
                     onClick={() => setTemplateSettings({ fontFamily: f.id })}
-                    className={`text-left p-2.5 rounded-lg border text-sm transition-all cursor-pointer flex items-center justify-between ${
+                    className={`text-left p-2.5 rounded-xs border text-xs transition-all cursor-pointer flex items-center justify-between ${
                       isSelected 
-                        ? 'border-blue-600 bg-blue-50/60 ring-1 ring-blue-500 font-semibold text-blue-950' 
-                        : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50 text-gray-800'
+                        ? 'border-[#141413] bg-[#F8F7F4] ring-1 ring-[#141413] text-[#141413]' 
+                        : 'border-[#E7E4DC] hover:border-[#141413] bg-white text-[#76736C] hover:text-[#141413]'
                     }`}
                   >
                     <div>
-                      <div className="text-xs font-medium text-gray-500">{f.type}</div>
-                      <div className="text-sm font-semibold">{f.label}</div>
+                      <div className="font-mono text-[10px] text-[#76736C] uppercase tracking-wider">{f.type}</div>
+                      <div className="font-semibold text-xs text-[#141413]">{f.label}</div>
                     </div>
-                    {isSelected && <Check className="w-4 h-4 text-blue-600 shrink-0" />}
+                    {isSelected && <Check className="w-3.5 h-3.5 text-[#993322] shrink-0" />}
                   </button>
                 );
               })}
@@ -108,10 +108,10 @@ export function TemplateSettingsModal({ isOpen, onClose }: TemplateSettingsModal
 
           {/* Accent Color */}
           <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-2">
-              Section Header Accent Color
+            <label className="block font-mono text-[11px] font-bold uppercase tracking-wider text-[#141413] mb-2">
+              02 · Section Header Accent Color
             </label>
-            <div className="flex flex-wrap items-center gap-3">
+            <div className="flex flex-wrap items-center gap-2.5">
               {PRESET_COLORS.map((c) => {
                 const isSelected = templateSettings.accentColor.toLowerCase() === c.color.toLowerCase();
                 return (
@@ -120,36 +120,36 @@ export function TemplateSettingsModal({ isOpen, onClose }: TemplateSettingsModal
                     type="button"
                     onClick={() => setTemplateSettings({ accentColor: c.color })}
                     title={c.label}
-                    className={`w-8 h-8 rounded-full border-2 transition-transform cursor-pointer flex items-center justify-center ${
-                      isSelected ? 'scale-110 ring-2 ring-offset-2 ring-blue-500 border-white shadow-md' : 'border-gray-300 hover:scale-105'
+                    className={`w-7 h-7 rounded-xs border transition-transform cursor-pointer flex items-center justify-center ${
+                      isSelected ? 'scale-105 ring-2 ring-offset-2 ring-[#141413] border-white shadow-xs' : 'border-[#DCD8CE] hover:scale-105'
                     }`}
                     style={{ backgroundColor: c.color }}
                   >
-                    {isSelected && <Check className="w-4 h-4 text-white" />}
+                    {isSelected && <Check className="w-3 h-3 text-white" />}
                   </button>
                 );
               })}
               
               {/* Custom Color Input */}
-              <div className="flex items-center gap-2 ml-2 pl-2 border-l border-gray-200">
+              <div className="flex items-center gap-1.5 ml-2 pl-2 border-l border-[#E7E4DC]">
                 <input
                   type="color"
                   value={templateSettings.accentColor}
                   onChange={(e) => setTemplateSettings({ accentColor: e.target.value })}
-                  className="w-8 h-8 rounded cursor-pointer border border-gray-300 p-0.5"
+                  className="w-7 h-7 rounded-xs cursor-pointer border border-[#DCD8CE] p-0.5 bg-white"
                   title="Custom hex color"
                 />
-                <span className="text-xs font-mono text-gray-600">{templateSettings.accentColor}</span>
+                <span className="font-mono text-[11px] text-[#76736C]">{templateSettings.accentColor}</span>
               </div>
             </div>
           </div>
 
           {/* Margins & Sizing */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2 border-t border-gray-100">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 border-t border-[#E7E4DC]">
             {/* Margins */}
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-2">
-                Margins
+              <label className="block font-mono text-[11px] font-bold uppercase tracking-wider text-[#141413] mb-2">
+                03 · Margins
               </label>
               <div className="space-y-1.5">
                 {MARGIN_OPTIONS.map((m) => {
@@ -159,14 +159,14 @@ export function TemplateSettingsModal({ isOpen, onClose }: TemplateSettingsModal
                       key={m.id}
                       type="button"
                       onClick={() => setTemplateSettings({ marginSize: m.id })}
-                      className={`w-full text-left p-2 rounded-lg border text-xs transition-all cursor-pointer ${
+                      className={`w-full text-left p-2 rounded-xs border font-mono text-xs transition-all cursor-pointer ${
                         isSelected 
-                          ? 'border-blue-600 bg-blue-50/70 font-semibold text-blue-900' 
-                          : 'border-gray-200 hover:bg-gray-50 text-gray-700'
+                          ? 'border-[#141413] bg-[#141413] text-[#F8F7F4] font-semibold' 
+                          : 'border-[#E7E4DC] hover:border-[#141413] bg-white text-[#76736C] hover:text-[#141413]'
                       }`}
                     >
                       <div>{m.label}</div>
-                      <div className="text-[10px] text-gray-500 font-normal">{m.desc}</div>
+                      <div className="text-[10px] opacity-75 font-normal">{m.desc}</div>
                     </button>
                   );
                 })}
@@ -175,8 +175,8 @@ export function TemplateSettingsModal({ isOpen, onClose }: TemplateSettingsModal
 
             {/* Line Spacing */}
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-2">
-                Line Spacing
+              <label className="block font-mono text-[11px] font-bold uppercase tracking-wider text-[#141413] mb-2">
+                04 · Line Spacing
               </label>
               <div className="space-y-1.5">
                 {SPACING_OPTIONS.map((s) => {
@@ -186,14 +186,14 @@ export function TemplateSettingsModal({ isOpen, onClose }: TemplateSettingsModal
                       key={s.id}
                       type="button"
                       onClick={() => setTemplateSettings({ lineSpacing: s.id })}
-                      className={`w-full text-left p-2 rounded-lg border text-xs transition-all cursor-pointer ${
+                      className={`w-full text-left p-2 rounded-xs border font-mono text-xs transition-all cursor-pointer ${
                         isSelected 
-                          ? 'border-blue-600 bg-blue-50/70 font-semibold text-blue-900' 
-                          : 'border-gray-200 hover:bg-gray-50 text-gray-700'
+                          ? 'border-[#141413] bg-[#141413] text-[#F8F7F4] font-semibold' 
+                          : 'border-[#E7E4DC] hover:border-[#141413] bg-white text-[#76736C] hover:text-[#141413]'
                       }`}
                     >
                       <div>{s.label}</div>
-                      <div className="text-[10px] text-gray-500 font-normal">{s.desc}</div>
+                      <div className="text-[10px] opacity-75 font-normal">{s.desc}</div>
                     </button>
                   );
                 })}
@@ -202,8 +202,8 @@ export function TemplateSettingsModal({ isOpen, onClose }: TemplateSettingsModal
 
             {/* Font Size */}
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-2">
-                Font Scale
+              <label className="block font-mono text-[11px] font-bold uppercase tracking-wider text-[#141413] mb-2">
+                05 · Font Scale
               </label>
               <div className="space-y-1.5">
                 {FONT_SIZE_OPTIONS.map((fs) => {
@@ -213,14 +213,14 @@ export function TemplateSettingsModal({ isOpen, onClose }: TemplateSettingsModal
                       key={fs.id}
                       type="button"
                       onClick={() => setTemplateSettings({ fontSize: fs.id })}
-                      className={`w-full text-left p-2 rounded-lg border text-xs transition-all cursor-pointer ${
+                      className={`w-full text-left p-2 rounded-xs border font-mono text-xs transition-all cursor-pointer ${
                         isSelected 
-                          ? 'border-blue-600 bg-blue-50/70 font-semibold text-blue-900' 
-                          : 'border-gray-200 hover:bg-gray-50 text-gray-700'
+                          ? 'border-[#141413] bg-[#141413] text-[#F8F7F4] font-semibold' 
+                          : 'border-[#E7E4DC] hover:border-[#141413] bg-white text-[#76736C] hover:text-[#141413]'
                       }`}
                     >
                       <div>{fs.label}</div>
-                      <div className="text-[10px] text-gray-500 font-normal">{fs.desc}</div>
+                      <div className="text-[10px] opacity-75 font-normal">{fs.desc}</div>
                     </button>
                   );
                 })}
@@ -230,19 +230,19 @@ export function TemplateSettingsModal({ isOpen, onClose }: TemplateSettingsModal
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-3.5 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
+        <div className="px-6 py-3.5 bg-[#F8F7F4] border-t border-[#E7E4DC] flex items-center justify-between">
           <button
             type="button"
             onClick={resetTemplateSettings}
-            className="flex items-center gap-1.5 text-xs text-gray-600 hover:text-gray-900 font-medium px-2 py-1 rounded hover:bg-gray-200 transition-colors cursor-pointer"
+            className="flex items-center gap-1.5 font-mono text-xs uppercase tracking-wider text-[#76736C] hover:text-[#141413] px-2.5 py-1.5 rounded-xs hover:bg-[#EFECE6] border border-[#DCD8CE] transition-colors cursor-pointer"
           >
-            <RotateCcw className="w-3.5 h-3.5" />
-            Reset Defaults
+            <RotateCcw className="w-3.5 h-3.5 text-[#76736C]" />
+            <span>Reset Defaults</span>
           </button>
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow-sm transition-colors cursor-pointer"
+            className="px-4 py-1.5 bg-[#141413] hover:bg-[#2A2927] text-[#F8F7F4] font-mono text-xs uppercase tracking-wider rounded-xs border border-[#141413] transition-colors cursor-pointer"
           >
             Done
           </button>

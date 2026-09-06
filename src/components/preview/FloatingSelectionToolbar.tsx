@@ -140,47 +140,50 @@ export function FloatingSelectionToolbar() {
         <button
           type="button"
           onClick={() => setIsOpen(true)}
-          className="flex items-center gap-1.5 px-3.5 py-1.5 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white rounded-full shadow-xl border border-white/20 text-xs font-semibold cursor-pointer animate-in fade-in zoom-in-95 hover:scale-105 transition-all select-none group"
+          className="neo-btn flex items-center gap-1.5 px-3 py-1.5 bg-[#D4FF00] hover:bg-[#C8F500] text-[#141413] font-mono text-xs font-black tracking-wider cursor-pointer animate-in fade-in zoom-in-95 select-none"
         >
-          <Sparkles className="w-3.5 h-3.5 text-yellow-300 group-hover:rotate-12 transition-transform" />
-          <span>✨ Generate / Rewrite Text</span>
+          <Sparkles className="w-3.5 h-3.5 text-[#141413]" />
+          <span>⚡ REWRITE / VIBE CHECK</span>
         </button>
       ) : (
         // Expanded popover dialog above selection
-        <div className="w-80 sm:w-96 bg-white rounded-xl shadow-2xl border border-purple-200 p-4 font-sans text-xs text-gray-900 animate-in fade-in zoom-in-95 duration-150">
-          <div className="flex items-center justify-between pb-2 mb-2 border-b border-gray-100">
-            <div className="flex items-center gap-1.5 font-bold text-purple-700 text-sm">
-              <Sparkles className="w-4 h-4 text-purple-600" />
-              <span>AI Text Generator</span>
+        <div className="w-80 sm:w-96 neo-box p-4 font-sans text-xs text-[#141413] animate-in fade-in zoom-in-95 duration-150">
+          <div className="flex items-center justify-between pb-2 mb-3 border-b-2 border-[#141413]">
+            <div className="flex items-center gap-1.5 font-mono text-xs uppercase tracking-wider font-black text-[#141413]">
+              <Sparkles className="w-3.5 h-3.5 text-[#141413]" />
+              <span>{generatedText ? '02 / AI PROPOSAL' : '01 / REWRITE VIBE'}</span>
             </div>
             <button
               type="button"
               onClick={() => setIsOpen(false)}
-              className="text-gray-400 hover:text-gray-600 p-1 cursor-pointer"
+              className="text-[#141413] hover:text-[#FF6B4A] p-1 cursor-pointer"
             >
               <X className="w-4 h-4" />
             </button>
           </div>
 
-          <div className="space-y-2.5">
+          <div className="space-y-3">
             <div>
-              <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Selected Text</span>
-              <div className="p-2 bg-gray-50 border border-gray-200 rounded text-gray-700 max-h-20 overflow-y-auto text-xs italic">
+              <span className="text-[10px] font-mono uppercase tracking-widest text-[#76736C] font-bold">Selected Passage</span>
+              <div className="mt-1 p-2 bg-[#F8F7F4] border border-[#141413] text-[#55534E] max-h-20 overflow-y-auto text-xs italic font-serif">
                 "{selectedText}"
               </div>
             </div>
 
             {generatedText ? (
-              <div className="space-y-2">
-                <span className="text-[10px] font-semibold text-green-600 uppercase tracking-wider">Generated Text</span>
-                <div className="p-2.5 bg-green-50 border border-green-200 rounded text-gray-900 text-xs font-medium max-h-32 overflow-y-auto">
+              <div className="space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-mono uppercase tracking-widest text-[#141413] font-bold">Generated Alternative</span>
+                  <span className="text-[9px] bg-[#D4FF00] text-[#141413] px-1.5 py-0.5 border border-[#141413] font-mono uppercase font-black">Synthesized</span>
+                </div>
+                <div className="p-2.5 bg-white border-2 border-[#141413] text-[#141413] text-xs font-medium max-h-32 overflow-y-auto shadow-[2px_2px_0px_#141413]">
                   {generatedText}
                 </div>
                 <div className="flex items-center gap-2 pt-1">
                   <button
                     type="button"
                     onClick={handleCopy}
-                    className="flex-1 flex items-center justify-center gap-1.5 py-1.5 px-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded shadow-sm text-xs cursor-pointer transition-colors"
+                    className="flex-1 neo-btn flex items-center justify-center gap-1.5 py-2 px-3 bg-[#D4FF00] hover:bg-[#C8F500] text-[#141413] font-mono text-xs uppercase tracking-wider font-bold cursor-pointer transition-all"
                   >
                     <Copy className="w-3.5 h-3.5" />
                     Copy to Clipboard
@@ -188,22 +191,22 @@ export function FloatingSelectionToolbar() {
                   <button
                     type="button"
                     onClick={() => setGeneratedText(null)}
-                    className="py-1.5 px-3 border border-gray-300 bg-white hover:bg-gray-50 text-gray-700 rounded text-xs cursor-pointer transition-colors"
+                    className="neo-btn py-2 px-3 bg-white hover:bg-[#F2EFE9] text-[#141413] font-mono text-xs uppercase tracking-wider font-bold cursor-pointer transition-all"
                   >
-                    Try Again
+                    Regenerate
                   </button>
                 </div>
               </div>
             ) : (
               <>
                 <div className="flex flex-wrap gap-1">
-                  {['More impactful', 'More concise', 'ATS optimized', 'Executive tone'].map((preset) => (
+                  {['Cut the Yap', 'Corporate Mask', 'Aura Boost', 'ATS Magnet'].map((preset) => (
                     <button
                       key={preset}
                       type="button"
                       disabled={isLoading}
                       onClick={() => handleGenerateText(preset)}
-                      className="px-2 py-0.5 rounded-full bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 text-[11px] font-medium cursor-pointer transition-colors disabled:opacity-50"
+                      className="neo-btn px-2 py-1 bg-[#FFFDF8] hover:bg-[#E2D9FC] text-[#141413] text-[11px] font-mono font-bold cursor-pointer transition-all disabled:opacity-50"
                     >
                       {preset}
                     </button>
@@ -213,23 +216,23 @@ export function FloatingSelectionToolbar() {
                 <div className="flex gap-1.5 pt-1">
                   <input
                     type="text"
-                    placeholder="Custom instruction (e.g. emphasize leadership)..."
+                    placeholder="Custom directive (e.g. emphasize leadership)..."
                     value={instruction}
                     onChange={(e) => setInstruction(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleGenerateText()}
                     disabled={isLoading}
-                    className="flex-1 px-2.5 py-1.5 border border-gray-300 rounded text-xs focus:ring-1 focus:ring-purple-500 focus:border-purple-500 outline-none"
+                    className="flex-1 px-2.5 py-1.5 bg-white border-2 border-[#141413] text-xs text-[#141413] outline-none placeholder:text-[#8C887B]"
                   />
                   <button
                     type="button"
                     disabled={isLoading}
                     onClick={() => handleGenerateText()}
-                    className="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded text-xs font-semibold flex items-center gap-1 cursor-pointer transition-colors disabled:bg-purple-400"
+                    className="neo-btn px-3 py-1.5 bg-[#141413] hover:bg-black text-white text-xs font-mono uppercase tracking-wider font-bold flex items-center gap-1 cursor-pointer transition-all disabled:opacity-40"
                   >
                     {isLoading ? (
                       <Loader2 className="w-3.5 h-3.5 animate-spin" />
                     ) : (
-                      <span>Generate</span>
+                      <span>Synthesize</span>
                     )}
                   </button>
                 </div>

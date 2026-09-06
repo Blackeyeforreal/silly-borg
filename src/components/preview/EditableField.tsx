@@ -185,11 +185,11 @@ export function EditableField({
         ref={containerRef as any}
       >
         {/* Floating Mini Formatting Toolbar */}
-        <div className="flex items-center gap-0.5 mb-0.5 bg-gray-900 text-white rounded px-1.5 py-0.5 shadow-lg text-xs w-max select-none">
+        <div className="flex items-center gap-0.5 mb-0.5 bg-[#141413] text-[#FDFCFB] border border-[#2B2A27] px-1.5 py-0.5 shadow-lg text-xs w-max select-none font-mono">
           <button
             type="button"
             onClick={() => applyFormatting('bold')}
-            className="p-1 hover:bg-gray-700 rounded font-bold transition-colors"
+            className="p-1 hover:bg-[#2B2A27] rounded font-bold transition-colors"
             title="Bold (Ctrl+B)"
           >
             <Bold className="w-3.5 h-3.5" />
@@ -197,7 +197,7 @@ export function EditableField({
           <button
             type="button"
             onClick={() => applyFormatting('italic')}
-            className="p-1 hover:bg-gray-700 rounded italic transition-colors"
+            className="p-1 hover:bg-[#2B2A27] rounded italic transition-colors"
             title="Italic (Ctrl+I)"
           >
             <Italic className="w-3.5 h-3.5" />
@@ -205,7 +205,7 @@ export function EditableField({
           <button
             type="button"
             onClick={() => applyFormatting('underline')}
-            className="p-1 hover:bg-gray-700 rounded underline transition-colors"
+            className="p-1 hover:bg-[#2B2A27] rounded underline transition-colors"
             title="Underline (Ctrl+U)"
           >
             <Underline className="w-3.5 h-3.5" />
@@ -214,29 +214,29 @@ export function EditableField({
           <button
             type="button"
             onClick={openLinkDialog}
-            className={`p-1 hover:bg-gray-700 rounded transition-colors ${showLinkDialog ? 'bg-blue-600' : ''}`}
+            className={`p-1 hover:bg-[#2B2A27] rounded transition-colors ${showLinkDialog ? 'bg-[#993322] text-white' : 'text-[#DCD8CE]'}`}
             title="Add Link (Ctrl+K)"
           >
             <Link2 className="w-3.5 h-3.5" />
           </button>
 
-          <div className="w-px h-3.5 bg-gray-700 mx-1" />
+          <div className="w-px h-3.5 bg-[#2B2A27] mx-1" />
 
           <button
             type="button"
             onClick={() => setShowRewrite(true)}
-            className="p-1 hover:bg-purple-900 text-purple-300 rounded transition-colors flex items-center gap-1"
+            className="p-1 hover:bg-[#2B2A27] text-[#DCD8CE] hover:text-[#993322] rounded transition-colors flex items-center gap-1"
             title="AI Rewrite"
           >
             <Sparkles className="w-3.5 h-3.5" />
           </button>
 
-          <div className="w-px h-3.5 bg-gray-700 mx-1" />
+          <div className="w-px h-3.5 bg-[#2B2A27] mx-1" />
 
           <button
             type="button"
             onClick={handleSave}
-            className="p-1 hover:bg-green-900 text-green-300 rounded transition-colors"
+            className="p-1 hover:bg-[#2B2A27] text-[#DCD8CE] hover:text-white rounded transition-colors"
             title="Save"
           >
             <Check className="w-3.5 h-3.5" />
@@ -244,7 +244,7 @@ export function EditableField({
           <button
             type="button"
             onClick={handleCancel}
-            className="p-1 hover:bg-red-900 text-red-300 rounded transition-colors"
+            className="p-1 hover:bg-[#2B2A27] text-[#DCD8CE] hover:text-white rounded transition-colors"
             title="Cancel (Esc)"
           >
             <X className="w-3.5 h-3.5" />
@@ -253,13 +253,13 @@ export function EditableField({
 
         {/* Inline Hyperlink Dialog */}
         {showLinkDialog && (
-          <div className="flex items-center gap-1.5 p-1.5 bg-white border border-blue-400 rounded shadow-md text-xs mb-1 w-max">
+          <div className="flex items-center gap-1.5 p-1.5 bg-[#FDFCFB] border border-[#DCD8CE] shadow-md text-xs mb-1 w-max font-sans">
             <input
               type="text"
               placeholder="Display text"
               value={linkText}
               onChange={(e) => setLinkText(e.target.value)}
-              className="px-1.5 py-0.5 border border-gray-300 rounded text-xs w-28 focus:outline-none focus:border-blue-500"
+              className="px-1.5 py-0.5 bg-white border border-[#DCD8CE] text-xs w-28 focus:outline-none focus:border-[#141413] text-[#141413]"
             />
             <input
               type="text"
@@ -268,19 +268,19 @@ export function EditableField({
               onChange={(e) => setLinkUrl(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleInsertLink()}
               autoFocus
-              className="px-1.5 py-0.5 border border-gray-300 rounded text-xs w-44 focus:outline-none focus:border-blue-500"
+              className="px-1.5 py-0.5 bg-white border border-[#DCD8CE] text-xs w-44 focus:outline-none focus:border-[#141413] text-[#141413]"
             />
             <button
               type="button"
               onClick={handleInsertLink}
-              className="px-2 py-0.5 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors font-medium text-xs cursor-pointer"
+              className="px-2 py-0.5 bg-[#141413] text-white hover:bg-black transition-colors font-mono text-xs uppercase cursor-pointer"
             >
               Add
             </button>
             <button
               type="button"
               onClick={() => setShowLinkDialog(false)}
-              className="p-0.5 text-gray-500 hover:text-gray-700 cursor-pointer"
+              className="p-0.5 text-[#8C887B] hover:text-[#141413] cursor-pointer"
             >
               <X className="w-3.5 h-3.5" />
             </button>

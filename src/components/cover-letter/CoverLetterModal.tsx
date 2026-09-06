@@ -218,45 +218,49 @@ export function CoverLetterModal() {
   ].filter(Boolean);
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[92vh] flex flex-col overflow-hidden border border-slate-200/80">
+    <div className="fixed inset-0 z-50 bg-[#141413]/70 backdrop-blur-xs flex items-center justify-center p-2 sm:p-4 overflow-y-auto no-print">
+      <div className="bg-[#FDFCFB] neo-box shadow-[6px_6px_0px_#141413] w-full max-w-4xl max-h-[92vh] flex flex-col overflow-hidden border-2 border-[#141413]">
         
         {/* Top Header Controls Bar */}
-        <div className="px-5 py-3.5 border-b border-slate-200 bg-slate-50/90 flex items-center justify-between gap-3 shrink-0 flex-wrap sm:flex-nowrap">
-          <div className="flex items-center gap-2.5">
-            <div className="p-2 bg-gradient-to-tr from-blue-600 to-indigo-600 text-white rounded-xl shadow-xs">
-              <FileSignature className="w-4 h-4" />
-            </div>
+        <div className="px-5 py-3.5 border-b-2 border-[#141413] bg-[#FFFDF8] flex items-center justify-between gap-3 shrink-0 flex-wrap sm:flex-nowrap">
+          <div className="flex items-center gap-3">
+            <span className="sticker-pill bg-[#D4FF00] text-[#141413] text-[10px]">
+              01 · MATCHED LETTER
+            </span>
             <div>
-              <h2 className="text-sm sm:text-base font-bold text-slate-900 flex items-center gap-2">
-                1-Click Matched Cover Letter
+              <h2 className="font-serif-display text-lg tracking-tight text-[#141413] leading-none">
+                Matched Cover Letter
               </h2>
-              <p className="text-[11px] text-slate-500 font-medium">
-                Tailored directly from your target job description and master experience
+              <p className="font-mono text-[10px] text-[#76736C] uppercase tracking-wider mt-0.5 font-bold">
+                Target Requisition Alignment &amp; Experience Synthesis
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-2 flex-wrap">
-            {/* Tone Selector */}
-            <div className="flex items-center bg-white border border-gray-200 rounded-lg p-0.5 shadow-2xs">
-              {(['professional', 'confident', 'technical'] as CoverLetterTone[]).map((t) => (
+            {/* Gen Z Tone Selector */}
+            <div className="flex items-center border-2 border-[#141413] bg-white shadow-[2px_2px_0px_#141413] p-0.5 font-mono text-xs font-bold">
+              {[
+                { tone: 'professional', label: 'Corporate Mask' },
+                { tone: 'confident', label: 'Main Character' },
+                { tone: 'technical', label: '10x Builder' }
+              ].map(({ tone, label }) => (
                 <button
-                  key={t}
+                  key={tone}
                   type="button"
                   onClick={() => {
-                    setCoverLetterTone(t);
+                    setCoverLetterTone(tone as CoverLetterTone);
                     if (coverLetterData) {
-                      handleGenerate(t);
+                      handleGenerate(tone as CoverLetterTone);
                     }
                   }}
-                  className={`px-2.5 py-1 text-xs font-medium rounded-md capitalize transition-colors cursor-pointer ${
-                    coverLetterTone === t
-                      ? 'bg-blue-600 text-white shadow-xs'
-                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                  className={`px-2.5 py-1 text-[11px] uppercase tracking-wider transition-colors cursor-pointer ${
+                    coverLetterTone === tone
+                      ? 'bg-[#141413] text-white font-bold'
+                      : 'text-[#141413] hover:bg-[#F2EFE9]'
                   }`}
                 >
-                  {t}
+                  {label}
                 </button>
               ))}
             </div>
@@ -266,16 +270,16 @@ export function CoverLetterModal() {
               type="button"
               onClick={() => handleGenerate(coverLetterTone)}
               disabled={isGenerating}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow-xs disabled:opacity-50 transition-colors cursor-pointer"
+              className="neo-btn flex items-center gap-1.5 px-3 py-1.5 bg-[#D4FF00] hover:bg-[#C8F500] text-[#141413] font-mono text-xs uppercase tracking-wider font-bold disabled:opacity-50 transition-all cursor-pointer"
             >
-              {isGenerating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
-              <span>{coverLetterData ? 'Re-Tailor' : 'Generate'}</span>
+              {isGenerating ? <Loader2 className="w-3.5 h-3.5 animate-spin text-[#141413]" /> : <Sparkles className="w-3.5 h-3.5" />}
+              <span>{coverLetterData ? 'Re-Cook' : 'Cook Letter'}</span>
             </button>
 
             <button
               type="button"
               onClick={() => setCoverLetterOpen(false)}
-              className="p-1.5 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-200 transition-colors cursor-pointer ml-1"
+              className="p-1.5 text-[#141413] hover:text-[#FF6B4A] transition-colors cursor-pointer ml-1"
             >
               <X className="w-4 h-4" />
             </button>
@@ -283,57 +287,57 @@ export function CoverLetterModal() {
         </div>
 
         {/* Content Area */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-8 bg-dot-grid bg-slate-100/70 flex justify-center">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-8 bg-[#F3F1EC] flex justify-center custom-scrollbar">
           {!coverLetterData ? (
-            <div className="max-w-md my-auto text-center p-8 bg-white rounded-2xl shadow-sm border border-slate-200">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-blue-50 to-indigo-50 text-blue-600 flex items-center justify-center mx-auto mb-3 border border-blue-100">
-                <FileSignature className="w-6 h-6" />
-              </div>
-              <h3 className="text-base font-bold text-slate-900 mb-1">Generate Tailored Cover Letter</h3>
-              <p className="text-xs text-slate-500 mb-5 leading-relaxed">
-                Automatically connects your top career achievements and skills with the target job requirements in an executive letter.
+            <div className="max-w-md my-auto text-center p-8 bg-[#FDFCFB] rounded-xs border border-[#E7E4DC] paper-shadow">
+              <span className="font-mono text-[10px] uppercase tracking-wider text-[#993322] border border-[#EACDC7] bg-[#FBF3F1] px-2 py-0.5 rounded-xs font-semibold">
+                Publication Pipeline
+              </span>
+              <h3 className="font-serif-display text-2xl text-[#141413] mt-3 mb-2">Generate Tailored Cover Letter</h3>
+              <p className="font-sans text-xs text-[#76736C] mb-6 leading-relaxed">
+                Automatically synthesizes your highest-impact achievements and technical competencies to match the specific requisitions in the target job description.
               </p>
               <button
                 type="button"
                 onClick={() => handleGenerate(coverLetterTone)}
                 disabled={isGenerating}
-                className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:via-indigo-700 hover:to-purple-700 text-white font-bold rounded-xl shadow-md shadow-indigo-500/20 transition-all cursor-pointer text-sm"
+                className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-[#141413] hover:bg-[#2A2927] text-[#F8F7F4] font-mono text-xs uppercase tracking-wider rounded-xs border border-[#141413] transition-all cursor-pointer"
               >
-                {isGenerating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4 text-yellow-300" />}
-                <span>Generate Cover Letter (1-Click)</span>
+                {isGenerating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4 text-[#993322]" />}
+                <span>Generate Tailored Letter (1-Click)</span>
               </button>
             </div>
           ) : (
             /* Styled Cover Letter Paper */
             <div 
-              className="bg-white shadow-[0_20px_60px_-15px_rgba(0,0,0,0.14)] ring-1 ring-slate-900/5 rounded-xs p-8 sm:p-12 w-full max-w-[8.5in] text-black transition-all font-serif"
+              className="bg-white shadow-[0_12px_36px_rgba(0,0,0,0.08)] ring-1 ring-[#141413]/5 rounded-none p-8 sm:p-12 w-full max-w-[8.5in] text-[#141413] transition-all font-serif"
               style={{
                 fontFamily: currentFontFamily,
                 minHeight: '10.5in',
                 fontSize: '10.5pt',
-                lineHeight: 1.4
+                lineHeight: 1.45
               }}
             >
               {/* Candidate Letterhead matching Resume */}
               <div className="text-center pb-4 mb-6 border-b" style={{ borderBottomColor: accentColor }}>
-                <h1 className="text-2xl font-bold tracking-tight text-gray-900 mb-1">
+                <h1 className="text-2xl font-bold tracking-tight text-[#141413] mb-1">
                   {candidateName}
                 </h1>
                 {contactParts.length > 0 && (
-                  <p className="text-xs text-gray-600">
-                    {contactParts.join('   |   ')}
+                  <p className="font-sans text-xs text-[#76736C]">
+                    {contactParts.join('   ·   ')}
                   </p>
                 )}
               </div>
 
               {/* Date & Recipient Details */}
-              <div className="mb-6 space-y-1 font-sans text-xs text-gray-700">
+              <div className="mb-6 space-y-1 font-sans text-xs text-[#76736C]">
                 <div>
                   <input
                     type="text"
                     value={coverLetterData.date}
                     onChange={(e) => updateField('date', e.target.value)}
-                    className="w-full bg-transparent hover:bg-gray-50 focus:bg-white border-b border-transparent hover:border-gray-300 focus:border-blue-500 outline-hidden px-1 py-0.5 font-medium transition-colors"
+                    className="w-full bg-transparent hover:bg-[#F8F7F4] focus:bg-white border-b border-transparent hover:border-[#DCD8CE] focus:border-[#141413] outline-hidden px-1 py-0.5 font-mono text-[11px] transition-colors"
                     placeholder="Date"
                   />
                 </div>
@@ -343,21 +347,21 @@ export function CoverLetterModal() {
                     type="text"
                     value={coverLetterData.recipient_name}
                     onChange={(e) => updateField('recipient_name', e.target.value)}
-                    className="w-full font-bold text-gray-900 bg-transparent hover:bg-gray-50 focus:bg-white border-b border-transparent hover:border-gray-300 focus:border-blue-500 outline-hidden px-1 py-0.5 transition-colors"
+                    className="w-full font-bold text-[#141413] bg-transparent hover:bg-[#F8F7F4] focus:bg-white border-b border-transparent hover:border-[#DCD8CE] focus:border-[#141413] outline-hidden px-1 py-0.5 transition-colors"
                     placeholder="Hiring Manager / Recipient Name"
                   />
                   <input
                     type="text"
                     value={coverLetterData.recipient_title}
                     onChange={(e) => updateField('recipient_title', e.target.value)}
-                    className="w-full text-gray-600 bg-transparent hover:bg-gray-50 focus:bg-white border-b border-transparent hover:border-gray-300 focus:border-blue-500 outline-hidden px-1 py-0.5 transition-colors"
+                    className="w-full text-[#76736C] bg-transparent hover:bg-[#F8F7F4] focus:bg-white border-b border-transparent hover:border-[#DCD8CE] focus:border-[#141413] outline-hidden px-1 py-0.5 transition-colors"
                     placeholder="Title (e.g. Engineering Lead / Hiring Team)"
                   />
                   <input
                     type="text"
                     value={coverLetterData.company_name}
                     onChange={(e) => updateField('company_name', e.target.value)}
-                    className="w-full font-semibold text-gray-800 bg-transparent hover:bg-gray-50 focus:bg-white border-b border-transparent hover:border-gray-300 focus:border-blue-500 outline-hidden px-1 py-0.5 transition-colors"
+                    className="w-full font-semibold text-[#141413] bg-transparent hover:bg-[#F8F7F4] focus:bg-white border-b border-transparent hover:border-[#DCD8CE] focus:border-[#141413] outline-hidden px-1 py-0.5 transition-colors"
                     placeholder="Company Name"
                   />
                 </div>
@@ -365,7 +369,7 @@ export function CoverLetterModal() {
 
               {/* Salutation */}
               <div className="mb-4">
-                <p className="font-semibold text-gray-900">
+                <p className="font-semibold text-[#141413]">
                   Dear {coverLetterData.recipient_name || 'Hiring Manager'},
                 </p>
               </div>
@@ -376,7 +380,7 @@ export function CoverLetterModal() {
                   value={coverLetterData.opening_paragraph}
                   onChange={(e) => updateField('opening_paragraph', e.target.value)}
                   rows={3}
-                  className="w-full bg-transparent hover:bg-gray-50/70 focus:bg-white p-2 rounded border border-transparent hover:border-gray-200 focus:border-blue-500 outline-hidden resize-y transition-all text-justify leading-relaxed"
+                  className="w-full bg-transparent hover:bg-[#F8F7F4] focus:bg-white p-2 rounded-xs border border-transparent hover:border-[#DCD8CE] focus:border-[#141413] outline-hidden resize-y transition-all text-justify leading-relaxed text-[#141413]"
                   placeholder="Opening paragraph..."
                 />
               </div>
@@ -388,14 +392,14 @@ export function CoverLetterModal() {
                     value={bodyPara}
                     onChange={(e) => updateBodyParagraph(idx, e.target.value)}
                     rows={4}
-                    className="w-full bg-transparent hover:bg-gray-50/70 focus:bg-white p-2 rounded border border-transparent hover:border-gray-200 focus:border-blue-500 outline-hidden resize-y transition-all text-justify leading-relaxed"
+                    className="w-full bg-transparent hover:bg-[#F8F7F4] focus:bg-white p-2 rounded-xs border border-transparent hover:border-[#DCD8CE] focus:border-[#141413] outline-hidden resize-y transition-all text-justify leading-relaxed text-[#141413]"
                     placeholder={`Body paragraph ${idx + 1}...`}
                   />
                   {coverLetterData.body_paragraphs.length > 1 && (
                     <button
                       type="button"
                       onClick={() => removeBodyParagraph(idx)}
-                      className="absolute right-1 -top-2 opacity-0 group-hover/bodypara:opacity-100 p-1 bg-white border border-gray-200 rounded-md text-gray-400 hover:text-red-600 shadow-xs transition-opacity cursor-pointer no-print"
+                      className="absolute right-1 -top-2 opacity-0 group-hover/bodypara:opacity-100 p-1 bg-white border border-[#DCD8CE] rounded-xs text-[#76736C] hover:text-[#993322] shadow-xs transition-opacity cursor-pointer no-print"
                       title="Remove paragraph"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
@@ -408,7 +412,7 @@ export function CoverLetterModal() {
                 <button
                   type="button"
                   onClick={addBodyParagraph}
-                  className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 font-sans font-medium px-2 py-1 rounded hover:bg-blue-50 cursor-pointer transition-colors"
+                  className="inline-flex items-center gap-1 font-mono text-[11px] uppercase tracking-wider text-[#993322] hover:text-[#802B1D] font-semibold px-2 py-1 rounded-xs hover:bg-[#FBF3F1] cursor-pointer transition-colors"
                 >
                   <Plus className="w-3 h-3" />
                   Add Achievement Paragraph
@@ -421,7 +425,7 @@ export function CoverLetterModal() {
                   value={coverLetterData.closing_paragraph}
                   onChange={(e) => updateField('closing_paragraph', e.target.value)}
                   rows={2}
-                  className="w-full bg-transparent hover:bg-gray-50/70 focus:bg-white p-2 rounded border border-transparent hover:border-gray-200 focus:border-blue-500 outline-hidden resize-y transition-all text-justify leading-relaxed"
+                  className="w-full bg-transparent hover:bg-[#F8F7F4] focus:bg-white p-2 rounded-xs border border-transparent hover:border-[#DCD8CE] focus:border-[#141413] outline-hidden resize-y transition-all text-justify leading-relaxed text-[#141413]"
                   placeholder="Closing paragraph..."
                 />
               </div>
@@ -432,10 +436,10 @@ export function CoverLetterModal() {
                   type="text"
                   value={coverLetterData.sign_off}
                   onChange={(e) => updateField('sign_off', e.target.value)}
-                  className="bg-transparent hover:bg-gray-50 focus:bg-white border-b border-transparent hover:border-gray-300 focus:border-blue-500 outline-hidden px-1 py-0.5 transition-colors font-medium text-gray-900"
+                  className="bg-transparent hover:bg-[#F8F7F4] focus:bg-white border-b border-transparent hover:border-[#DCD8CE] focus:border-[#141413] outline-hidden px-1 py-0.5 transition-colors font-medium text-[#141413]"
                   placeholder="Sincerely,"
                 />
-                <p className="font-bold text-gray-900 pt-3">
+                <p className="font-bold text-[#141413] pt-3">
                   {candidateName}
                 </p>
               </div>
@@ -445,35 +449,35 @@ export function CoverLetterModal() {
 
         {/* Bottom Actions Footer */}
         {coverLetterData && (
-          <div className="px-5 py-3 border-t border-gray-200 bg-white flex items-center justify-between gap-3 shrink-0 flex-wrap">
-            <div className="text-xs text-gray-500 font-sans flex items-center gap-2">
-              <span>💡 Click any paragraph to edit inline</span>
+          <div className="px-5 py-3 border-t-2 border-[#141413] bg-[#FFFDF8] flex items-center justify-between gap-3 shrink-0 flex-wrap">
+            <div className="font-mono text-[10px] text-[#76736C] uppercase tracking-wider font-bold">
+              [ NOTE ] Click any passage to edit inline · Outputs format to matching typography
             </div>
 
             <div className="flex items-center gap-2">
               <button
                 type="button"
                 onClick={handleCopy}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors cursor-pointer"
+                className="neo-btn flex items-center gap-1.5 px-3 py-1.5 font-mono text-xs uppercase tracking-wider font-bold text-[#141413] bg-white hover:bg-[#D4FF00] transition-all cursor-pointer"
               >
-                {copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
-                <span>{copied ? 'Copied!' : 'Copy Text'}</span>
+                {copied ? <Check className="w-3.5 h-3.5 text-[#141413]" /> : <Copy className="w-3.5 h-3.5" />}
+                <span>{copied ? 'Copied' : 'Copy Text'}</span>
               </button>
 
               <button
                 type="button"
                 onClick={handleExportDocx}
                 disabled={isExportingDocx}
-                className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-xs transition-colors cursor-pointer disabled:opacity-50"
+                className="neo-btn flex items-center gap-1.5 px-3.5 py-1.5 font-mono text-xs uppercase tracking-wider font-black text-[#141413] bg-[#D4FF00] hover:bg-[#C8F500] transition-all cursor-pointer disabled:opacity-50"
               >
-                {isExportingDocx ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
+                {isExportingDocx ? <Loader2 className="w-3.5 h-3.5 animate-spin text-[#141413]" /> : <Download className="w-3.5 h-3.5" />}
                 <span>Download DOCX</span>
               </button>
 
               <button
                 type="button"
                 onClick={handlePrint}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 rounded-lg transition-colors cursor-pointer"
+                className="neo-btn flex items-center gap-1.5 px-3 py-1.5 font-mono text-xs uppercase tracking-wider font-bold text-[#141413] bg-[#E2D9FC] hover:bg-[#D4C4FC] transition-all cursor-pointer"
               >
                 <Printer className="w-3.5 h-3.5" />
                 <span>Print / PDF</span>

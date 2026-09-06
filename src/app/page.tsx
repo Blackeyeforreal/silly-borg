@@ -8,156 +8,199 @@ import { ResumePreview } from '@/components/preview/ResumePreview';
 import { ResumeToolbar } from '@/components/toolbar/ResumeToolbar';
 import { ResumeSidebar } from '@/components/sidebar/ResumeSidebar';
 import { AuthModal } from '@/components/auth/AuthModal';
-import { 
-  Sparkles, 
-  Zap, 
-  FileCheck2, 
-  FileSignature, 
-  Download, 
-  User, 
-  ArrowRight,
-  ShieldCheck
-} from 'lucide-react';
 import { sampleResumeData } from '@/lib/sample-data';
+import { FileEdit, Eye, ArrowRight, User } from 'lucide-react';
 
 export default function Home() {
-  const { resumeData, setResumeData } = useResumeStore();
+  const { resumeData, setResumeData, mobileView, setMobileView } = useResumeStore();
   const sidebarPosition = useResumeStore((state) => state.sidebarPosition);
   const { user, setAuthModalOpen } = useUserStore();
 
   return (
-    <main className="min-h-screen bg-slate-50 text-slate-900 selection:bg-blue-500 selection:text-white flex flex-col">
+    <main className="min-h-screen bg-[#F8F7F4] text-[#141413] flex flex-col selection:bg-[#141413] selection:text-[#F8F7F4]">
       {!resumeData ? (
-        <div className="relative min-h-screen bg-aura-glow bg-slate-50 flex flex-col">
-          {/* Subtle Ambient Top Glow */}
-          <div className="absolute top-0 inset-x-0 h-96 bg-gradient-to-b from-blue-100/50 via-indigo-50/30 to-transparent pointer-events-none -z-10" />
-
-          {/* Landing Header */}
-          <header className="w-full max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-blue-600 via-indigo-600 to-purple-600 flex items-center justify-center shadow-md shadow-blue-500/20 text-white">
-                <Sparkles className="w-4 h-4" />
+        <div className="min-h-screen flex flex-col">
+          {/* Top Editorial Masthead Bar */}
+          <header className="w-full border-b-2 border-[#141413] bg-[#FDFCFB] sticky top-0 z-30">
+            <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <span className="font-mono text-xs tracking-wider uppercase font-black text-[#141413]">
+                  SILLYBORG
+                </span>
+                <span className="sticker-pill bg-[#D4FF00] text-[#141413] text-[10px]">
+                  ⚡ 0 YAP
+                </span>
               </div>
-              <span className="font-bold tracking-tight text-base sm:text-lg text-slate-900">
-                SillyBorg <span className="text-blue-600 font-medium">Studio</span>
-              </span>
-            </div>
 
-            <div className="flex items-center gap-3">
-              <button
-                type="button"
-                onClick={() => setResumeData(sampleResumeData)}
-                className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:text-slate-900 bg-white hover:bg-slate-100 border border-slate-200/80 rounded-lg shadow-2xs transition-all cursor-pointer"
-              >
-                <span>Try Demo Resume</span>
-                <ArrowRight className="w-3 h-3 text-slate-400" />
-              </button>
-
-              {user ? (
-                <div className="flex items-center gap-2 text-xs font-semibold text-slate-700 bg-white border border-slate-200 px-3 py-1.5 rounded-lg shadow-2xs">
-                  <div className="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px]">
-                    {user.name.charAt(0).toUpperCase()}
-                  </div>
-                  <span>{user.name}</span>
-                </div>
-              ) : (
+              <div className="flex items-center gap-3">
                 <button
                   type="button"
-                  onClick={() => setAuthModalOpen(true)}
-                  className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 rounded-lg shadow-xs transition-colors cursor-pointer"
+                  onClick={() => setResumeData(sampleResumeData)}
+                  className="neo-btn px-3 py-1 bg-white hover:bg-[#D4FF00] text-xs font-mono font-bold uppercase tracking-wider text-[#141413] flex items-center gap-1.5 transition-all cursor-pointer"
                 >
-                  <User className="w-3.5 h-3.5 text-slate-300" />
-                  <span>Log In</span>
+                  <span>Quick Specimen</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
                 </button>
-              )}
+
+                <div className="w-px h-4 bg-[#141413]" />
+
+                {user ? (
+                  <div className="flex items-center gap-2 font-mono text-[11px] tracking-wider uppercase text-[#141413] font-bold">
+                    <span className="w-2 h-2 rounded-full bg-[#141413]" />
+                    <span>{user.name.split(' ')[0]}</span>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setAuthModalOpen(true)}
+                    className="font-mono text-xs font-bold tracking-wider uppercase text-[#141413] hover:text-[#FF6B4A] transition-colors cursor-pointer flex items-center gap-1.5"
+                  >
+                    <User className="w-3.5 h-3.5" />
+                    <span>Account</span>
+                  </button>
+                )}
+              </div>
             </div>
           </header>
 
-          {/* Hero Content */}
-          <div className="max-w-4xl mx-auto pt-8 pb-16 px-4 sm:px-6 lg:px-8 w-full flex-1 flex flex-col">
-            <div className="text-center mb-10 space-y-4">
-              {/* Pill badge */}
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white border border-indigo-100 shadow-xs text-xs font-semibold text-indigo-700">
-                <span className="flex h-2 w-2 rounded-full bg-indigo-600 animate-pulse" />
-                <span>Next-Gen Career Suite • Gemini 2.5 • Zero Fluff</span>
+          {/* Hero Header: Gen Z Punch + Typographic Craft */}
+          <div className="max-w-5xl mx-auto pt-10 sm:pt-16 pb-12 sm:pb-20 px-4 sm:px-6 lg:px-8 w-full flex-1 flex flex-col">
+            <div className="space-y-6 mb-10 sm:mb-14">
+              {/* Vibe Sticker Cluster */}
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="sticker-pill bg-[#D4FF00] text-[#141413]">
+                  ⚡ ZERO YAP
+                </span>
+                <span className="sticker-pill bg-[#E2D9FC] text-[#141413]">
+                  🎯 1-PAGE LOCK IN
+                </span>
+                <span className="sticker-pill bg-[#FF85B3] text-[#141413]">
+                  💼 ATS SECURED
+                </span>
+                <span className="sticker-pill bg-[#FF6B4A] text-white">
+                  🔥 NO CAP FR
+                </span>
               </div>
 
-              {/* Main Headline */}
-              <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-slate-900 leading-[1.15]">
-                Tailor Resumes &amp; Cover Letters <br className="hidden sm:inline" />
-                <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600">
-                  for High-Impact Roles in Seconds
-                </span>
+              {/* Title in Instrument Serif */}
+              <h1 className="font-display text-4xl sm:text-6xl lg:text-7xl font-normal tracking-tight text-[#141413] leading-[1.04]">
+                Land the Gig. <br className="hidden sm:inline" />
+                <span className="italic">Zero Yap. Perfect Typesetting.</span>
               </h1>
 
-              <p className="max-w-2xl mx-auto text-base sm:text-lg text-slate-600 font-normal leading-relaxed">
-                Connect your accomplishments to the exact job description with XYZ metrics, 
-                visual 1-page boundary enforcement, and matching executive cover letters.
+              {/* Subtext in IBM Plex Sans */}
+              <p className="max-w-2xl text-base sm:text-lg text-[#55534E] font-normal leading-relaxed">
+                The high-signal resume &amp; cover letter builder for people who refuse to get cooked by 2-page spillovers,
+                clunky templates, and robotic AI fluff.
               </p>
 
-              {/* Feature Highlights Grid */}
-              <div className="pt-2 grid grid-cols-2 sm:grid-cols-4 gap-2.5 max-w-3xl mx-auto text-left">
-                <div className="bg-white/80 backdrop-blur-xs border border-slate-200/80 rounded-xl p-2.5 shadow-2xs flex items-center gap-2">
-                  <div className="p-1.5 bg-blue-50 text-blue-600 rounded-lg">
-                    <Zap className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <div className="text-[11px] font-bold text-slate-900">1-Page Auto-Tuner</div>
-                    <div className="text-[10px] text-slate-500">Zero awkward spills</div>
-                  </div>
+              {/* Tactile Attributes Grid */}
+              <div className="pt-2 grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div className="neo-box p-3.5 sm:p-4 space-y-1 bg-[#FFFDF8]">
+                  <div className="font-mono text-[10px] font-black uppercase text-[#141413] bg-[#D4FF00] px-1.5 py-0.5 w-max border border-[#141413]">01 / BOUNDARY</div>
+                  <div className="font-bold text-xs text-[#141413]">1-Page Auto-Tuner</div>
+                  <div className="text-[11px] text-[#76736C] leading-snug">Never get cooked by 2-page spillover</div>
                 </div>
 
-                <div className="bg-white/80 backdrop-blur-xs border border-slate-200/80 rounded-xl p-2.5 shadow-2xs flex items-center gap-2">
-                  <div className="p-1.5 bg-indigo-50 text-indigo-600 rounded-lg">
-                    <FileCheck2 className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <div className="text-[11px] font-bold text-slate-900">ATS Keyword Match</div>
-                    <div className="text-[10px] text-slate-500">Natural skill alignment</div>
-                  </div>
+                <div className="neo-box p-3.5 sm:p-4 space-y-1 bg-[#FFFDF8]">
+                  <div className="font-mono text-[10px] font-black uppercase text-[#141413] bg-[#E2D9FC] px-1.5 py-0.5 w-max border border-[#141413]">02 / TARGETING</div>
+                  <div className="font-bold text-xs text-[#141413]">ATS Vibe Check</div>
+                  <div className="text-[11px] text-[#76736C] leading-snug">Clean metric mapping, zero buzzwords</div>
                 </div>
 
-                <div className="bg-white/80 backdrop-blur-xs border border-slate-200/80 rounded-xl p-2.5 shadow-2xs flex items-center gap-2">
-                  <div className="p-1.5 bg-emerald-50 text-emerald-600 rounded-lg">
-                    <FileSignature className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <div className="text-[11px] font-bold text-slate-900">Matched Cover Letter</div>
-                    <div className="text-[10px] text-slate-500">Same job context</div>
-                  </div>
+                <div className="neo-box p-3.5 sm:p-4 space-y-1 bg-[#FFFDF8]">
+                  <div className="font-mono text-[10px] font-black uppercase text-[#141413] bg-[#FF85B3] px-1.5 py-0.5 w-max border border-[#141413]">03 / COMPANION</div>
+                  <div className="font-bold text-xs text-[#141413]">Matched Cover Letter</div>
+                  <div className="text-[11px] text-[#76736C] leading-snug">Corporate mask or main character tone</div>
                 </div>
 
-                <div className="bg-white/80 backdrop-blur-xs border border-slate-200/80 rounded-xl p-2.5 shadow-2xs flex items-center gap-2">
-                  <div className="p-1.5 bg-purple-50 text-purple-600 rounded-lg">
-                    <Download className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <div className="text-[11px] font-bold text-slate-900">DOCX &amp; Vector PDF</div>
-                    <div className="text-[10px] text-slate-500">Perfect Word parity</div>
-                  </div>
+                <div className="neo-box p-3.5 sm:p-4 space-y-1 bg-[#FFFDF8]">
+                  <div className="font-mono text-[10px] font-black uppercase text-white bg-[#141413] px-1.5 py-0.5 w-max border border-[#141413]">04 / OUTPUT</div>
+                  <div className="font-bold text-xs text-[#141413]">Native DOCX &amp; PDF</div>
+                  <div className="text-[11px] text-[#76736C] leading-snug">100% recruiter approved standard</div>
                 </div>
               </div>
             </div>
 
-            {/* Generator Card Container */}
-            <div className="relative">
-              <div className="absolute -inset-1 bg-gradient-to-r from-blue-500/20 via-indigo-500/20 to-purple-500/20 rounded-2xl blur-lg opacity-70 -z-10" />
+            {/* Input Form Module */}
+            <div className="w-full">
               <GenerateForm />
             </div>
+
+            {/* Minimalist Colophon Footer */}
+            <footer className="mt-16 pt-6 border-t-2 border-[#141413] flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-[#76736C] font-mono">
+              <div>SILLYBORG STUDIO • VERIFIED ATS ENGINE 2.5</div>
+              <div className="flex items-center gap-3">
+                <span className="sticker-pill bg-[#D4FF00] text-[#141413] text-[9px]">ATS APPROVED</span>
+                <span className="sticker-pill bg-[#E2D9FC] text-[#141413] text-[9px]">WORD DOCX</span>
+                <span className="sticker-pill bg-[#FF85B3] text-[#141413] text-[9px]">VECTOR PDF</span>
+              </div>
+            </footer>
           </div>
         </div>
       ) : (
-        /* Live Editor Workspace */
-        <div className="min-h-screen flex flex-col bg-slate-100">
+        /* Interactive Editorial Studio Workspace */
+        <div className="min-h-screen flex flex-col bg-[#F8F7F4]">
           <ResumeToolbar />
-          <div className="flex-1 flex flex-col lg:flex-row relative">
-            {sidebarPosition === 'left' && <ResumeSidebar />}
+
+          {/* Mobile Screen Responsive View Switcher (Visible strictly on small screens < lg) */}
+          <div className="lg:hidden border-b border-[#E7E4DC] bg-[#F8F7F4] px-4 py-2 flex items-center justify-between sticky top-14 z-30 no-print">
+            <div className="font-mono text-[10px] tracking-[0.16em] uppercase text-[#76736C]">
+              VIEWPORT MODE
+            </div>
+
+            <div className="flex items-center border border-[#141413] bg-white rounded-xs p-0.5">
+              <button
+                type="button"
+                onClick={() => setMobileView('editor')}
+                className={`flex items-center gap-1.5 px-3 py-1 text-xs font-mono tracking-wider uppercase transition-colors cursor-pointer ${
+                  mobileView === 'editor'
+                    ? 'bg-[#141413] text-white font-bold'
+                    : 'text-[#55534E] hover:text-[#141413]'
+                }`}
+              >
+                <FileEdit className="w-3.5 h-3.5" />
+                <span>Editor</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setMobileView('preview')}
+                className={`flex items-center gap-1.5 px-3 py-1 text-xs font-mono tracking-wider uppercase transition-colors cursor-pointer ${
+                  mobileView === 'preview'
+                    ? 'bg-[#141413] text-white font-bold'
+                    : 'text-[#55534E] hover:text-[#141413]'
+                }`}
+              >
+                <Eye className="w-3.5 h-3.5" />
+                <span>Document</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Main Dual Workspace: Adapts based on screen size */}
+          <div className="flex-1 flex flex-col lg:flex-row relative min-h-0">
+            {/* Desktop: Sidebar on left or right */}
+            {sidebarPosition === 'left' && (
+              <div className={`${mobileView === 'editor' ? 'block' : 'hidden lg:block'}`}>
+                <ResumeSidebar />
+              </div>
+            )}
             
-            <div className="flex-1 overflow-y-auto overflow-x-auto py-8 px-2 sm:px-4 lg:px-8 flex justify-center items-start min-w-0 bg-dot-grid bg-slate-100/70">
+            {/* Document Drafting Canvas */}
+            <div
+              className={`flex-1 overflow-y-auto overflow-x-hidden py-6 sm:py-10 px-2 sm:px-6 lg:px-10 flex justify-center items-start min-w-0 bg-[#EFECE6] border-x border-[#E7E4DC]/60 ${
+                mobileView === 'preview' ? 'block' : 'hidden lg:flex'
+              }`}
+            >
               <ResumePreview />
             </div>
 
-            {sidebarPosition === 'right' && <ResumeSidebar />}
+            {sidebarPosition === 'right' && (
+              <div className={`${mobileView === 'editor' ? 'block' : 'hidden lg:block'}`}>
+                <ResumeSidebar />
+              </div>
+            )}
           </div>
         </div>
       )}

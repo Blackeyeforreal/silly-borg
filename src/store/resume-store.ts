@@ -106,6 +106,8 @@ interface ResumeState {
   isSidebarOpen: boolean;
   sidebarPosition: 'left' | 'right';
   activeFormSection: string | null;
+  mobileView: 'editor' | 'preview';
+  setMobileView: (view: 'editor' | 'preview') => void;
   
   // Page 1 Boundary & Auto-Tuner State
   showPageBoundary: boolean;
@@ -171,6 +173,8 @@ export const useResumeStore = create<ResumeState>()(
       isSidebarOpen: true,
       sidebarPosition: 'left',
       activeFormSection: null,
+      mobileView: 'editor',
+      setMobileView: (view) => set({ mobileView: view }),
 
       // Page boundary & auto-tuning
       showPageBoundary: true,
